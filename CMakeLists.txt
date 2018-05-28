@@ -73,8 +73,8 @@ set_target_properties(${MOOSE_LIBRARY}
 )
 
 #Set variable path to external libs and headers
-set (MOOSE_PATH_EXTERNAL_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-set (MOOSE_PATH_EXTERNAL_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+set (MOOSE_PATH_EXTERNAL_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/External/)
+set (MOOSE_PATH_EXTERNAL_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/External/)
 
 #Add variables to hold public and internal api files
 set (MOOSE_PUBLIC_API_FILES "")
@@ -116,8 +116,23 @@ set (TEST_PROJECT_EXE test_project)
 if(${MOOSE_CREATE_TEST_PROJECT})
 	add_executable(${TEST_PROJECT_EXE}
 		${CMAKE_CURRENT_SOURCE_DIR}/code/source/main.cpp
-	)	
+	)
+
 	
+	#add_custom_command( TARGET ${TEST_PROJECT_EXE} POST_BUILD
+    #            COMMAND copy ${MOOSE_PATH_EXTERNAL_LIBS}*.dll  ${CMAKE_CURRENT_SOURCE_DIR}/bin/$<CONFIGURATION>
+    #)
+	
+	add_custom_command(TARGET ${TEST_PROJECT_EXE} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${MOOSE_PATH_EXTERNAL_LIBS}/dll"
+        $<TARGET_FILE_DIR:${TEST_PROJECT_EXE}>)
+	
+	#add_custom_command(TARGET ${TEST_PROJECT_EXE} POST_BUILD       
+    #COMMAND ${CMAKE_COMMAND} -E copy_if_different  
+    #    "${MOOSE_PATH_EXTERNAL_LIBS}freeglut.dll"     
+    #    $<TARGET_FILE_DIR:${TEST_PROJECT_EXE}>)     
+		
 	set(VS_STARTUP_PROJECT ${TEST_PROJECT_EXE})
 	
 	#Tell test_project where to find Routa -headers and lib
@@ -130,7 +145,7 @@ if(${MOOSE_CREATE_TEST_PROJECT})
 	set_target_properties(${TEST_PROJECT_EXE} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY
 		${CMAKE_CURRENT_LIST_DIR})
 	
-	#Link Routa library to this executable
+	#Link MoosE library to this executable
 	target_link_libraries (${TEST_PROJECT_EXE}
 		${MOOSE_LIBRARY}
 	)
@@ -139,5 +154,7 @@ if(${MOOSE_CREATE_TEST_PROJECT})
 	set_target_properties(${TEST_PROJECT_EXE} 
 	PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/
+	
+	
 )
 endif()

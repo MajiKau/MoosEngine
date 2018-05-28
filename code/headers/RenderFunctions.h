@@ -1,8 +1,8 @@
 #pragma once
-#include <include/glew/include/GL/glew.h>
-#include <include/freeglut/include/GL/freeglut.h>
-#include <include/glm/glm.hpp>
-#include <include/glm/ext.hpp>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <glm.hpp>
+#include <ext.hpp>
 
 #include <stdio.h>
 #include <iostream>

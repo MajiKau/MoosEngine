@@ -3,13 +3,13 @@
 #include <vector>
 #include <map>
 
-#include <include/glew/include/GL/glew.h>
-#include <include/freeglut/include/GL/freeglut.h>
-#include <include/glm/glm.hpp>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <glm.hpp>
 
-#include <include/Assimp/include/assimp/Importer.hpp>
-#include <include/Assimp/include/assimp/scene.h>
-#include <include/Assimp/include/assimp/postprocess.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 
 typedef glm::vec3 Vector3f;

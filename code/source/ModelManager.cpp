@@ -1,5 +1,5 @@
 #include "code/headers/ModelManager.h"
-#include <include/FreeImage/x64/FreeImage.h>
+#include <FreeImage.h>
 
 Texture::Texture(GLenum TextureTarget, const std::string& FileName)
 {

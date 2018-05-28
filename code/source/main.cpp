@@ -1,15 +1,15 @@
-#include <include/glew/include/GL/glew.h>
-#include <include/freeglut/include/GL/freeglut.h>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
 
-#include <include/glm/glm.hpp>
-#include <include/glm/ext.hpp>
+#include <glm.hpp>
+#include <ext.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
-#include <include/glm/gtx/rotate_vector.hpp>
-#include <include/glm/gtx/euler_angles.hpp>
-#include <include/glm/gtx/intersect.hpp>
+#include <gtx/rotate_vector.hpp>
+#include <gtx/euler_angles.hpp>
+#include <gtx/intersect.hpp>
 
 //#include <include/imgui/include/imgui.h>//GUI
-#include <include/imgui/include/imgui_impl_glut.h>
+#include <imgui_impl_glut.h>
 
 #include "code/headers/Geometry.h"
 #include "code/headers/RenderFunctions.h"
