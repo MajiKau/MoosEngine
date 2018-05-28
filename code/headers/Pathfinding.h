@@ -45,7 +45,7 @@ bool ExistsInVector(Node* node, std::vector<Node*>* nodes, uint size)
 {
 	if (size == 0)
 	{
-		for (int i = 0; i < nodes->size(); i++)
+		for (uint i = 0; i < nodes->size(); i++)
 		{
 			if (node == (*nodes)[i])
 			{
@@ -55,7 +55,7 @@ bool ExistsInVector(Node* node, std::vector<Node*>* nodes, uint size)
 	}
 	else
 	{
-		for (int i = 0; i < size; i++)
+		for (uint i = 0; i < size; i++)
 		{
 			if (node == (*nodes)[i])
 			{

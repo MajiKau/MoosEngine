@@ -10,8 +10,6 @@ cmake_minimum_required (VERSION 3.8)
 set (APPLICATION_NAME MoosE)
 project (${APPLICATION_NAME})
 
-set(CMAKE_BUILD_TYPE Release)
-
 #Set variable for CMake's 'add_library'. This is used in 'root/src' 
 #-CMakeLists.txt to define a name for library and in other sub-folders
 #to add source files
@@ -34,16 +32,12 @@ set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 #Check that user's compiler supports C++11 standard
 message ("testi")
 include (CheckCXXCompilerFlag)
-# Emscripten freezes on c++11 check
-if (NOT EMSCRIPTEN)
-	check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
-	if (COMPILER_SUPPORTS_CXX11)
-		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-	else()
-		message ("NO support for C++11, exiting" FATAL_ERROR)
-	endif()
-else()
+# c++11 check
+check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
+if (COMPILER_SUPPORTS_CXX11)
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else()
+	message ("NO support for C++11, exiting" FATAL_ERROR)
 endif()
 
 
@@ -117,23 +111,14 @@ if(${MOOSE_CREATE_TEST_PROJECT})
 	add_executable(${TEST_PROJECT_EXE}
 		${CMAKE_CURRENT_SOURCE_DIR}/code/source/main.cpp
 	)
+	#Set startup project
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_PROJECT_EXE})
 
-	
-	#add_custom_command( TARGET ${TEST_PROJECT_EXE} POST_BUILD
-    #            COMMAND copy ${MOOSE_PATH_EXTERNAL_LIBS}*.dll  ${CMAKE_CURRENT_SOURCE_DIR}/bin/$<CONFIGURATION>
-    #)
-	
+	#Copy dlls to exe folder
 	add_custom_command(TARGET ${TEST_PROJECT_EXE} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${MOOSE_PATH_EXTERNAL_LIBS}/dll"
         $<TARGET_FILE_DIR:${TEST_PROJECT_EXE}>)
-	
-	#add_custom_command(TARGET ${TEST_PROJECT_EXE} POST_BUILD       
-    #COMMAND ${CMAKE_COMMAND} -E copy_if_different  
-    #    "${MOOSE_PATH_EXTERNAL_LIBS}freeglut.dll"     
-    #    $<TARGET_FILE_DIR:${TEST_PROJECT_EXE}>)     
-		
-	set(VS_STARTUP_PROJECT ${TEST_PROJECT_EXE})
 	
 	#Tell test_project where to find Routa -headers and lib
 	target_include_directories(${TEST_PROJECT_EXE} PUBLIC
