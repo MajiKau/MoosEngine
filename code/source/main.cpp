@@ -19,6 +19,7 @@
 #include "code/headers/Follower.h"
 #include "code/headers/Turret.h"
 
+#include "code/headers/Quadtree.h"
 
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
@@ -78,10 +79,10 @@ std::vector<Follower*> followers;
 std::vector<Turret*> turrets;
 
 float score = 500.0f;
-int followerAmount = 500;
+int followerAmount = 10;
 int followerUpdateIterator = 0;
-int pathfindingUpdates = 20;
-int nodenum = 6000;
+int pathfindingUpdates = 1;
+int nodenum = 1000;
 
 glm::vec3 cursor;
 bool showTurret = false;
@@ -354,7 +355,7 @@ void reset()
 {
     score = 500.0f;
     walls.clear();
-    int wallnum = 100;
+    int wallnum = 10;
     int s = (int)sqrt(wallnum);
     for (int i = 0; i < s; i++)
     {
@@ -372,7 +373,10 @@ void reset()
             walls.push_back(wall);
         }
     }
-
+	for (size_t i = 0; i < nodes.size(); i++)
+	{
+		delete nodes[i];
+	}
     nodes.clear();
     s = (int)sqrt(nodenum);
 
@@ -391,8 +395,16 @@ void reset()
     endNode = nodes.back();
     selectedNode = 0;
 
+	for (size_t i = 0; i < turrets.size(); i++)
+	{
+		delete turrets[i];
+	}
     turrets.clear();
 
+	for (size_t i = 0; i < followers.size(); i++)
+	{
+		delete followers[i];
+	}
     followers.clear();
     for (int i = 0; i < followerAmount; i++)
     {
@@ -428,6 +440,9 @@ void changeSize(int w, int h)
 	printf("W:%d,H:%d,Ration:%.2f\n", screenWidth, screenHeight, ratio);
 }
 
+Quadtree test_quadtree(0, { -100,-100,200,200 });
+std::vector<Rectangle2D> test_objects;
+
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -446,6 +461,22 @@ void GameInit()
     renderer->m_point_light.push_back(light);
 
     reset();    
+
+	test_objects.push_back({ 1,2,1,5 });
+	test_objects.push_back({ 1,5,1,5 });
+	test_objects.push_back({ 1,35,1,5 });
+	test_objects.push_back({ 12,2,1,5 });
+	test_objects.push_back({ 1,42,1,5 });
+	test_objects.push_back({ 12,65,1,5 });
+	test_objects.push_back({ 77,67,1,5 });
+	for (int x = 0; x < 10; x++)
+	{
+		for (int y = 0; y < 10; y++)
+		{
+			test_objects.push_back({ x * 10.0f-rand()%10,y * 10.0f-rand()%10,3,6 });
+		}
+	}
+	
 }
 
 
@@ -476,12 +507,14 @@ void renderScene(void)
 
 	//Rendering
 
+	test_quadtree.Render(renderer);
+
 	//Draw all nodes as Tetrahedrons
 	for each (auto node in nodes)
 	{
 		Color3f nodecolor{ 1 - 10000 / node->H, 1 - 10000 / node->H, 1 - 10000 / node->H };
-        //renderer->RenderRegularTriangle({ node->x,node->y }, 4, 0, nodecolor); 
-        renderer->RenderRegularTetrahedron({ node->x,-2,node->y }, 2, nodecolor);
+        
+        //renderer->RenderRegularTetrahedron({ node->x,-2,node->y }, 2, nodecolor);
 	}
 
 	//Draw Lines to show connections between nodes
@@ -525,14 +558,14 @@ void renderScene(void)
     }    
 
     //Render walls
-    if (walls.size() != 0)
+    /*if (walls.size() != 0)
     {
         for (int i = 0; i < walls.size(); i ++)
         {
             std::vector<glm::vec3> points = { ToVec3(walls[i].v1),ToVec3(walls[i].v2),ToVec3(walls[i].v3),ToVec3(walls[i].v4) };
             renderer->RenderExtrudedShape(points, 4, RED);
         }
-    }
+    }*/
 
     if (rotateLight)
     {
@@ -628,6 +661,7 @@ void renderScene(void)
     else
     {
         renderer->RenderRegularTetrahedron(cursor, 0.5f, GREEN);
+		renderer->RenderRegularTriangle({ cursor.x,cursor.z }, 0.5f,0, GREEN);
     }
 
     modelMat = glm::translate(renderer->Camera.Position)*glm::rotate(PI, glm::vec3(0, 1, 0))*glm::scale(glm::vec3(1000));
@@ -779,7 +813,28 @@ void game()
         }
     }
 
-    
+	if (inputManager->IsKeyDown('e'))
+	{
+		float w = rand() % 4 + 1;
+		float h = rand() % 4 + 1;
+		test_objects.push_back({ cursor.x-w/2.0f,cursor.z-h/2.0f,w,h });
+	}
+	if (inputManager->IsKeyPressed('t'))
+	{
+		float w = rand() % 4 + 1;
+		float h = rand() % 4 + 1;
+		test_objects[0] = { cursor.x - w / 2.0f,cursor.z - h / 2.0f,w,h };
+	}
+	if (inputManager->IsKeyPressed('y'))
+	{
+		printf("%d\n", test_objects.size());
+	}
+
+	test_quadtree.clear();
+	for (int i = 0; i < test_objects.size(); i++)
+	{
+		test_quadtree.insert(&test_objects[i]);
+	}
 
     /*if (inputManager->IsMousePressed(GLUT_LEFT_BUTTON))
     {
