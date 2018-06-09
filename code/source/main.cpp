@@ -20,6 +20,7 @@
 #include "code/headers/Turret.h"
 
 #include "code/headers/Quadtree.h"
+#include "code/headers/Octree.h"
 
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
@@ -79,9 +80,9 @@ std::vector<Follower*> followers;
 std::vector<Turret*> turrets;
 
 float score = 500.0f;
-int followerAmount = 10;
+int followerAmount = 100;
 int followerUpdateIterator = 0;
-int pathfindingUpdates = 1;
+int pathfindingUpdates = 5;
 int nodenum = 1000;
 
 glm::vec3 cursor;
@@ -440,8 +441,10 @@ void changeSize(int w, int h)
 	printf("W:%d,H:%d,Ration:%.2f\n", screenWidth, screenHeight, ratio);
 }
 
-Quadtree test_quadtree(0, { -100,-100,200,200 });
-std::vector<Rectangle2D> test_objects;
+Octree<Cuboid> test_octree(0, { -1000,-1000,-1000,2000,2000,2000 });
+std::vector<Cuboid> test_objects;
+
+Quadtree<Follower> follower_quadtree(0, { -1000,-1000,2000,2000 });
 
 void GameInit()
 {
@@ -462,18 +465,14 @@ void GameInit()
 
     reset();    
 
-	test_objects.push_back({ 1,2,1,5 });
-	test_objects.push_back({ 1,5,1,5 });
-	test_objects.push_back({ 1,35,1,5 });
-	test_objects.push_back({ 12,2,1,5 });
-	test_objects.push_back({ 1,42,1,5 });
-	test_objects.push_back({ 12,65,1,5 });
-	test_objects.push_back({ 77,67,1,5 });
-	for (int x = 0; x < 10; x++)
+	for (int x = -10; x < 10; x++)
 	{
 		for (int y = 0; y < 10; y++)
 		{
-			test_objects.push_back({ x * 10.0f-rand()%10,y * 10.0f-rand()%10,3,6 });
+			for (int z = 0; z < 10; z++)
+			{
+				test_objects.push_back({ x * 100.0f - rand() % 10,y * 100.0f - rand() % 10,z * 100.0f - rand() % 10,3,6,4 });
+			}
 		}
 	}
 	
@@ -507,7 +506,8 @@ void renderScene(void)
 
 	//Rendering
 
-	test_quadtree.Render(renderer);
+	test_octree.Render(renderer);
+	follower_quadtree.Render(renderer);
 
 	//Draw all nodes as Tetrahedrons
 	for each (auto node in nodes)
@@ -815,25 +815,37 @@ void game()
 
 	if (inputManager->IsKeyDown('e'))
 	{
-		float w = rand() % 4 + 1;
-		float h = rand() % 4 + 1;
-		test_objects.push_back({ cursor.x-w/2.0f,cursor.z-h/2.0f,w,h });
+		float w = rand() % 4 + 1.0f;
+		float h = rand() % 4 + 1.0f;
+		float d = rand() % 4 + 1.0f;
+		Vector3f pos = renderer->Camera.Position + 5.0f*renderer->Camera.Forward;
+		test_objects.push_back({ pos.x - w / 2.0f, pos.y - h / 2.0f, pos.z - d / 2.0f,w,h,d });
+		//test_objects.push_back({ cursor.x-w/2.0f,cursor.z-h/2.0f,w,h });
 	}
 	if (inputManager->IsKeyPressed('t'))
 	{
-		float w = rand() % 4 + 1;
-		float h = rand() % 4 + 1;
-		test_objects[0] = { cursor.x - w / 2.0f,cursor.z - h / 2.0f,w,h };
+		float w = rand() % 4 + 1.0f;
+		float h = rand() % 4 + 1.0f;
+		float d = rand() % 4 + 1.0f;
+		Vector3f pos = renderer->Camera.Position + 5.0f*renderer->Camera.Forward;
+		test_objects.push_back({ pos.x - w / 2.0f, pos.y - h / 2.0f, pos.z - d / 2.0f,w,h,d });
+		//test_objects[0] = { cursor.x - w / 2.0f,cursor.z - h / 2.0f,w,h };
 	}
 	if (inputManager->IsKeyPressed('y'))
 	{
-		printf("%d\n", test_objects.size());
+		printf("%d\n", (int)test_objects.size());
 	}
 
-	test_quadtree.clear();
+	test_octree.clear();
 	for (int i = 0; i < test_objects.size(); i++)
 	{
-		test_quadtree.insert(&test_objects[i]);
+		test_octree.insert(&test_objects[i]);
+	}
+
+	follower_quadtree.clear();
+	for (int i = 0; i < followers.size(); i++)
+	{
+		follower_quadtree.insert(followers[i]);
 	}
 
     /*if (inputManager->IsMousePressed(GLUT_LEFT_BUTTON))

@@ -1,4 +1,5 @@
 #pragma once
+#include "Quadtree.h"
 
 class Follower
 {
@@ -81,6 +82,11 @@ public:
             //y = m_target->y;
         }
     }
+
+	Rectangle2D Rect() 
+	{
+		return Rectangle2D(x-1, y-1, 2, 2);
+	}
 
     Node* m_target;
     std::vector<Node*> m_path;

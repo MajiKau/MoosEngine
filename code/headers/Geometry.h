@@ -2,6 +2,22 @@
 #include <math.h>
 #include <vector>
 
+struct Rectangle2D
+{
+	Rectangle2D() {};
+	Rectangle2D(float X, float Y, float width, float height) :x(X), y(Y), w(width), h(height) {};
+	Rectangle2D Rect() { return *this; }
+	float x, y, w, h;
+};
+
+struct Cuboid
+{
+	Cuboid() {};
+	Cuboid(float X, float Y, float Z, float width, float height, float depth) :x(X), y(Y), z(Z), w(width), h(height), d(depth) {};
+	Cuboid Cube() { return *this; }
+	float x, y, z, w, h, d;
+};
+
 
 struct Point2
 {

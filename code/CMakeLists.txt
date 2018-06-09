@@ -57,6 +57,7 @@ set (MOOSE_CORE_API
         ${CMAKE_CURRENT_LIST_DIR}/headers/Turret.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Vector.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Quadtree.h
+        ${CMAKE_CURRENT_LIST_DIR}/headers/Octree.h
 )
 
 #Add files that are internal. (Internal headers and sources and also sources for
@@ -70,6 +71,7 @@ set (MOOSE_CORE_INTERNAL
         ${CMAKE_CURRENT_LIST_DIR}/source/RenderFunctions.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Vector.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Quadtree.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/source/Octree.cpp
 )
 
 #**********************************************************************************

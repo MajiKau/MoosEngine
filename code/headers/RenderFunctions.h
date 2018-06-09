@@ -726,7 +726,40 @@ public:
         };
         RenderTriangles(vertices , 4);
     }
-
+	void RenderLine(Vector3f pos1, Vector3f pos2, Color3f color)
+	{
+		m_lines.emplace_back(pos1.x);
+		m_lines.emplace_back(pos1.y);
+		m_lines.emplace_back(pos1.z);
+		m_lines.emplace_back(color.r);
+		m_lines.emplace_back(color.g);
+		m_lines.emplace_back(color.b);
+		m_lines.emplace_back(pos2.x);
+		m_lines.emplace_back(pos2.y);
+		m_lines.emplace_back(pos2.z);
+		m_lines.emplace_back(color.r);
+		m_lines.emplace_back(color.g);
+		m_lines.emplace_back(color.b);
+	}
+	void RenderLineStrip(std::vector<Vector3f> linestrip, Color3f color)
+	{
+		if (linestrip.size() < 2)
+		{
+			printf("BatchRenderer linestrip not enough vertices\n");
+			return;
+		}
+		std::vector<float> strip;
+		for (uint i = 0; i < linestrip.size(); i++)
+		{
+			strip.emplace_back(linestrip[i].x);
+			strip.emplace_back(linestrip[i].y);
+			strip.emplace_back(linestrip[i].z);
+			strip.emplace_back(color.r);
+			strip.emplace_back(color.g);
+			strip.emplace_back(color.b);
+		}
+		m_linestrips.emplace_back(strip);
+	}
 	void RenderLine(std::vector<Point2> line, Color3f color)
 	{
 		if (line.size() < 2)
@@ -734,18 +767,45 @@ public:
 			printf("BatchRenderer line not enough vertices\n");
 			return;
 		}
-		m_lines.push_back(line[0].x);
-        m_lines.push_back(0.0f);
-		m_lines.push_back(line[0].y);
-		m_lines.push_back(color.r);
-		m_lines.push_back(color.g);
-		m_lines.push_back(color.b);
-		m_lines.push_back(line[1].x);
-        m_lines.push_back(0.0f);
-		m_lines.push_back(line[1].y);
-		m_lines.push_back(color.r);
-		m_lines.push_back(color.g);
-		m_lines.push_back(color.b);
+		m_lines.emplace_back(line[0].x);
+        m_lines.emplace_back(0.0f);
+		m_lines.emplace_back(line[0].y);
+		m_lines.emplace_back(color.r);
+		m_lines.emplace_back(color.g);
+		m_lines.emplace_back(color.b);
+		m_lines.emplace_back(line[1].x);
+        m_lines.emplace_back(0.0f);
+		m_lines.emplace_back(line[1].y);
+		m_lines.emplace_back(color.r);
+		m_lines.emplace_back(color.g);
+		m_lines.emplace_back(color.b);
+	}
+	void RenderCuboid(Cuboid cuboid, Color3f color)
+	{
+		std::vector<Vector3f> linestrip =
+		{
+			{ cuboid.x,cuboid.y,cuboid.z },
+		{ cuboid.x + cuboid.w,cuboid.y,cuboid.z },
+		{ cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z },
+		{ cuboid.x ,cuboid.y + cuboid.h,cuboid.z },
+		{ cuboid.x ,cuboid.y,cuboid.z }
+		};
+		RenderLineStrip(linestrip, color);
+
+		std::vector<Vector3f> linestrip2 =
+		{
+			{ cuboid.x,cuboid.y,cuboid.z + cuboid.d },
+		{ cuboid.x + cuboid.w,cuboid.y,cuboid.z + cuboid.d },
+		{ cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z + cuboid.d },
+		{ cuboid.x ,cuboid.y + cuboid.h,cuboid.z + cuboid.d },
+		{ cuboid.x ,cuboid.y,cuboid.z + cuboid.d }
+		};
+		RenderLineStrip(linestrip2, color);
+
+		RenderLine(Vector3f(cuboid.x, cuboid.y, cuboid.z), Vector3f(cuboid.x, cuboid.y, cuboid.z + cuboid.d), color);
+		RenderLine(Vector3f(cuboid.x + cuboid.w, cuboid.y, cuboid.z), Vector3f(cuboid.x + cuboid.w, cuboid.y, cuboid.z + cuboid.d), color);
+		RenderLine(Vector3f(cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z), Vector3f(cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z + cuboid.d), color);
+		RenderLine(Vector3f(cuboid.x, cuboid.y + cuboid.h, cuboid.z), Vector3f(cuboid.x, cuboid.y + cuboid.h, cuboid.z + cuboid.d), color);
 	}
 	void RenderLine(float x0, float y0, float x1, float y1, Color3f color)
 	{

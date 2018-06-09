@@ -5,14 +5,10 @@
 #include "Geometry.h"
 #include "RenderFunctions.h"
 
-struct Rectangle2D
-{
-	Rectangle2D() {};
-	Rectangle2D(float X, float Y, float width, float height) :x(X), y(Y), w(width), h(height) {};
-	float x, y, w, h;
-};
 
-//Generic Quadtree that uses rectangles for objects
+
+//Generic Quadtree that uses rectangles for objects. Objects need a Rect() function.
+template <class T>
 class Quadtree {
 
 public:
@@ -21,7 +17,7 @@ public:
 	{
 		//printf("Quadtree Constructor\n");
 		level = pLevel;
-		objects = std::vector<Rectangle2D*>();
+		objects = std::vector<T*>();
 		bounds = pBounds;
 		nodes = std::vector<Quadtree*>(4);
 	}
@@ -50,16 +46,17 @@ public:
 		{
 			if (objects[i] != NULL)
 			{
+				Rectangle2D rect = objects[i]->Rect();
 				std::vector<Point2> linestrip =
 				{
-					{ objects[i]->x,objects[i]->y  },
-				{ objects[i]->x + objects[i]->w,objects[i]->y  },
-				{ objects[i]->x + objects[i]->w,objects[i]->y + objects[i]->h },
-				{ objects[i]->x ,objects[i]->y + objects[i]->h },
-				{ objects[i]->x ,objects[i]->y  }
+					{ rect.x,rect.y  },
+				{ rect.x + rect.w,rect.y  },
+				{ rect.x + rect.w,rect.y + rect.h },
+				{ rect.x ,rect.y + rect.h },
+				{ rect.x ,rect.y  }
 				};
 				renderer->RenderLineStrip(linestrip, YELLOW);
-				renderer->RenderRegularTriangle({ objects[i]->x + objects[i]->w / 2.0f,objects[i]->y + objects[i]->h / 2.0f }, 0.1f, 0, YELLOW);
+				renderer->RenderRegularTriangle({ rect.x + rect.w / 2.0f,rect.y + rect.h / 2.0f }, 0.1f, 0, YELLOW);
 			}
 		}
 	}
@@ -78,20 +75,20 @@ public:
 		}
 	}
 
-	void insert(Rectangle2D* pRect) 
+	void insert(T* obj) 
 	{
 		//printf("Quadtree Insert(%.1f,%.1f,%.1f,%.1f)\n",pRect.x, pRect.y, pRect.w, pRect.h);
 		if (nodes[0] != NULL) {
-			int index = GetIndex(*pRect);
+			int index = GetIndex(obj->Rect());
 
 			if (index != -1) {
-				nodes[index]->insert(pRect);
+				nodes[index]->insert(obj);
 
 				return;
 			}
 		}
 
-		objects.push_back(pRect);
+		objects.push_back(obj);
 
 		if (objects.size() > MAX_OBJECTS && level < MAX_LEVELS) {
 			if (nodes[0] == NULL) {
@@ -100,7 +97,7 @@ public:
 
 			int i = 0;
 			while (i < objects.size()) {
-				int index = GetIndex(*objects[i]);
+				int index = GetIndex(objects[i]->Rect());
 				if (index != -1) {
 					nodes[index]->insert(objects[i]);
 					objects.erase(objects.begin() + i);
@@ -112,7 +109,7 @@ public:
 		}
 	}
 
-	std::vector<Rectangle2D*> retrieve(std::vector<Rectangle2D*> returnObjects, Rectangle2D pRect)
+	std::vector<T*> retrieve(std::vector<T*> returnObjects, Rectangle2D pRect)
 	{
 		//printf("Quadtree Retrieve\n");
 		int index = GetIndex(pRect);
@@ -176,10 +173,10 @@ private:
 	}
 
 	int MAX_OBJECTS = 10;
-	int MAX_LEVELS = 5;
+	int MAX_LEVELS = 10;
 
 	int level;
-	std::vector<Rectangle2D*> objects;
+	std::vector<T*> objects;
 	Rectangle2D bounds;
 	std::vector<Quadtree*> nodes;
 
