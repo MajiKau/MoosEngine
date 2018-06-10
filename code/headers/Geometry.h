@@ -14,7 +14,7 @@ struct Cuboid
 {
 	Cuboid() {};
 	Cuboid(float X, float Y, float Z, float width, float height, float depth) :x(X), y(Y), z(Z), w(width), h(height), d(depth) {};
-	Cuboid Cube() { return *this; }
+	const Cuboid& Cube() { return *this; }
 	float x, y, z, w, h, d;
 };
 

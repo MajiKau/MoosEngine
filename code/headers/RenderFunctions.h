@@ -502,6 +502,9 @@ public:
 	}
 	void Render()
 	{
+		//printf("Lines: %d\n", (int)m_lines.size());
+		//printf("Linestrips: %d\n", (int)m_linestrips.size());
+
         m_mvp = m_projection * m_view;
         m_mvp_new = m_projection * m_view*m_model;
 
@@ -728,7 +731,23 @@ public:
     }
 	void RenderLine(Vector3f pos1, Vector3f pos2, Color3f color)
 	{
-		m_lines.emplace_back(pos1.x);
+		float temp_lines[] =
+		{
+		pos1.x,
+		pos1.y,
+		pos1.z,
+		color.r,
+		color.g,
+		color.b,
+		pos2.x,
+		pos2.y,
+		pos2.z,
+		color.r,
+		color.g,
+		color.b
+		};
+		m_lines.insert(m_lines.end(), &temp_lines[0], &temp_lines[0] + 12);
+		/*m_lines.emplace_back(pos1.x);
 		m_lines.emplace_back(pos1.y);
 		m_lines.emplace_back(pos1.z);
 		m_lines.emplace_back(color.r);
@@ -739,7 +758,15 @@ public:
 		m_lines.emplace_back(pos2.z);
 		m_lines.emplace_back(color.r);
 		m_lines.emplace_back(color.g);
-		m_lines.emplace_back(color.b);
+		m_lines.emplace_back(color.b);*/
+	}
+	void RenderLines(float* lines, int number_of_lines)
+	{
+		m_lines.insert(m_lines.end(), &lines[0], &lines[0] + number_of_lines*12);
+	}
+	void RenderLineStrip(std::vector<float> linestrip)
+	{
+		m_linestrips.emplace_back(linestrip);
 	}
 	void RenderLineStrip(std::vector<Vector3f> linestrip, Color3f color)
 	{
@@ -751,12 +778,22 @@ public:
 		std::vector<float> strip;
 		for (uint i = 0; i < linestrip.size(); i++)
 		{
-			strip.emplace_back(linestrip[i].x);
+			float temp_strip[] =
+			{
+				linestrip[i].x,
+				linestrip[i].y,
+				linestrip[i].z,
+				color.r,
+				color.g,
+				color.b
+			};
+			strip.insert(strip.end(), &temp_strip[0], &temp_strip[0]+6);
+			/*strip.emplace_back(linestrip[i].x);
 			strip.emplace_back(linestrip[i].y);
 			strip.emplace_back(linestrip[i].z);
 			strip.emplace_back(color.r);
 			strip.emplace_back(color.g);
-			strip.emplace_back(color.b);
+			strip.emplace_back(color.b);*/
 		}
 		m_linestrips.emplace_back(strip);
 	}
@@ -780,32 +817,65 @@ public:
 		m_lines.emplace_back(color.g);
 		m_lines.emplace_back(color.b);
 	}
-	void RenderCuboid(Cuboid cuboid, Color3f color)
+	void RenderCuboid(const Cuboid& cuboid, Color3f color)
 	{
-		std::vector<Vector3f> linestrip =
+		float lines[] =
 		{
-			{ cuboid.x,cuboid.y,cuboid.z },
-		{ cuboid.x + cuboid.w,cuboid.y,cuboid.z },
-		{ cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z },
-		{ cuboid.x ,cuboid.y + cuboid.h,cuboid.z },
-		{ cuboid.x ,cuboid.y,cuboid.z }
-		};
-		RenderLineStrip(linestrip, color);
+			cuboid.x, cuboid.y, cuboid.z, color.r, color.g, color.b,
+			cuboid.x + cuboid.w, cuboid.y, cuboid.z, color.r, color.g, color.b,
+			cuboid.x + cuboid.w, cuboid.y, cuboid.z, color.r, color.g, color.b,
+			cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z, color.r, color.g, color.b,
+			cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z, color.r, color.g, color.b,
+			cuboid.x, cuboid.y + cuboid.h, cuboid.z, color.r, color.g, color.b,
+			cuboid.x, cuboid.y + cuboid.h, cuboid.z, color.r, color.g, color.b,
+			cuboid.x, cuboid.y, cuboid.z, color.r, color.g, color.b,
 
-		std::vector<Vector3f> linestrip2 =
-		{
-			{ cuboid.x,cuboid.y,cuboid.z + cuboid.d },
-		{ cuboid.x + cuboid.w,cuboid.y,cuboid.z + cuboid.d },
-		{ cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z + cuboid.d },
-		{ cuboid.x ,cuboid.y + cuboid.h,cuboid.z + cuboid.d },
-		{ cuboid.x ,cuboid.y,cuboid.z + cuboid.d }
+			cuboid.x,cuboid.y,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y + cuboid.h,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y + cuboid.h,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y,cuboid.z + cuboid.d,color.r,color.g,color.b,
+
+			cuboid.x, cuboid.y, cuboid.z,color.r,color.g,color.b,
+			cuboid.x, cuboid.y, cuboid.z + cuboid.d,color.r,color.g,color.b,
+
+			cuboid.x + cuboid.w, cuboid.y, cuboid.z,color.r,color.g,color.b,
+			cuboid.x + cuboid.w, cuboid.y, cuboid.z + cuboid.d,color.r,color.g,color.b,
+
+			cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z,color.r,color.g,color.b,
+			cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z + cuboid.d,color.r,color.g,color.b,
+
+			cuboid.x, cuboid.y + cuboid.h, cuboid.z,color.r,color.g,color.b,
+			cuboid.x, cuboid.y + cuboid.h, cuboid.z + cuboid.d,color.r,color.g,color.b
 		};
-		RenderLineStrip(linestrip2, color);
+		RenderLines(lines, 12);
+
+		/*std::vector<float> linestrip =
+		{
+			cuboid.x,cuboid.y,cuboid.z,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y,cuboid.z,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y + cuboid.h,cuboid.z,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y,cuboid.z,color.r,color.g,color.b
+		}; 
+		RenderLineStrip(linestrip);
+		std::vector<float> linestrip2 =
+		{
+			cuboid.x,cuboid.y,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x + cuboid.w,cuboid.y + cuboid.h,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y + cuboid.h,cuboid.z + cuboid.d ,color.r,color.g,color.b,
+			cuboid.x ,cuboid.y,cuboid.z + cuboid.d,color.r,color.g,color.b
+		};
+		RenderLineStrip(linestrip2);
 
 		RenderLine(Vector3f(cuboid.x, cuboid.y, cuboid.z), Vector3f(cuboid.x, cuboid.y, cuboid.z + cuboid.d), color);
 		RenderLine(Vector3f(cuboid.x + cuboid.w, cuboid.y, cuboid.z), Vector3f(cuboid.x + cuboid.w, cuboid.y, cuboid.z + cuboid.d), color);
 		RenderLine(Vector3f(cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z), Vector3f(cuboid.x + cuboid.w, cuboid.y + cuboid.h, cuboid.z + cuboid.d), color);
-		RenderLine(Vector3f(cuboid.x, cuboid.y + cuboid.h, cuboid.z), Vector3f(cuboid.x, cuboid.y + cuboid.h, cuboid.z + cuboid.d), color);
+		RenderLine(Vector3f(cuboid.x, cuboid.y + cuboid.h, cuboid.z), Vector3f(cuboid.x, cuboid.y + cuboid.h, cuboid.z + cuboid.d), color);*/
 	}
 	void RenderLine(float x0, float y0, float x1, float y1, Color3f color)
 	{

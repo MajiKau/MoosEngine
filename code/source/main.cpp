@@ -1,6 +1,8 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <GL/wglew.h>
+
 #include <glm.hpp>
 #include <ext.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -24,6 +26,7 @@
 
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
+
 
 Vector3f ToVec3(Point2 p)
 {
@@ -441,10 +444,10 @@ void changeSize(int w, int h)
 	printf("W:%d,H:%d,Ration:%.2f\n", screenWidth, screenHeight, ratio);
 }
 
-Octree<Cuboid> test_octree(0, { -1000,-1000,-1000,2000,2000,2000 });
+Octree<Cuboid> test_octree(0, { -500,-500,-500,1000,1000,1000 });
 std::vector<Cuboid> test_objects;
 
-Quadtree<Follower> follower_quadtree(0, { -1000,-1000,2000,2000 });
+Quadtree<Follower> follower_quadtree(0, { -500,-500,1000,1000 });
 
 void GameInit()
 {
@@ -465,11 +468,11 @@ void GameInit()
 
     reset();    
 
-	for (int x = -10; x < 10; x++)
+	for (int x = -5; x < 5; x++)
 	{
-		for (int y = 0; y < 10; y++)
+		for (int y = -5; y < 5; y++)
 		{
-			for (int z = 0; z < 10; z++)
+			for (int z = -5; z < 5; z++)
 			{
 				test_objects.push_back({ x * 100.0f - rand() % 10,y * 100.0f - rand() % 10,z * 100.0f - rand() % 10,3,6,4 });
 			}
@@ -1034,6 +1037,9 @@ int main(int argc, char **argv) {
 
     GameInit();
 
+	printf("%s\n",glGetString(GL_EXTENSIONS));
+	
+	wglSwapIntervalEXT(0);
     // enter GLUT event processing loop
     glutMainLoop();
 

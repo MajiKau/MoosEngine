@@ -17,21 +17,26 @@ public:
 		//printf("Quadtree Constructor\n");
 		level = pLevel;
 		objects = std::vector<T*>();
-		bounds = pBounds;
-		nodes = std::vector<Octree*>(8);
+		bounds = pBounds; 
+		for (int i = 0; i < 8; i++) {
+			nodes[i] = NULL;
+		}
+		xMidpoint = bounds.x + (bounds.w / 2);
+		yMidpoint = bounds.y + (bounds.h / 2);
+		zMidpoint = bounds.z + (bounds.d / 2);
 	}
 
 	void Render(BatchRenderer* renderer)
 	{
 		//printf("Quadtree Render(%.1f,%.1f,%.1f,%.1f)\n", bounds.x, bounds.y, bounds.w, bounds.h);
-		for (int i = 0; i < nodes.size(); i++)
+		for (int i = 0; i < 8; i++)
 		{
 			if (nodes[i] != NULL)
 			{
 				nodes[i]->Render(renderer);
 			}
 		}
-		std::vector<Vector3f> linestrip =
+		/*std::vector<Vector3f> linestrip =
 		{
 			{ bounds.x,bounds.y,bounds.z },
 		{ bounds.x + bounds.w,bounds.y,bounds.z },
@@ -53,16 +58,17 @@ public:
 		renderer->RenderLine(Vector3f( bounds.x,bounds.y,bounds.z ), Vector3f( bounds.x,bounds.y,bounds.z+bounds.d ), BLUE);
 		renderer->RenderLine(Vector3f( bounds.x + bounds.w,bounds.y,bounds.z ), Vector3f( bounds.x + bounds.w,bounds.y,bounds.z + bounds.d ), BLUE);
 		renderer->RenderLine(Vector3f( bounds.x + bounds.w,bounds.y + bounds.h,bounds.z ), Vector3f( bounds.x + bounds.w,bounds.y + bounds.h,bounds.z + bounds.d ), BLUE);
-		renderer->RenderLine(Vector3f( bounds.x,bounds.y + bounds.h,bounds.z ), Vector3f( bounds.x,bounds.y + bounds.h,bounds.z + bounds.d ), BLUE);
+		renderer->RenderLine(Vector3f( bounds.x,bounds.y + bounds.h,bounds.z ), Vector3f( bounds.x,bounds.y + bounds.h,bounds.z + bounds.d ), BLUE);*/
 
+		renderer->RenderCuboid(bounds, YELLOW);
 
 		for (int i = 0; i < objects.size(); i++)
 		{
 			if (objects[i] != NULL)
 			{
-				Cuboid cube = objects[i]->Cube();
+				//Cuboid cube = objects[i]->Cube();
 
-				renderer->RenderCuboid(cube, YELLOW);
+				renderer->RenderCuboid(objects[i]->Cube(), YELLOW);
 				
 			}
 		}
@@ -73,7 +79,7 @@ public:
 		//printf("Quadtree Clear\n");
 		objects.clear();
 
-		for (int i = 0; i < nodes.size(); i++) {
+		for (int i = 0; i < 8; i++) {
 			if (nodes[i] != NULL) {
 				nodes[i]->clear();
 				delete nodes[i];
@@ -103,11 +109,13 @@ public:
 			}
 
 			int i = 0;
-			while (i < objects.size()) {
+			int obj_size = (int)objects.size();
+			while (i < obj_size) {
 				int index = GetIndex(objects[i]->Cube());
 				if (index != -1) {
 					nodes[index]->insert(objects[i]);
-					objects.erase(objects.begin() + i);
+					objects.erase(objects.begin() + i); 
+					obj_size--;
 				}
 				else {
 					i++;
@@ -152,25 +160,25 @@ private:
 		nodes[7] = new Octree(level + 1, Cuboid(x + subWidth, y + subHeight, z + subDepth, subWidth, subHeight, subDepth));
 	}
 
-	int GetIndex(Cuboid pRect)
+	int GetIndex(const Cuboid& pRect)
 	{
 		//printf("Quadtree GetIndex\n");
 		int index = -1;
-		double xMidpoint = bounds.x + (bounds.w / 2);
-		double yMidpoint = bounds.y + (bounds.h / 2);
-		double zMidpoint = bounds.z + (bounds.d / 2);
+		/*float xMidpoint = bounds.x + (bounds.w / 2);
+		float yMidpoint = bounds.y + (bounds.h / 2);
+		float zMidpoint = bounds.z + (bounds.d / 2);*/
 
 		// Object can completely fit within the top quadrants
-		bool topQuadrant = (pRect.y < yMidpoint && pRect.y + pRect.h < yMidpoint);
+		bool topQuadrant = (pRect.y + pRect.h < yMidpoint);
 		// Object can completely fit within the bottom quadrants
 		bool bottomQuadrant = (pRect.y > yMidpoint);
 
-		bool frontQuadrant = (pRect.z < zMidpoint && pRect.z + pRect.d < zMidpoint);
+		bool frontQuadrant = (pRect.z + pRect.d < zMidpoint);
 
 		bool backQuadrant = (pRect.z > zMidpoint);
 
 		// Object can completely fit within the left quadrants
-		if (pRect.x < xMidpoint && pRect.x + pRect.w < xMidpoint) {
+		if (pRect.x + pRect.w < xMidpoint) {
 			if (topQuadrant) {
 				if (frontQuadrant)
 					index = 1;
@@ -209,6 +217,10 @@ private:
 	int level;
 	std::vector<T*> objects;
 	Cuboid bounds;
-	std::vector<Octree*> nodes;
+	Octree* nodes[8];
+
+	float xMidpoint;
+	float yMidpoint;
+	float zMidpoint;
 
 };
