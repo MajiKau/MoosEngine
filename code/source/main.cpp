@@ -24,6 +24,8 @@
 #include "code/headers/Quadtree.h"
 #include "code/headers/Octree.h"
 
+#include "code/headers/Vehicle.h"
+
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
@@ -83,10 +85,11 @@ std::vector<Follower*> followers;
 std::vector<Turret*> turrets;
 
 float score = 500.0f;
-int followerAmount = 100;
+int followerAmount = 1000;
 int followerUpdateIterator = 0;
-int pathfindingUpdates = 5;
+int pathfindingUpdates = 50;
 int nodenum = 1000;
+int wallnum = 1000;
 
 glm::vec3 cursor;
 bool showTurret = false;
@@ -102,6 +105,8 @@ int pLightID = 0;
 bool renderPlane = false;
 
 bool showdebug = false;
+
+Vehicle tank;
 
 bool IsKeySpecial(unsigned char key)
 {
@@ -359,7 +364,6 @@ void reset()
 {
     score = 500.0f;
     walls.clear();
-    int wallnum = 10;
     int s = (int)sqrt(wallnum);
     for (int i = 0; i < s; i++)
     {
@@ -561,14 +565,14 @@ void renderScene(void)
     }    
 
     //Render walls
-    /*if (walls.size() != 0)
+    if (walls.size() != 0)
     {
         for (int i = 0; i < walls.size(); i ++)
         {
             std::vector<glm::vec3> points = { ToVec3(walls[i].v1),ToVec3(walls[i].v2),ToVec3(walls[i].v3),ToVec3(walls[i].v4) };
             renderer->RenderExtrudedShape(points, 4, RED);
         }
-    }*/
+    }
 
     if (rotateLight)
     {
@@ -587,7 +591,10 @@ void renderScene(void)
 
     Material material = DefaultMaterial;
 
-    glm::mat4 modelMat = glm::translate(glm::vec3(0, 100, -20));
+    glm::mat4 modelMat = glm::translate(glm::vec3(0, 100, -20)); 
+	renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);
+
+
     /*renderer->RenderMesh("dragon", modelMat, DefaultMaterial);
     //
     modelMat = glm::translate(glm::vec3(20, 100, 0))*glm::rotate(totalTime / 800.0f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -624,8 +631,9 @@ void renderScene(void)
     }
 
     //Render Player
-    modelMat = glm::translate(glm::vec3(renderer->Camera.Position.x, 2, renderer->Camera.Position.z))*glm::rotate(renderer->Camera.Rotation.x - PI / 2.0f, glm::vec3(0, 1, 0));
-    renderer->RenderMesh("dragon", modelMat, DefaultMaterial);
+	tank.Render(renderer);
+    /*modelMat = glm::translate(glm::vec3(renderer->Camera.Position.x, 2, renderer->Camera.Position.z))*glm::rotate(renderer->Camera.Rotation.x - PI / 2.0f, glm::vec3(0, 1, 0));
+    renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);*/
 
     /*modelMat = glm::translate(glm::vec3(0, 100, 20));
     renderer->RenderMesh("Cube", modelMat, CustomMaterial);
@@ -653,17 +661,20 @@ void renderScene(void)
     modelMat = glm::translate(glm::vec3(0.0f, -2.0f, 0.0f));
     renderer->RenderMesh("flatplane", modelMat, CustomMaterial);
 
+	modelMat = glm::translate(glm::vec3(0, -2.0f, 0))*glm::scale(glm::vec3(1000,1,1000));
+	renderer->RenderMesh("Cube", modelMat, DefaultMaterial);
+
     /*modelMat = glm::translate(glm::vec3(0.0f, 90.0f, 0.0f));
     renderer->RenderMesh("flatplane", modelMat, CustomMaterial);*/
 
     if (showTurret)
     {
-        renderer->RenderRegularTetrahedron(cursor, 1.0f, BLUE);
+        //renderer->RenderRegularTetrahedron(cursor, 1.0f, BLUE);
         renderer->RenderCircleHollow({ cursor.x,cursor.z }, 10, BLUE);
     }
     else
     {
-        renderer->RenderRegularTetrahedron(cursor, 0.5f, GREEN);
+        //renderer->RenderRegularTetrahedron(cursor, 0.5f, GREEN);
 		renderer->RenderRegularTriangle({ cursor.x,cursor.z }, 0.5f,0, GREEN);
     }
 
@@ -728,6 +739,7 @@ void game()
         deltaTime = 1.0f;
     }
 
+	tank.Update(deltaTime);
 
     totalTime = (float)glutGet(GLUT_ELAPSED_TIME);
 
@@ -765,7 +777,7 @@ void game()
             distance = Distance({ tur->m_position.x,tur->m_position.z }, { fol->x,fol->y });
             if (distance < 30)
             {
-                fol->Damage(tur->m_damage);
+                fol->Damage(tur->m_damage*(float)deltaTime);
             }
 
         }
@@ -796,7 +808,8 @@ void game()
     if (inputManager->IsKeyPressed('r'))
         reset();
 
-    if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))
+	//Turret placing
+    /*if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))
     {
         showTurret = true;
     }
@@ -814,9 +827,10 @@ void game()
                 score -= 100.0f;
             }
         }
-    }
+    }*/
 
-	if (inputManager->IsKeyDown('e'))
+	//Place test objects into octree
+	/*if (inputManager->IsKeyDown('e'))
 	{
 		float w = rand() % 4 + 1.0f;
 		float h = rand() % 4 + 1.0f;
@@ -824,7 +838,7 @@ void game()
 		Vector3f pos = renderer->Camera.Position + 5.0f*renderer->Camera.Forward;
 		test_objects.push_back({ pos.x - w / 2.0f, pos.y - h / 2.0f, pos.z - d / 2.0f,w,h,d });
 		//test_objects.push_back({ cursor.x-w/2.0f,cursor.z-h/2.0f,w,h });
-	}
+	}*/
 	if (inputManager->IsKeyPressed('t'))
 	{
 		float w = rand() % 4 + 1.0f;
@@ -868,12 +882,82 @@ void game()
     //glm::vec3 Forward = glm::normalize(renderer->Camera.Forward);
     glm::vec3 Right = glm::normalize(glm::cross(glm::vec3(renderer->Camera.Forward.x, 0, renderer->Camera.Forward.z), glm::vec3(0, 1, 0)));
 
-    float speed = 0.1f;
+    float speed = 100.0f;
     if (inputManager->IsMouseDown(GLUT_RIGHT_BUTTON))
     {
-        speed = 2.0f;
+        speed = 200.0f;
     }
-    if (inputManager->IsKeyDown('w'))
+	/*if (GetAsyncKeyState(0x57))
+	{
+		renderer->Camera.Position += Forward * speed * (float)deltaTime;
+	}
+	if (GetAsyncKeyState(0x53))
+	{
+		renderer->Camera.Position -= Forward * speed * (float)deltaTime;
+	}
+	if (GetAsyncKeyState(0x41))
+	{
+		renderer->Camera.Position -= Right * speed * (float)deltaTime;
+	}
+	if (GetAsyncKeyState(0x44))
+	{
+		renderer->Camera.Position += Right * speed * (float)deltaTime;
+	}*/
+	
+	if (GetAsyncKeyState(0x57))//W
+	{
+		tank.Move(0);
+	}
+	else if (GetAsyncKeyState(0x53))//S
+	{
+		tank.Move(1);
+	}
+	else
+	{
+		tank.Move(2);
+	}
+	if (GetAsyncKeyState(0x41))//A
+	{
+		tank.Move(3);
+	}
+	else if (GetAsyncKeyState(0x44))//D
+	{
+		tank.Move(4);
+	}
+	else
+	{
+		tank.Move(5);
+	}
+	if (GetAsyncKeyState(0x51))//Q
+	{
+		tank.Move(6);
+	}
+	else if (GetAsyncKeyState(0x45))//E
+	{
+		tank.Move(7);
+	}
+	else
+	{
+		tank.Move(8);
+	}
+
+	if (GetAsyncKeyState(0x48))//H
+	{
+
+	}
+	if (GetAsyncKeyState(0x4A))//J
+	{
+
+	}
+	if (GetAsyncKeyState(0x4B))//K
+	{
+
+	}
+
+	glm::mat4 rotation = glm::eulerAngleY(renderer->Camera.Rotation.x)*glm::eulerAngleX(renderer->Camera.Rotation.y);
+	renderer->Camera.Position = glm::vec4(tank.GetPosition(),1.0f) + rotation * glm::translate(glm::vec3(0,0,10))* glm::vec4(0,0,0,1);
+
+    /*if (inputManager->IsKeyDown('w'))
     {
         renderer->Camera.Position += Forward*speed;
     }
@@ -888,7 +972,8 @@ void game()
     if (inputManager->IsKeyDown('d'))
     {
         renderer->Camera.Position += Right*speed;
-    }
+    }*/
+
     /*if (inputManager->IsMouseDown(GLUT_MIDDLE_BUTTON))
     {
         for each (auto fol in followers)
@@ -928,7 +1013,7 @@ void game()
     //Follower updates
     for each (Follower* fol in followers)
     {
-        int res = fol->Update();
+        int res = fol->Update((float)deltaTime);
         if (res == 1)//Dead
         {
             score += 1.0f;

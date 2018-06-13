@@ -366,6 +366,10 @@ public:
 
         m_loaded_meshes.insert({ "flatplane",new Mesh("Content/Models/flatplane/flatplane.obj") });
 
+		m_loaded_meshes.insert({ "fulltank",new Mesh("Content/Models/Tank/fulltank.obj") });
+		m_loaded_meshes.insert({ "tank_bottom",new Mesh("Content/Models/Tank/tank_bottom.obj") });
+		m_loaded_meshes.insert({ "tank_top",new Mesh("Content/Models/Tank/tank_top.obj") });
+
 
         //CUBE
         {
@@ -573,6 +577,9 @@ public:
             printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
         }
 
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(2);
         for each (auto mo in m_meshes)
         {
             m_mvp_new = m_projection * m_view *std::get<1>(mo);
@@ -601,6 +608,13 @@ public:
                 m_loaded_meshes[std::get<0>(mo)]->Render();
             }
         }
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glActiveTexture(GL_TEXTURE0);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
          
         err = glGetError();
         if (GLEW_OK != err)

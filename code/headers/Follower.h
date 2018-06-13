@@ -6,29 +6,47 @@ class Follower
 public:
     Follower()
     {
-        x = 0;
-        y = 0;
+        x = 0.0f;
+        y = 0.0f;
         std::vector<Node*> m_path = std::vector<Node*>(0);
         m_target = NULL;
         color = rand() % 2 - 1 ? RED : BLUE;
-        speed = 0.2f;//rand() % 20 / 20.0f + 0.2f;
-        health = 10.0f;
+        speed = 20.0f;//rand() % 20 / 20.0f + 0.2f;
+		health = 10.0f; 
+		lost_timer = 3.0f;
+		lost = false;
     }
     void Damage(float dmg)
     {
+		if (dmg < 0.0f)
+		{
+			lost = true;
+			return;
+		}
+
         health -= dmg;
     }
 
-    int Update()
+    int Update(float deltatime)
     {
-        if (health <= 0.0f)
+		if (lost)
+		{
+			lost_timer -= deltatime;
+		}
+		else
+		{
+			lost_timer = 3.0f;
+		}
+		if (health <= 0.0f)
         {
+			lost_timer = 3.0f;
             health = 10.0f;
             m_path.clear();
             return 1; //Dead
         }
-        else if(health > 15.0f)
+        else if(health > 15.0f || lost_timer <= 0.0f)
         {
+			lost_timer = 3.0f;
             health = 10.0f;
             m_path.clear();
             return 3; //Stuck
@@ -56,8 +74,8 @@ public:
                 m_target = m_path.front();
             return 0;
         }
-        x += speed*dir.x;
-        y += speed*dir.y;
+        x += deltatime*speed*dir.x;
+        y += deltatime*speed*dir.y;
 
         return 0;
     }
@@ -73,6 +91,8 @@ public:
     }
     void SetPath(std::vector<Node*> path)
     {
+		lost = false;
+
         m_path = path;
         if (m_path.size() == 0)return;
         m_target = m_path.front();
@@ -94,4 +114,6 @@ public:
     Color3f color;
     float speed;
     float health;
+	bool lost;
+	float lost_timer;
 };

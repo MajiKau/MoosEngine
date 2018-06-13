@@ -58,6 +58,7 @@ set (MOOSE_CORE_API
         ${CMAKE_CURRENT_LIST_DIR}/headers/Vector.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Quadtree.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Octree.h
+        ${CMAKE_CURRENT_LIST_DIR}/headers/Vehicle.h
 )
 
 #Add files that are internal. (Internal headers and sources and also sources for

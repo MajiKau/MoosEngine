@@ -260,9 +260,9 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
 
 void Mesh::Render()
 {
-    glEnableVertexAttribArray(0);
+    /*glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(2);*/
 
     for (unsigned int i = 0; i < m_Entries.size(); i++) {
         
@@ -272,11 +272,11 @@ void Mesh::Render()
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Entries[i].IB);
-        GLuint err = glGetError();
+        /*GLuint err = glGetError();
         if (GLEW_OK != err)
         {
             printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-        }
+        }*/
         const unsigned int MaterialIndex = m_Entries[i].MaterialIndex;
 
         if (MaterialIndex < m_Textures.size() && m_Textures[MaterialIndex]) {
@@ -285,26 +285,26 @@ void Mesh::Render()
         if (MaterialIndex < m_Textures_Specular.size() && m_Textures_Specular[MaterialIndex]) {
             m_Textures_Specular[MaterialIndex]->Bind(GL_TEXTURE1);
         }
-        err = glGetError();
+        /*err = glGetError();
         if (GLEW_OK != err)
         {
             printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-        }
+        }*/
 
 
 
         glDrawElements(GL_TRIANGLES, m_Entries[i].NumIndices, GL_UNSIGNED_INT, 0); 
-        err = glGetError();
+        /*err = glGetError();
         if (GLEW_OK != err)
         {
             printf("||%s||", gluErrorString(err));// glewGetErrorString(err));
-        }
+        }*/
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    /*glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glActiveTexture(GL_TEXTURE0);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(2);*/
 }

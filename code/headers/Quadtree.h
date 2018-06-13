@@ -32,31 +32,37 @@ public:
 				nodes[i]->Render(renderer);
 			}
 		}
-		std::vector<Point2> linestrip =
+		float lines[] =
 		{
-			{ bounds.x,bounds.y },
-		{ bounds.x + bounds.w,bounds.y  },
-		{ bounds.x + bounds.w,bounds.y + bounds.h },
-		{ bounds.x ,bounds.y + bounds.h },
-		{ bounds.x ,bounds.y  }
+			 bounds.x,0,bounds.y ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x + bounds.w,0,bounds.y  ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x + bounds.w,0,bounds.y  ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x + bounds.w,0,bounds.y + bounds.h ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x + bounds.w,0,bounds.y + bounds.h ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x ,0,bounds.y + bounds.h ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x ,0,bounds.y + bounds.h ,BLUE.r,BLUE.g,BLUE.b,
+		 bounds.x ,0,bounds.y , BLUE.r,BLUE.g,BLUE.b
 		};
-		renderer->RenderLineStrip(linestrip, BLUE);
+		renderer->RenderLines(lines, 4);
 
 		for (int i = 0; i < objects.size(); i++)
 		{
 			if (objects[i] != NULL)
 			{
 				Rectangle2D rect = objects[i]->Rect();
-				std::vector<Point2> linestrip =
+				float lines2[] =
 				{
-					{ rect.x,rect.y  },
-				{ rect.x + rect.w,rect.y  },
-				{ rect.x + rect.w,rect.y + rect.h },
-				{ rect.x ,rect.y + rect.h },
-				{ rect.x ,rect.y  }
+					 rect.x,0,rect.y  ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x + rect.w,0,rect.y  ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x + rect.w,0,rect.y  ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x + rect.w,0,rect.y + rect.h ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x + rect.w,0,rect.y + rect.h ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x ,0,rect.y + rect.h ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x ,0,rect.y + rect.h ,YELLOW.r,YELLOW.g,YELLOW.b,
+				 rect.x ,0,rect.y  ,YELLOW.r,YELLOW.g,YELLOW.b
 				};
-				renderer->RenderLineStrip(linestrip, YELLOW);
-				renderer->RenderRegularTriangle({ rect.x + rect.w / 2.0f,rect.y + rect.h / 2.0f }, 0.1f, 0, YELLOW);
+				renderer->RenderLines(lines2, 4);
+				//renderer->RenderRegularTriangle({ rect.x + rect.w / 2.0f,rect.y + rect.h / 2.0f }, 0.1f, 0, YELLOW);
 			}
 		}
 	}
