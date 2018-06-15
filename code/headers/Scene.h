@@ -8,6 +8,9 @@ public:
 	Scene() {};
 	void Update(float deltaTime);
 	void Render(BatchRenderer* renderer);
+
+	Entity* SpawnEntity();
+
 private:
 	std::vector<Entity*> m_entities;
 };

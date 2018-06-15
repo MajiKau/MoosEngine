@@ -2,6 +2,9 @@
 #include "RenderFunctions.h"
 #include "Animation.h"
 
+class AnimationController;
+class Animation;
+
 class Entity
 {
 public:
@@ -20,8 +23,10 @@ public:
 
 	glm::vec3 GetWorldPosition();
 	glm::mat4 GetWorldPose();
-private:
 
+	void AddMesh(std::string mesh);
+	void AddAnimation(Animation animation);
+private:
 
 	glm::vec3 m_position;
 	glm::quat m_rotation;

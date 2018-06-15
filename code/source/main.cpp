@@ -109,6 +109,8 @@ bool showdebug = false;
 
 Vehicle tank;
 
+Scene MainScene;
+
 bool IsKeySpecial(unsigned char key)
 {
     if (key == 127	//Delete
@@ -484,6 +486,16 @@ void GameInit()
 		}
 	}
 	
+	Entity* e1 = MainScene.SpawnEntity();
+	e1->AddMesh("v_platform_left");
+	Animation a1(NULL, { glm::vec3(-30, 20, 0),glm::quat() }, { glm::vec3(0.0f, 20.0f, 0.0f) , glm::quat() }, 10.0f);
+	e1->AddAnimation(a1);
+
+	Entity* e2 = MainScene.SpawnEntity();
+	e2->AddMesh("v_platform_right");
+	Animation a2(NULL, { glm::vec3(30, 20, 0) ,glm::quat() }, { glm::vec3(0.0f, 20.0f, 0.0f), glm::quat() }, 10.0f);
+	e2->AddAnimation(a2);
+	//e2->SetLocalPose(glm::translate(glm::vec3(0.0f, 20.0f, 0.0f))*glm::rotate(PI / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
 }
 
 
@@ -513,6 +525,8 @@ void renderScene(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Rendering
+
+	MainScene.Render(renderer);
 
 	test_octree.Render(renderer);
 	follower_quadtree.Render(renderer);
@@ -740,12 +754,14 @@ bool PlaceTurretAt(Vector3f pos)
 void game()
 {
     //UPDATES
-    double deltaTime = glutGet(GLUT_ELAPSED_TIME) - totalTime;
+    float deltaTime = glutGet(GLUT_ELAPSED_TIME) - totalTime;
     deltaTime /= 1000.0f;
     if (deltaTime > 1.0f)
     {
         deltaTime = 1.0f;
     }
+
+	MainScene.Update(deltaTime);
 
 	tank.Update(deltaTime);
 

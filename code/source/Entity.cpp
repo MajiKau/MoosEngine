@@ -1,11 +1,13 @@
 #include "code/headers/Entity.h"
+#define GLM_ENABLE_EXPERIMENTAL
 #include <gtx/matrix_decompose.hpp>
+#include <gtx/rotate_vector.hpp>
 
 Entity::Entity()
 {
 	m_position = glm::vec3();
 	m_rotation = glm::quat();
-	m_animations = NULL;
+	m_animations = new AnimationController();
 	m_parent = NULL;
 }
 
@@ -62,7 +64,9 @@ void Entity::SetLocalPose(glm::mat4 pose)
 
 glm::mat4 Entity::GetLocalPose()
 {
-	return  glm::mat4(m_rotation)*glm::translate(glm::mat4(),m_position);
+	//glm::mat4 r(m_rotation);
+	//glm::mat4 t = glm::translate(m_position);
+	return  glm::mat4(m_rotation)*glm::translate(m_position);
 }
 
 glm::vec3 Entity::GetWorldPosition()
@@ -81,10 +85,25 @@ glm::mat4 Entity::GetWorldPose()
 {
 	if (m_parent)
 	{
-		return m_parent->GetWorldPose() + GetLocalPose();
+		//TODO: Might be wrong? Test?
+		return m_parent->GetWorldPose() * GetLocalPose();
 	}
 	else
 	{
 		return GetLocalPose();
 	}
+}
+
+void Entity::AddMesh(std::string mesh)
+{
+	m_meshes.emplace_back(mesh);
+}
+
+void Entity::AddAnimation(Animation animation)
+{
+	if (animation.GetTarget() == NULL)
+	{
+		animation.SetTarget(this);
+	}
+	m_animations->AddAnimation(animation);
 }

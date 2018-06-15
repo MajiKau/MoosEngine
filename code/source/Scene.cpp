@@ -15,3 +15,10 @@ void Scene::Render(BatchRenderer * renderer)
 		entity->Render(renderer);
 	}
 }
+
+Entity * Scene::SpawnEntity()
+{
+	Entity* new_entity = new Entity();
+	m_entities.emplace_back(new_entity);
+	return new_entity;
+}
