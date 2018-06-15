@@ -370,6 +370,10 @@ public:
 		m_loaded_meshes.insert({ "tank_bottom",new Mesh("Content/Models/Tank/tank_bottom.obj") });
 		m_loaded_meshes.insert({ "tank_top",new Mesh("Content/Models/Tank/tank_top.obj") });
 
+		m_loaded_meshes.insert({ "v_platform_full",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_full.obj") });
+		m_loaded_meshes.insert({ "v_platform_left",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_left.obj") });
+		m_loaded_meshes.insert({ "v_platform_right",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_right.obj") });
+
 
         //CUBE
         {
@@ -501,6 +505,8 @@ public:
         light.Position = { 200,100,200 };
         m_point_light.push_back(light);
 
+		m_default_material = Material();
+		m_default_material.shininess = 32.0f;
         //m_texture_new = new Texture(GL_TEXTURE_2D, "test.png");
         //m_texture_new->Load();
 	}
@@ -1380,5 +1386,5 @@ private:
     std::map<std::string, Mesh*> m_loaded_meshes;
     std::vector<std::tuple<std::string, glm::mat4, Material>> m_meshes;
 
-
+	Material m_default_material;
 };

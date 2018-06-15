@@ -25,6 +25,7 @@
 #include "code/headers/Octree.h"
 
 #include "code/headers/Vehicle.h"
+#include "code/headers/Scene.h"
 
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
@@ -630,6 +631,13 @@ void renderScene(void)
         renderer->RenderMesh("f16", modelMat, DefaultMaterial);
     }
 
+	modelMat = glm::translate(glm::vec3(0, 100, 0));
+	renderer->RenderMesh("v_platform_full", modelMat, DefaultMaterial);
+	modelMat = glm::translate(glm::vec3(-10, 100, 0));
+	renderer->RenderMesh("v_platform_left", modelMat, DefaultMaterial);
+	modelMat = glm::translate(glm::vec3(10, 100, 0));
+	renderer->RenderMesh("v_platform_right", modelMat, DefaultMaterial);
+
     //Render Player
 	tank.Render(renderer);
     /*modelMat = glm::translate(glm::vec3(renderer->Camera.Position.x, 2, renderer->Camera.Position.z))*glm::rotate(renderer->Camera.Rotation.x - PI / 2.0f, glm::vec3(0, 1, 0));
@@ -887,7 +895,7 @@ void game()
     {
         speed = 200.0f;
     }
-	/*if (GetAsyncKeyState(0x57))
+	if (GetAsyncKeyState(0x57))
 	{
 		renderer->Camera.Position += Forward * speed * (float)deltaTime;
 	}
@@ -902,7 +910,7 @@ void game()
 	if (GetAsyncKeyState(0x44))
 	{
 		renderer->Camera.Position += Right * speed * (float)deltaTime;
-	}*/
+	}
 	
 	if (GetAsyncKeyState(0x57))//W
 	{
@@ -954,8 +962,8 @@ void game()
 
 	}
 
-	glm::mat4 rotation = glm::eulerAngleY(renderer->Camera.Rotation.x)*glm::eulerAngleX(renderer->Camera.Rotation.y);
-	renderer->Camera.Position = glm::vec4(tank.GetPosition(),1.0f) + rotation * glm::translate(glm::vec3(0,0,10))* glm::vec4(0,0,0,1);
+	/*glm::mat4 rotation = glm::eulerAngleY(renderer->Camera.Rotation.x)*glm::eulerAngleX(renderer->Camera.Rotation.y);
+	renderer->Camera.Position = glm::vec4(tank.GetPosition(),1.0f) + rotation * glm::translate(glm::vec3(0,0,10))* glm::vec4(0,0,0,1);*/
 
     /*if (inputManager->IsKeyDown('w'))
     {
