@@ -27,7 +27,15 @@ public:
 	void AddMesh(std::string mesh);
 	void AddAnimation(Animation animation);
 	void PlayAnimation(std::string name);
+
+	Entity* SpawnChild();
+	void AddChild(Entity* child);
+
+	void _RemoveChild(Entity* child);
+	void _SetParent(Entity* parent);
+
 private:
+
 
 	glm::vec3 m_position;
 	glm::quat m_rotation;

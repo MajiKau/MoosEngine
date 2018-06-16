@@ -456,8 +456,9 @@ std::vector<Cuboid> test_objects;
 
 Quadtree<Follower> follower_quadtree(0, { -500,-500,1000,1000 });
 
-Entity* e1;
-Entity* e2;
+Entity* left_entity;
+Entity* right_entity;
+Entity* tank_entity;
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -498,29 +499,33 @@ void GameInit()
 	anim1.SetLooping(true);
 
 	Animation left("left");
-	left.AddKeyFrame(0.0f, Pose(glm::vec3(0, 20, 0), glm::quat()));
-	left.AddKeyFrame(1.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
-	left.AddKeyFrame(2.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
-	left.AddKeyFrame(4.0f, Pose(glm::vec3(-10, 40, 0), glm::quat()));
+	left.AddKeyFrame(0.0f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	left.AddKeyFrame(1.5f, Pose(glm::vec3(-4, 40, 0), glm::quat()));
+	left.AddKeyFrame(1.6f, Pose(glm::vec3(0, 30, 0), glm::quat()));
+	left.AddKeyFrame(3.6f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	left.SetLooping(true);
 
 	Animation right("right");
-	right.AddKeyFrame(0.0f, Pose(glm::vec3(0, 20, 0), glm::quat()));
-	right.AddKeyFrame(1.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
-	right.AddKeyFrame(2.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
-	right.AddKeyFrame(4.0f, Pose(glm::vec3(10, 40, 0), glm::quat()));
+	right.AddKeyFrame(0.0f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	right.AddKeyFrame(1.5f, Pose(glm::vec3(4, 40, 0), glm::quat()));
+	right.AddKeyFrame(1.6f, Pose(glm::vec3(0, 30, 0), glm::quat()));
+	right.AddKeyFrame(3.6f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	right.SetLooping(true);
 
-	e1 = MainScene.SpawnEntity();
-	e1->AddMesh("v_platform_left");
-	e1->AddAnimation(anim1);
-	e1->AddAnimation(left);
+	left_entity = MainScene.SpawnEntity();
+	left_entity->AddMesh("v_platform_left");
+	left_entity->AddAnimation(anim1);
+	left_entity->AddAnimation(left);
 
-	e2 = MainScene.SpawnEntity();
-	e2->AddMesh("v_platform_right");
-	e2->AddAnimation(anim1);
-	e2->AddAnimation(right);
+	right_entity = MainScene.SpawnEntity();
+	right_entity->AddMesh("v_platform_right");
+	right_entity->AddAnimation(anim1);
+	right_entity->AddAnimation(right);
 	//e2->SetLocalPose(glm::translate(glm::vec3(0.0f, 20.0f, 0.0f))*glm::rotate(PI / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-	
+	tank_entity = right_entity->SpawnChild();
+	tank_entity->AddMesh("fulltank");
+	tank_entity->SetLocalPosition({ 0,1,0 });
 }
 
 
@@ -860,16 +865,16 @@ void game()
 	//TODO:
 	if (inputManager->IsKeyPressed('m'))
 	{
-		e1->PlayAnimation("left");
-		e2->PlayAnimation("right");
+		left_entity->PlayAnimation("left");
+		right_entity->PlayAnimation("right");
 	}
 
 
 	if (inputManager->IsKeyPressed('n'))
-		e1->PlayAnimation("anim1");
+		left_entity->PlayAnimation("anim1");
 
 	if (inputManager->IsKeyPressed('b'))
-		e2->PlayAnimation("left");
+		right_entity->PlayAnimation("left");
 
 	//Turret placing
     /*if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))

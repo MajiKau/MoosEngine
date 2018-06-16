@@ -113,3 +113,42 @@ void Entity::PlayAnimation(std::string name)
 {
 	m_animations->PlayAnimation(name);
 }
+
+Entity * Entity::SpawnChild()
+{
+	Entity* new_entity = new Entity(); 
+	new_entity->_SetParent(this);
+	m_entities.emplace_back(new_entity);
+	return new_entity;
+}
+
+void Entity::AddChild(Entity * child)
+{
+	if (child)
+	{
+		child->_SetParent(this);
+	}
+	m_entities.emplace_back(child);
+}
+
+void Entity::_RemoveChild(Entity * child)
+{
+	for (int i=0;i< m_entities.size();i++)
+	{
+		if (m_entities[i] == child)
+		{
+			m_entities[i]->_SetParent(NULL);
+			m_entities.erase(m_entities.begin() + i);
+			return;
+		}
+	}
+}
+
+void Entity::_SetParent(Entity * parent)
+{
+	if (m_parent)
+	{
+		m_parent->_RemoveChild(this);
+	}
+	m_parent = parent;
+}
