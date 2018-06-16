@@ -456,6 +456,8 @@ std::vector<Cuboid> test_objects;
 
 Quadtree<Follower> follower_quadtree(0, { -500,-500,1000,1000 });
 
+Entity* e1;
+Entity* e2;
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -485,17 +487,40 @@ void GameInit()
 			}
 		}
 	}
-	
-	Entity* e1 = MainScene.SpawnEntity();
-	e1->AddMesh("v_platform_left");
-	Animation a1(NULL, { glm::vec3(-30, 20, 0),glm::quat() }, { glm::vec3(0.0f, 20.0f, 0.0f) , glm::quat() }, 10.0f);
-	e1->AddAnimation(a1);
 
-	Entity* e2 = MainScene.SpawnEntity();
+	Animation anim1("anim1");
+	anim1.AddKeyFrame(0.0f, Pose(glm::vec3(-30, 20, 0), glm::quat()));
+	anim1.AddKeyFrame(8.0f, Pose(glm::vec3(0.0f, 20.0f, 0.0f), glm::quat()));
+	anim1.AddKeyFrame(1.6f, Pose(glm::vec3(30, 20, 0), glm::quat()));
+	anim1.AddKeyFrame(26.0f, Pose(glm::vec3(40.0f, 40.0f, 40.0f), glm::quat()));
+	anim1.AddKeyFrame(4.3f, Pose(glm::vec3(-30, 25, 0), glm::quat()));
+	anim1.AddKeyFrame(15.1f, Pose(glm::vec3(-30, 10, 0), glm::quat()));
+	anim1.SetLooping(true);
+
+	Animation left("left");
+	left.AddKeyFrame(0.0f, Pose(glm::vec3(0, 20, 0), glm::quat()));
+	left.AddKeyFrame(1.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	left.AddKeyFrame(2.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	left.AddKeyFrame(4.0f, Pose(glm::vec3(-10, 40, 0), glm::quat()));
+
+	Animation right("right");
+	right.AddKeyFrame(0.0f, Pose(glm::vec3(0, 20, 0), glm::quat()));
+	right.AddKeyFrame(1.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	right.AddKeyFrame(2.5f, Pose(glm::vec3(0, 40, 0), glm::quat()));
+	right.AddKeyFrame(4.0f, Pose(glm::vec3(10, 40, 0), glm::quat()));
+
+	e1 = MainScene.SpawnEntity();
+	e1->AddMesh("v_platform_left");
+	e1->AddAnimation(anim1);
+	e1->AddAnimation(left);
+
+	e2 = MainScene.SpawnEntity();
 	e2->AddMesh("v_platform_right");
-	Animation a2(NULL, { glm::vec3(30, 20, 0) ,glm::quat() }, { glm::vec3(0.0f, 20.0f, 0.0f), glm::quat() }, 10.0f);
-	e2->AddAnimation(a2);
+	e2->AddAnimation(anim1);
+	e2->AddAnimation(right);
 	//e2->SetLocalPose(glm::translate(glm::vec3(0.0f, 20.0f, 0.0f))*glm::rotate(PI / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+	
 }
 
 
@@ -832,6 +857,20 @@ void game()
     if (inputManager->IsKeyPressed('r'))
         reset();
 
+	//TODO:
+	if (inputManager->IsKeyPressed('m'))
+	{
+		e1->PlayAnimation("left");
+		e2->PlayAnimation("right");
+	}
+
+
+	if (inputManager->IsKeyPressed('n'))
+		e1->PlayAnimation("anim1");
+
+	if (inputManager->IsKeyPressed('b'))
+		e2->PlayAnimation("left");
+
 	//Turret placing
     /*if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))
     {
@@ -1146,7 +1185,7 @@ int main(int argc, char **argv) {
 
     GameInit();
 
-	printf("%s\n",glGetString(GL_EXTENSIONS));
+	//printf("%s\n",glGetString(GL_EXTENSIONS));
 	
 	wglSwapIntervalEXT(0);
     // enter GLUT event processing loop

@@ -11,28 +11,55 @@ struct Pose
 	glm::quat Rotation;
 };
 
+struct KeyFrame
+{
+	KeyFrame(float _time, Pose _pose) :time(_time), pose(_pose) {};
+	float time;
+	Pose pose;
+};
+
 class Animation
 {
 public:
-	Animation(Entity* target, Pose start, Pose end, float time_in_seconds);
+	Animation(std::string name);
+	//Animation(Entity* target, Pose start, Pose end, float time_in_seconds);
 	Animation();
 	void SetTarget(Entity* target);
 	Entity* GetTarget();
 
-	void SetTransformation(Pose start, Pose end);
+	std::string GetName();
 
-	void Play(bool start_from_beginning = false);
+	//void SetTransformation(Pose start, Pose end);
+	void SetLooping(bool loops);
+
+	void Play(bool start_from_beginning);
 	void Stop();
 	void Update(float deltaTime);
 
+	void AddKeyFrame(float time, Pose pose);
+	void AddKeyFrame(KeyFrame keyframe);
+
 private:
+
+	void _SortKeyframes();
+
+	std::string m_name;
+	std::vector<KeyFrame> m_keyframes;
+	int m_current_frame;
+
 	Entity * m_target;
+	//float m_length;
+	float m_current_time;
+
+	float m_progress;
 	Pose m_start_pose;
 	Pose m_end_pose;
+
 	bool m_playing;
-	float m_length;
-	float m_progress;
+	bool m_looping;
 };
+
+
 
 class AnimationController
 {
@@ -40,6 +67,8 @@ public:
 	AnimationController() {};
 	void Update(float deltaTime);
 	void AddAnimation(Animation animation);
+
+	void PlayAnimation(std::string name);
 private:
 	std::vector<Animation> m_animations;
 };

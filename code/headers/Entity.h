@@ -26,6 +26,7 @@ public:
 
 	void AddMesh(std::string mesh);
 	void AddAnimation(Animation animation);
+	void PlayAnimation(std::string name);
 private:
 
 	glm::vec3 m_position;

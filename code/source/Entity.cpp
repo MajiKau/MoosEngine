@@ -105,5 +105,11 @@ void Entity::AddAnimation(Animation animation)
 	{
 		animation.SetTarget(this);
 	}
+	animation.Play(true);
 	m_animations->AddAnimation(animation);
+}
+
+void Entity::PlayAnimation(std::string name)
+{
+	m_animations->PlayAnimation(name);
 }
