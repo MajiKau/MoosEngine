@@ -178,12 +178,25 @@ void AnimationController::AddAnimation(Animation animation)
 
 void AnimationController::PlayAnimation(std::string name)
 {
+	bool found = false;
 	for (int i = 0; i < m_animations.size(); i++)
 	{
 		m_animations[i].Stop();
 		if (name == m_animations[i].GetName())
 		{
-			m_animations[i].Play(true);
+			if (!found)
+			{
+				m_animations[i].Play(true);
+				found = true;
+			}
+			else
+			{
+				printf("Found another animation with the same name: %s\n", name);	
+			}
 		}
+	}
+	if (!found)
+	{
+		printf("Animation not found: %s\n", name);
 	}
 }

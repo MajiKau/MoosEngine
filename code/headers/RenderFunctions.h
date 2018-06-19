@@ -373,6 +373,7 @@ public:
 		m_loaded_meshes.insert({ "v_platform_full",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_full.obj") });
 		m_loaded_meshes.insert({ "v_platform_left",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_left.obj") });
 		m_loaded_meshes.insert({ "v_platform_right",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_right.obj") });
+		m_loaded_meshes.insert({ "v_platform_frame",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_frame.obj") });
 
 
         //CUBE
