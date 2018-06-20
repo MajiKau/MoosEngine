@@ -101,6 +101,7 @@ void Animation::Update(float deltaTime)
 		else
 		{
 			m_current_time = m_keyframes[last_frame].time;
+			m_playing = false;
 		}
 		m_current_frame = 0;
 	}

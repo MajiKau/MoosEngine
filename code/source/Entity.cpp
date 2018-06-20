@@ -7,7 +7,8 @@ Entity::Entity()
 {
 	m_position = glm::vec3();
 	m_rotation = glm::quat();
-	m_animations = new AnimationController();
+	m_animations = new AnimationController(); 
+	m_rigidbody = new Rigidbody(this);
 	m_parent = NULL;
 }
 
@@ -22,7 +23,12 @@ void Entity::Update(float deltaTime)
 	{
 		m_animations->Update(deltaTime);
 	}
-	
+
+	if (m_rigidbody)
+	{
+		m_rigidbody->Update(deltaTime);
+	}
+
 }
 
 void Entity::Render(BatchRenderer * renderer)
@@ -47,6 +53,11 @@ glm::vec3 Entity::GetLocalPosition()
 	return m_position;
 }
 
+void Entity::Translate(glm::vec3 translation)
+{
+	m_position += translation;
+}
+
 void Entity::SetLocalRotation(glm::quat rotation)
 {
 	m_rotation = rotation;
@@ -55,6 +66,11 @@ void Entity::SetLocalRotation(glm::quat rotation)
 glm::quat Entity::GetLocalRotation()
 {
 	return m_rotation;
+}
+
+void Entity::Rotate(glm::quat rotation)
+{
+	m_rotation += rotation;
 }
 
 void Entity::SetLocalPose(glm::mat4 pose)
@@ -81,6 +97,11 @@ glm::vec3 Entity::GetWorldPosition()
 	}
 }
 
+void Entity::SetWorldPosition(glm::vec3 position)
+{
+	m_position = position - (GetWorldPosition() - m_position);
+}
+
 glm::mat4 Entity::GetWorldPose()
 {
 	if (m_parent)
@@ -105,13 +126,23 @@ void Entity::AddAnimation(Animation animation)
 	{
 		animation.SetTarget(this);
 	}
-	animation.Play(true);
+	//animation.Play(true);
 	m_animations->AddAnimation(animation);
 }
 
 void Entity::PlayAnimation(std::string name)
 {
 	m_animations->PlayAnimation(name);
+}
+
+void Entity::EnableRigidbody()
+{
+	m_rigidbody->Enable();
+}
+
+void Entity::DisableRigidbody()
+{
+	m_rigidbody->Disable();
 }
 
 Entity * Entity::SpawnChild()

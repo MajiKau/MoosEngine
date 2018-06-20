@@ -462,6 +462,7 @@ Entity* platform_entity;
 Entity* left_entity;
 Entity* right_entity;
 Entity* tank_entity;
+Entity* tank_rb_entity;
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -548,7 +549,8 @@ void GameInit()
 	right_entity->AddAnimation(right);
 	//e2->SetLocalPose(glm::translate(glm::vec3(0.0f, 20.0f, 0.0f))*glm::rotate(PI / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-	tank_entity = platform_entity->SpawnChild();
+	tank_rb_entity = platform_entity->SpawnChild();
+	tank_entity = tank_rb_entity->SpawnChild();
 	tank_entity->AddMesh("fulltank");
 	tank_entity->AddAnimation(tank);
 	//tank_entity->SetLocalPosition({ 0,1,0 });
@@ -906,8 +908,17 @@ void game()
 		right_entity->PlayAnimation("");
 		left_entity->PlayAnimation("");
 		platform_entity->PlayAnimation("");
+		tank_entity->PlayAnimation("");
 	}
-
+	if (inputManager->IsKeyPressed('i'))
+	{
+		tank_rb_entity->EnableRigidbody();
+	}
+	if (inputManager->IsKeyPressed('o'))
+	{
+		tank_rb_entity->DisableRigidbody();
+		tank_rb_entity->SetLocalPosition({ 0,0,0 });
+	}
 	//Turret placing
     /*if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))
     {

@@ -62,6 +62,7 @@ set (MOOSE_CORE_API
         ${CMAKE_CURRENT_LIST_DIR}/headers/Scene.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Animation.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Entity.h
+        ${CMAKE_CURRENT_LIST_DIR}/headers/Rigidbody.h
 )
 
 #Add files that are internal. (Internal headers and sources and also sources for
@@ -79,6 +80,7 @@ set (MOOSE_CORE_INTERNAL
         ${CMAKE_CURRENT_LIST_DIR}/source/Scene.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Animation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Entity.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/source/Rigidbody.cpp
 )
 
 #**********************************************************************************
