@@ -36,6 +36,7 @@ public:
 
 	void EnableRigidbody();
 	void DisableRigidbody();
+	Rigidbody* GetRidigbody();
 
 	Entity* SpawnChild();
 	void AddChild(Entity* child);

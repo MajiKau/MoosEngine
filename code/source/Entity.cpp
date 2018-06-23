@@ -6,7 +6,7 @@
 Entity::Entity()
 {
 	m_position = glm::vec3();
-	m_rotation = glm::quat();
+	m_rotation = glm::quat(1,0,0,0);
 	m_animations = new AnimationController(); 
 	m_rigidbody = new Rigidbody(this);
 	m_parent = NULL;
@@ -70,7 +70,7 @@ glm::quat Entity::GetLocalRotation()
 
 void Entity::Rotate(glm::quat rotation)
 {
-	m_rotation += rotation;
+	m_rotation *= rotation;
 }
 
 void Entity::SetLocalPose(glm::mat4 pose)
@@ -82,7 +82,8 @@ glm::mat4 Entity::GetLocalPose()
 {
 	//glm::mat4 r(m_rotation);
 	//glm::mat4 t = glm::translate(m_position);
-	return  glm::mat4(m_rotation)*glm::translate(m_position);
+	glm::mat4 res = glm::mat4_cast(m_rotation)*glm::translate(m_position);
+	return res;
 }
 
 glm::vec3 Entity::GetWorldPosition()
@@ -143,6 +144,11 @@ void Entity::EnableRigidbody()
 void Entity::DisableRigidbody()
 {
 	m_rigidbody->Disable();
+}
+
+Rigidbody * Entity::GetRidigbody()
+{
+	return m_rigidbody;
 }
 
 Entity * Entity::SpawnChild()

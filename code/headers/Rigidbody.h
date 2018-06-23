@@ -16,6 +16,9 @@ public:
 	void SetMass(float mass);
 	float GetMass();
 
+	void SetVelocity(glm::vec3 velocity);
+	glm::vec3 GetVelocity();
+
 	void Update(float deltaTime);
 
 private:

@@ -461,8 +461,12 @@ Entity* frame_entity;
 Entity* platform_entity;
 Entity* left_entity;
 Entity* right_entity;
+
 Entity* tank_entity;
 Entity* tank_rb_entity;
+Entity* tank_bot_entity;
+Entity* tank_top_entity;
+
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -551,9 +555,16 @@ void GameInit()
 
 	tank_rb_entity = platform_entity->SpawnChild();
 	tank_entity = tank_rb_entity->SpawnChild();
-	tank_entity->AddMesh("fulltank");
+	//tank_entity->AddMesh("fulltank");
 	tank_entity->AddAnimation(tank);
-	//tank_entity->SetLocalPosition({ 0,1,0 });
+	tank_entity->SetLocalPosition({ 0,1,0 });
+	tank_bot_entity = tank_entity->SpawnChild();
+	tank_bot_entity->AddMesh("tank_bottom");
+	tank_top_entity = tank_bot_entity->SpawnChild();
+	tank_top_entity->AddMesh("tank_top");
+	tank_top_entity->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), -10.1f, { 0,1,0 }));
+
+
 }
 
 
@@ -811,84 +822,84 @@ bool PlaceTurretAt(Vector3f pos)
 
 void game()
 {
-    //UPDATES
-    float deltaTime = glutGet(GLUT_ELAPSED_TIME) - totalTime;
-    deltaTime /= 1000.0f;
-    if (deltaTime > 1.0f)
-    {
-        deltaTime = 1.0f;
-    }
+	//UPDATES
+	float deltaTime = glutGet(GLUT_ELAPSED_TIME) - totalTime;
+	deltaTime /= 1000.0f;
+	if (deltaTime > 1.0f)
+	{
+		deltaTime = 1.0f;
+	}
 
 	MainScene.Update(deltaTime);
 
 	tank.Update(deltaTime);
 
-    totalTime = (float)glutGet(GLUT_ELAPSED_TIME);
+	totalTime = (float)glutGet(GLUT_ELAPSED_TIME);
 
-    //PATHFINDING
-    Node* target = nodes.front();
-    float distance = 1000;
-    for each (Node* node in nodes)
-    {
-        float distance2 = DistanceSquared({ renderer->Camera.Position.x, renderer->Camera.Position.z }, { node->x,node->y });
-        if (distance2 < distance)
-        {
-            target = node;
-            distance = distance2;
-        }
-    }
+	//PATHFINDING
+	Node* target = nodes.front();
+	float distance = 1000;
+	for each (Node* node in nodes)
+	{
+		float distance2 = DistanceSquared({ renderer->Camera.Position.x, renderer->Camera.Position.z }, { node->x,node->y });
+		if (distance2 < distance)
+		{
+			target = node;
+			distance = distance2;
+		}
+	}
 	std::vector<Node*> new_path;
-    for (int i = 0; i < pathfindingUpdates; i++)
-    {
-        Follower* fol = followers[followerUpdateIterator];
+	for (int i = 0; i < pathfindingUpdates; i++)
+	{
+		Follower* fol = followers[followerUpdateIterator];
 
-        followerUpdateIterator++;
-        if (followerUpdateIterator >= followerAmount)followerUpdateIterator = 0;
+		followerUpdateIterator++;
+		if (followerUpdateIterator >= followerAmount)followerUpdateIterator = 0;
 
-        new_path = DoPathFinding(fol->m_target, target);
-        if (new_path.size() != 0)
-            fol->SetPath(new_path);
+		new_path = DoPathFinding(fol->m_target, target);
+		if (new_path.size() != 0)
+			fol->SetPath(new_path);
 
-        
-    }
-    //Turrets damage followers
-    for each (Follower* fol in followers)
-    {
-        for each (Turret* tur in turrets)
-        {
-            distance = Distance({ tur->m_position.x,tur->m_position.z }, { fol->x,fol->y });
-            if (distance < 30)
-            {
-                fol->Damage(tur->m_damage*(float)deltaTime);
-            }
 
-        }
-    }
+	}
+	//Turrets damage followers
+	for each (Follower* fol in followers)
+	{
+		for each (Turret* tur in turrets)
+		{
+			distance = Distance({ tur->m_position.x,tur->m_position.z }, { fol->x,fol->y });
+			if (distance < 30)
+			{
+				fol->Damage(tur->m_damage*(float)deltaTime);
+			}
 
-    //INPUTS
-    if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock)
-    {
-        renderer->Camera.Rotation.x += mouseDelta.x*0.001f;
-        renderer->Camera.Rotation.y += mouseDelta.y*0.001f;
-    }
+		}
+	}
 
-    float dist = 1;;
-    if (glm::intersectRayPlane(renderer->Camera.Position, renderer->Camera.Forward, glm::vec3(0, 4.5f, 0), glm::vec3(0, 1, 0), dist))
-    {
-        cursor = renderer->Camera.Position + renderer->Camera.Forward * dist;
-    }
-    else
-    {
-        cursor = renderer->Camera.Position;
-        cursor.y = 4.5f;
-    }
+	//INPUTS
+	if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock)
+	{
+		renderer->Camera.Rotation.x += mouseDelta.x*0.001f;
+		renderer->Camera.Rotation.y += mouseDelta.y*0.001f;
+	}
 
-    //Escape -> Exit
-    if (inputManager->IsKeyDown(27))
-        glutExit();
+	float dist = 1;;
+	if (glm::intersectRayPlane(renderer->Camera.Position, renderer->Camera.Forward, glm::vec3(0, 4.5f, 0), glm::vec3(0, 1, 0), dist))
+	{
+		cursor = renderer->Camera.Position + renderer->Camera.Forward * dist;
+	}
+	else
+	{
+		cursor = renderer->Camera.Position;
+		cursor.y = 4.5f;
+	}
 
-    if (inputManager->IsKeyPressed('r'))
-        reset();
+	//Escape -> Exit
+	if (inputManager->IsKeyDown(27))
+		glutExit();
+
+	if (inputManager->IsKeyPressed('r'))
+		reset();
 
 	//TODO:
 	if (inputManager->IsKeyPressed('m'))
@@ -919,6 +930,39 @@ void game()
 		tank_rb_entity->DisableRigidbody();
 		tank_rb_entity->SetLocalPosition({ 0,0,0 });
 	}
+
+	glm::vec3 dir(0.0f, 0.0f, 0.0f);
+	if (inputManager->IsSpecialDown(GLUT_KEY_UP))
+	{
+		dir.z = 1.0f;
+	}
+	else if (inputManager->IsSpecialDown(GLUT_KEY_DOWN))
+	{
+		dir.z = -1.0f;
+	}
+	if (inputManager->IsSpecialDown(GLUT_KEY_LEFT))
+	{
+		dir.x = 1.0f;
+	}
+	else if (inputManager->IsSpecialDown(GLUT_KEY_RIGHT))
+	{
+		dir.x = -1.0f;
+	}
+	if (dir.x != 0.0f || dir.z != 0.0f)
+	{
+		dir = glm::normalize(dir);
+	}
+	if (inputManager->IsKeyDown('q'))
+	{
+		tank_top_entity->Rotate(glm::rotate(glm::quat(1, 0, 0, 0), 2.0f*deltaTime, { 0,1,0 }));
+	}
+	else if (inputManager->IsKeyDown('e'))
+	{
+		tank_top_entity->Rotate(glm::rotate(glm::quat(1, 0, 0, 0), -2.0f*deltaTime, { 0,1,0 }));
+	}
+	dir *= 10.0f;
+	tank_rb_entity->GetRidigbody()->SetVelocity({ dir.x, tank_rb_entity->GetRidigbody()->GetVelocity().y, dir.z });
+
 	//Turret placing
     /*if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))
     {

@@ -29,6 +29,16 @@ float Rigidbody::GetMass()
 	return m_mass;
 }
 
+void Rigidbody::SetVelocity(glm::vec3 velocity)
+{
+	m_velocity = velocity;
+}
+
+glm::vec3 Rigidbody::GetVelocity()
+{
+	return m_velocity;
+}
+
 void Rigidbody::Update(float deltaTime)
 {
 	if (!m_enabled)
