@@ -1,0 +1,29 @@
+Name: Wave
+Looping: 1
+Animation Components: 5
+Hierarchy:0
+Child
+Frames: 3
+Time: 0 Pos:10 10 0 Rot: 0.99875 0 -0.0499792 0 Scale: 1 1 1
+Time: 1 Pos:10 10 0 Rot: 0.99875 0 0.0499792 0 Scale: 0.5 5 3
+Time: 2 Pos:10 10 0 Rot: 0.99875 0 -0.0499792 0 Scale: 1 1 1
+Hierarchy:1
+Child: 0 
+Frames: 3
+Time: 0 Pos:1 4 0 Rot: 1 0 0 0 Scale: 2 2 2
+Time: 1 Pos:-1 4 0 Rot: 1 0 0 0 Scale: 2 2 2
+Time: 2 Pos:1 4 0 Rot: 1 0 0 0 Scale: 2 2 2
+Hierarchy:1
+Child: 1 
+Frames: 1
+Time: 0 Pos:0 0 0 Rot: 1 0 0 0 Scale: 4 6 1
+Hierarchy:1
+Child: 2 
+Frames: 3
+Time: 0 Pos:2 2 0 Rot: 1 0 0 0 Scale: 1 1 1
+Time: 1 Pos:2 2 0 Rot: 0.866025 0 0 0.5 Scale: 1 1 1
+Time: 2 Pos:2 2 0 Rot: 1 0 0 0 Scale: 1 1 1
+Hierarchy:2
+Child: 2 : 0 
+Frames: 1
+Time: 0 Pos:1.5 0 0 Rot: 1 0 0 0 Scale: 3 1 1

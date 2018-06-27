@@ -7,6 +7,7 @@ Entity::Entity()
 {
 	m_position = glm::vec3();
 	m_rotation = glm::quat(1,0,0,0);
+	m_scale = glm::vec3(1, 1, 1);
 	m_animations = new AnimationController(); 
 	m_rigidbody = new Rigidbody(this);
 	m_parent = NULL;
@@ -39,7 +40,7 @@ void Entity::Render(BatchRenderer * renderer)
 	}
 	for each (auto mesh in m_meshes)
 	{
-		renderer->RenderMesh(mesh, GetWorldPose(), Material());
+		renderer->RenderMesh(mesh, GetWorldModelMatrix(), Material());
 	}
 }
 
@@ -78,12 +79,34 @@ void Entity::SetLocalPose(glm::mat4 pose)
 	glm::decompose(pose, glm::vec3(), m_rotation, m_position, glm::vec3(), glm::vec4());
 }
 
-glm::mat4 Entity::GetLocalPose()
+void Entity::SetLocalPose(Pose pose)
+{
+	m_position = pose.Position;
+	m_rotation = pose.Rotation;
+	m_scale = pose.Scale;
+}
+
+Pose Entity::GetLocalPose()
+{
+	return Pose(m_position, m_rotation, m_scale);
+}
+
+glm::mat4 Entity::GetLocalModelMatrix()
 {
 	//glm::mat4 r(m_rotation);
 	//glm::mat4 t = glm::translate(m_position);
-	glm::mat4 res = glm::mat4_cast(m_rotation)*glm::translate(m_position);
+	glm::mat4 res = glm::translate(m_position)*glm::mat4_cast(m_rotation)*glm::scale(m_scale);
 	return res;
+}
+
+void Entity::SetLocalScale(glm::vec3 scale)
+{
+	m_scale = scale;
+}
+
+glm::vec3 Entity::GetLocalScale()
+{
+	return m_scale;
 }
 
 glm::vec3 Entity::GetWorldPosition()
@@ -103,16 +126,16 @@ void Entity::SetWorldPosition(glm::vec3 position)
 	m_position = position - (GetWorldPosition() - m_position);
 }
 
-glm::mat4 Entity::GetWorldPose()
+glm::mat4 Entity::GetWorldModelMatrix()
 {
 	if (m_parent)
 	{
 		//TODO: Might be wrong? Test?
-		return m_parent->GetWorldPose() * GetLocalPose();
+		return m_parent->GetWorldModelMatrix() * GetLocalModelMatrix();
 	}
 	else
 	{
-		return GetLocalPose();
+		return GetLocalModelMatrix();
 	}
 }
 
@@ -166,6 +189,16 @@ void Entity::AddChild(Entity * child)
 		child->_SetParent(this);
 	}
 	m_entities.emplace_back(child);
+}
+
+Entity * Entity::GetChild(int index)
+{
+	if (m_entities.size() <= index)
+	{
+		printf("Child doesn't exist!\n");
+		return NULL;
+	}
+	return m_entities[index];
 }
 
 void Entity::_RemoveChild(Entity * child)

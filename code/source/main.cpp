@@ -86,11 +86,11 @@ std::vector<Follower*> followers;
 std::vector<Turret*> turrets;
 
 float score = 500.0f;
-int followerAmount = 1000;
+int followerAmount = 1;
 int followerUpdateIterator = 0;
 int pathfindingUpdates = 50;
 int nodenum = 1000;
-int wallnum = 1000;
+int wallnum = 0;
 
 glm::vec3 cursor;
 bool showTurret = false;
@@ -467,6 +467,8 @@ Entity* tank_rb_entity;
 Entity* tank_bot_entity;
 Entity* tank_top_entity;
 
+Entity* wave_entity;
+
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -510,7 +512,12 @@ void GameInit()
 	platform.AddKeyFrame(1.5f, Pose(glm::vec3(4, -20, 0), glm::quat()));
 	platform.AddKeyFrame(2.0f, Pose(glm::vec3(0, -20, 0), glm::quat()));
 	platform.AddKeyFrame(3.0f, Pose(glm::vec3(0, -20, 0), glm::quat()));
-	platform.AddKeyFrame(5.0f, Pose(glm::vec3(0, 0, 0), glm::quat()));
+	platform.AddKeyFrame(5.0f, Pose(glm::vec3(0, 0, 0), glm::quat())); 
+	//platform.SaveAnimation("plat.txt");
+
+	//Animation platformtest("");
+	//platformtest.LoadAnimation("plat.txt");
+
 	//platform.SetLooping(true);
 
 	Animation left("left");
@@ -564,7 +571,41 @@ void GameInit()
 	tank_top_entity->AddMesh("tank_top");
 	tank_top_entity->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), -10.1f, { 0,1,0 }));
 
+	{
+		Animation wave_animation("Wave");
+		wave_animation.SetLooping(true);
 
+		wave_animation.AddKeyFrame(0.0f, Pose({ 10.0f,10.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), -0.1f, glm::vec3(0, 1, 0)), { 1,1,1 }), {});//PARENT
+		wave_animation.AddKeyFrame(1.0f, Pose({ 10.0f,10.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), 0.1f, glm::vec3(0, 1, 0)), { 0.5f,5.0f,3.0f }), {});//PARENT
+		wave_animation.AddKeyFrame(2.0f, Pose({ 10.0f,10.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), -0.1f, glm::vec3(0, 1, 0)), { 1,1,1 }), {});//PARENT
+
+		wave_animation.AddKeyFrame(0.0f, Pose({ 1.0f,4.0f,0.0f }, { 1,0,0,0 }, { 2,2,2 }), { 0 });//HEAD
+		wave_animation.AddKeyFrame(1.0f, Pose({ -1.0f,4.0f,0.0f }, { 1,0,0,0 }, { 2,2,2 }), { 0 });//HEAD
+		wave_animation.AddKeyFrame(2.0f, Pose({ 1.0f,4.0f,0.0f }, { 1,0,0,0 }, { 2,2,2 }), { 0 });//HEAD
+
+		wave_animation.AddKeyFrame(0.0f, Pose({ 0.0f,0.0f,0.0f }, { 1,0,0,0 }, { 4,6,1 }), { 1 });//BODY
+
+		wave_animation.AddKeyFrame(0.0f, Pose({ 2.0f,2.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), 0.0f, glm::vec3(0, 0, 1)), { 1,1,1 }), { 2 });//HAND_JOINT
+		wave_animation.AddKeyFrame(1.0f, Pose({ 2.0f,2.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), PI / 3.0f, glm::vec3(0, 0, 1)), { 1,1,1 }), { 2 });//HAND_JOINT
+		wave_animation.AddKeyFrame(2.0f, Pose({ 2.0f,2.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), 0.0f, glm::vec3(0, 0, 1)), { 1,1,1 }), { 2 });//HAND_JOINT
+
+		wave_animation.AddKeyFrame(0.0f, Pose({ 1.5f,0.0f,0.0f }, { 1,0,0,0 }, { 3,1,1 }), { 2,0 });//HAND
+
+		wave_animation.SaveAnimation("SimpleWaveTest.txt");
+
+		wave_entity = MainScene.SpawnEntity();
+		wave_entity->AddAnimation(wave_animation);
+		Entity* head = wave_entity->SpawnChild();
+		head->AddMesh("Cube");
+		Entity* body = wave_entity->SpawnChild();
+		body->AddMesh("Cube");
+		Entity* hand_joint = wave_entity->SpawnChild();
+		Entity* hand = hand_joint->SpawnChild();
+		hand->AddMesh("Cube");
+
+		wave_entity->SetLocalPosition({ 10,100,10 });
+		wave_entity->PlayAnimation("Wave"); 
+	}
 }
 
 
@@ -912,7 +953,10 @@ void game()
 
 
 	if (inputManager->IsKeyPressed('n'))
+	{
 		platform_entity->PlayAnimation("anim1");
+		wave_entity->SetLocalPosition(cursor);
+	}
 
 	if (inputManager->IsKeyPressed('b'))
 	{

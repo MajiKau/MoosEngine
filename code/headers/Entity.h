@@ -6,6 +6,7 @@
 class AnimationController;
 class Animation;
 class Rigidbody;
+struct Pose;
 
 class Entity
 {
@@ -23,12 +24,17 @@ public:
 	void Rotate(glm::quat rotation);
 
 	void SetLocalPose(glm::mat4 pose);
-	glm::mat4 GetLocalPose();
+	void SetLocalPose(Pose pose);
+	Pose GetLocalPose();
+
+	void SetLocalScale(glm::vec3 scale);
+	glm::vec3 GetLocalScale();
 
 	glm::vec3 GetWorldPosition();
 	void SetWorldPosition(glm::vec3 position);
 
-	glm::mat4 GetWorldPose();
+	glm::mat4 GetLocalModelMatrix();
+	glm::mat4 GetWorldModelMatrix();
 
 	void AddMesh(std::string mesh);
 	void AddAnimation(Animation animation);
@@ -40,6 +46,7 @@ public:
 
 	Entity* SpawnChild();
 	void AddChild(Entity* child);
+	Entity* GetChild(int index);
 
 	void _RemoveChild(Entity* child);
 	void _SetParent(Entity* parent);
@@ -49,6 +56,7 @@ private:
 
 	glm::vec3 m_position;
 	glm::quat m_rotation;
+	glm::vec3 m_scale;
 	std::vector<Entity*> m_entities;
 	std::vector<std::string> m_meshes;
 	AnimationController* m_animations;
