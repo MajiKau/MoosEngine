@@ -12,8 +12,14 @@ class Entity
 {
 public:
 	Entity();
+	Entity(std::string name);
 	void Update(float deltaTime);
 	void Render(BatchRenderer* renderer);
+
+	void SetName(std::string name);
+	std::string GetName();
+
+	int GetId();
 
 	void SetLocalPosition(glm::vec3 position);
 	glm::vec3 GetLocalPosition();
@@ -45,14 +51,20 @@ public:
 	Rigidbody* GetRidigbody();
 
 	Entity* SpawnChild();
+	Entity* SpawnChild(std::string name);
 	void AddChild(Entity* child);
 	Entity* GetChild(int index);
+	std::vector<Entity*> GetChildren();
+	Entity* FindChildWithId(int id);
+	Entity* FindChildWithName(std::string name);
 
 	void _RemoveChild(Entity* child);
 	void _SetParent(Entity* parent);
 
-private:
+	static int GetAmount();
 
+private:
+	static int amount;
 
 	glm::vec3 m_position;
 	glm::quat m_rotation;
@@ -63,4 +75,7 @@ private:
 	Rigidbody* m_rigidbody;
 
 	Entity* m_parent;
+
+	std::string m_name;
+	int m_id;
 };

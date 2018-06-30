@@ -105,7 +105,7 @@ void Animation::Update(float deltaTime)
 
 	for (int i = 0; i < m_animation.m_keyframes.size(); i++)
 	{
-		int last_frame = m_animation.m_keyframes[i].second.size() - 1;
+		int last_frame = (int)m_animation.m_keyframes[i].second.size() - 1;
 		int current_frame = 0;
 		Entity* target = m_parent;
 
@@ -186,7 +186,7 @@ void Animation::AddKeyFrame(KeyFrame keyframe, std::vector<int> child)
 	if (index == -1)
 	{
 		m_animation.m_keyframes.push_back({ child,{ keyframe } });
-		index = m_animation.m_keyframes.size() - 1;
+		index = (int)m_animation.m_keyframes.size() - 1;
 	}
 	else
 	{
@@ -200,7 +200,7 @@ void Animation::AddKeyFrame(KeyFrame keyframe, std::vector<int> child)
 	}
 
 	printf("Animation: %s(%d)\n",m_animation.m_name.c_str(),index);
-	printf("Frames: %d\n", m_animation.m_keyframes[index].second.size());
+	printf("Frames: %d\n", (int)m_animation.m_keyframes[index].second.size());
 	int i = 0;
 	for each(auto frame in m_animation.m_keyframes[index].second)
 	{
@@ -303,12 +303,12 @@ void AnimationController::PlayAnimation(std::string name)
 			}
 			else
 			{
-				printf("Found another animation with the same name: %s\n", name);	
+				printf("Found another animation with the same name: %s\n", name.c_str());	
 			}
 		}
 	}
 	if (!found)
 	{
-		printf("Animation not found: %s\n", name);
+		printf("Animation not found: %s\n", name.c_str());
 	}
 }

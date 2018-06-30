@@ -155,6 +155,10 @@ void KeyboardSpecial(int key, int x, int y)
     ImGuiIO& io = ImGui::GetIO();
     io.KeysDown[key] = true;
 
+	int mods = glutGetModifiers();
+	io.KeyCtrl = GLUT_ACTIVE_CTRL & mods;
+	io.KeyShift = GLUT_ACTIVE_SHIFT & mods;
+	io.KeyAlt = GLUT_ACTIVE_ALT & mods;
 }
 void KeyboardSpecialUp(int key, int x, int y)
 {
@@ -162,6 +166,11 @@ void KeyboardSpecialUp(int key, int x, int y)
 
     ImGuiIO& io = ImGui::GetIO();
     io.KeysDown[key] = false;
+
+	int mods = glutGetModifiers();
+	io.KeyCtrl = GLUT_ACTIVE_CTRL & mods;
+	io.KeyShift = GLUT_ACTIVE_SHIFT & mods;
+	io.KeyAlt = GLUT_ACTIVE_ALT & mods;
 }
 void MouseMove(int x, int y)
 {
@@ -203,15 +212,21 @@ void Mouse(int button, int state, int x, int y)
         io.MouseDown[1] = !state;
         break;
     case 3:
-        //printf("Scroll Up\n");
+		io.MouseWheel = 1.0f;
         break;
     case 4:
-        //printf("Scroll Down\n");
+		io.MouseWheel = -1.0f;
         break;
     default:
         printf("Unknown Mouse Button:%d\n", button);
         break;
     }
+}
+void MouseWheel(int wheel, int direction, int x, int y)//Not used!
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)x, (float)y);
+	io.MouseWheel = direction;
 }
 
 // Initialize OpenGL and ImGui
@@ -229,67 +244,153 @@ void init()
 
 }
 
+int selected_tree_node = 0;
+void EntityToTreeNode(Entity* entity)
+{
+	std::vector<Entity*> children = entity->GetChildren();
+	if (children.size() == 0)
+	{
+		ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick
+			| (selected_tree_node == entity->GetId() ? ImGuiTreeNodeFlags_Selected : 0) 
+			| ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+		ImGui::TreeNodeEx(entity->GetName().c_str(), node_flags); 
+		if (ImGui::IsItemClicked())
+		{
+			selected_tree_node = entity->GetId();
+		}
+	}
+	else
+	{
+		ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick
+			| (selected_tree_node == entity->GetId() ? ImGuiTreeNodeFlags_Selected : 0);
+		bool node_open = ImGui::TreeNodeEx(entity->GetName().c_str(), node_flags);
+		if (ImGui::IsItemClicked())
+		{
+			selected_tree_node = entity->GetId();
+		}
+		if (node_open)
+		{
+			for each (auto child in children)
+			{
+				EntityToTreeNode(child);
+			}
+			ImGui::TreePop();
+		}
+	}
+}
+void EntitiesToTreeNode(std::vector<Entity*> entities)
+{
+	for each (auto entity in entities)
+	{
+		EntityToTreeNode(entity);
+	}
+}
+
 void drawGUI()
 {
 	ImGui_ImplGLUT_NewFrame(screenWidth, screenHeight);
     // Show a simple window
-    {
-        ImGui::Value("Money:", score);
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        if (ImGui::Button("Debug"))
-            showdebug ^= 1;
-        if (showdebug)
-        {
-            static float f = 0.0f;
-            ImGui::Text("Hello, world!");
-            ImGui::Value("MouseX:", inputManager->GetMousePosition()[0]);
-            ImGui::Value("MouseY:", inputManager->GetMousePosition()[1]);
+	{
+		ImGui::Value("Money:", score);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		if (ImGui::Button("Debug"))
+			showdebug ^= 1;
+		if (showdebug)
+		{
+			static float f = 0.0f;
+			ImGui::Text("Hello, world!");
+			ImGui::Value("MouseX:", inputManager->GetMousePosition()[0]);
+			ImGui::Value("MouseY:", inputManager->GetMousePosition()[1]);
 
-            ImGui::InputInt("PointLight", &pLightID, 1);
+			ImGui::InputInt("PointLight", &pLightID, 1);
 
-            ImGui::SliderFloat("Light.R", &(renderer->m_point_light[pLightID].Color.r), 0, 1);
-            ImGui::SliderFloat("Light.G", &(renderer->m_point_light[pLightID].Color.g), 0, 1);
-            ImGui::SliderFloat("Light.B", &(renderer->m_point_light[pLightID].Color.b), 0, 1);
+			ImGui::SliderFloat("Light.R", &(renderer->m_point_light[pLightID].Color.r), 0, 1);
+			ImGui::SliderFloat("Light.G", &(renderer->m_point_light[pLightID].Color.g), 0, 1);
+			ImGui::SliderFloat("Light.B", &(renderer->m_point_light[pLightID].Color.b), 0, 1);
 
-            ImGui::SliderFloat("Light.Ambient", &(renderer->m_point_light[pLightID].AmbientIntensity), 0, 1);
-            ImGui::SliderFloat("Light.Diffuse", &(renderer->m_point_light[pLightID].DiffuseIntensity), 0, 1);
+			ImGui::SliderFloat("Light.Ambient", &(renderer->m_point_light[pLightID].AmbientIntensity), 0, 1);
+			ImGui::SliderFloat("Light.Diffuse", &(renderer->m_point_light[pLightID].DiffuseIntensity), 0, 1);
 
-            ImGui::SliderFloat("Light.X", &(renderer->m_point_light[pLightID].Position.x), -200, 200);
-            ImGui::SliderFloat("Light.Y", &(renderer->m_point_light[pLightID].Position.y), -200, 200);
-            ImGui::SliderFloat("Light.Z", &(renderer->m_point_light[pLightID].Position.z), -200, 200);
+			ImGui::SliderFloat("Light.X", &(renderer->m_point_light[pLightID].Position.x), -200, 200);
+			ImGui::SliderFloat("Light.Y", &(renderer->m_point_light[pLightID].Position.y), -200, 200);
+			ImGui::SliderFloat("Light.Z", &(renderer->m_point_light[pLightID].Position.z), -200, 200);
 
-            ImGui::SliderFloat("LightD.R", &(renderer->m_directional_light.Color.r), 0, 1);
-            ImGui::SliderFloat("LightD.G", &(renderer->m_directional_light.Color.g), 0, 1);
-            ImGui::SliderFloat("LightD.B", &(renderer->m_directional_light.Color.b), 0, 1);
+			ImGui::SliderFloat("LightD.R", &(renderer->m_directional_light.Color.r), 0, 1);
+			ImGui::SliderFloat("LightD.G", &(renderer->m_directional_light.Color.g), 0, 1);
+			ImGui::SliderFloat("LightD.B", &(renderer->m_directional_light.Color.b), 0, 1);
 
-            ImGui::SliderFloat("LightD.Ambient", &(renderer->m_directional_light.AmbientIntensity), 0, 1);
-            ImGui::SliderFloat("LightD.Diffuse", &(renderer->m_directional_light.DiffuseIntensity), 0, 1);
+			ImGui::SliderFloat("LightD.Ambient", &(renderer->m_directional_light.AmbientIntensity), 0, 1);
+			ImGui::SliderFloat("LightD.Diffuse", &(renderer->m_directional_light.DiffuseIntensity), 0, 1);
 
-            ImGui::SliderFloat("LightD.X", &(renderer->m_directional_light.Direction.x), -1, 1);
-            ImGui::SliderFloat("LightD.Y", &(renderer->m_directional_light.Direction.y), -1, 1);
-            ImGui::SliderFloat("LightD.Z", &(renderer->m_directional_light.Direction.z), -1, 1);
+			ImGui::SliderFloat("LightD.X", &(renderer->m_directional_light.Direction.x), -1, 1);
+			ImGui::SliderFloat("LightD.Y", &(renderer->m_directional_light.Direction.y), -1, 1);
+			ImGui::SliderFloat("LightD.Z", &(renderer->m_directional_light.Direction.z), -1, 1);
 
-            ImGui::SliderFloat("Shininess", &(CustomMaterial.shininess), 0, 1024);
+			ImGui::SliderFloat("Shininess", &(CustomMaterial.shininess), 0, 1024);
 
-            ImGui::Checkbox("Rotate Light", &rotateLight);
-            ImGui::SliderFloat("Distance", &lightDistance, 0, 200);
+			ImGui::Checkbox("Rotate Light", &rotateLight);
+			ImGui::SliderFloat("Distance", &lightDistance, 0, 200);
 
-            if (renderer->Blinn)
-            {
-                if (ImGui::Button("Blinn-Phong"))
-                {
-                    renderer->Blinn = false;
-                }
-            }
-            else
-            {
-                if (ImGui::Button("Phong"))
-                {
-                    renderer->Blinn = true;
-                }
-            }
+			if (renderer->Blinn)
+			{
+				if (ImGui::Button("Blinn-Phong"))
+				{
+					renderer->Blinn = false;
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Phong"))
+				{
+					renderer->Blinn = true;
+				}
+			}
 
-        }
+		}
+
+
+		//Entity browser!
+
+
+		ImGui::BeginChild("EntityTree", { 0,200 },true);
+		EntitiesToTreeNode(MainScene.GetChildren());
+		ImGui::EndChild();
+
+		Entity* selected_entity = MainScene.FindEntityWithId(selected_tree_node);
+		if (selected_entity != NULL)
+		{
+			glm::vec3 position = selected_entity->GetLocalPosition();
+			glm::quat rotation = selected_entity->GetLocalRotation();
+			glm::vec3 scale = selected_entity->GetLocalScale();
+			ImGui::BeginChild("EntityInfo", { 0,200 }, true);
+			ImGui::Text(("Name: " + selected_entity->GetName()).c_str());
+			ImGui::DragFloat3("Position", &position[0],0.25f);
+			ImGui::DragFloat4("Rotation", &rotation[0], 0.25f);
+			ImGui::DragFloat3("Scale", &scale[0], 0.25f);
+			static char name[20];
+			ImGui::InputText("NewChildName", name, 20);
+			if (ImGui::Button("SpawnChild"))
+			{
+				if(name[0]!='\0')
+					selected_entity->SpawnChild(name);
+				else
+					selected_entity->SpawnChild();
+			}
+			static char mesh_name[20];
+			ImGui::InputText("NewMeshName", mesh_name, 20);
+			if (ImGui::Button("AddMesh"))
+			{
+				selected_entity->AddMesh(mesh_name);
+			}
+			ImGui::EndChild();
+			selected_entity->SetLocalPosition(position);
+			selected_entity->SetLocalRotation(rotation);
+			selected_entity->SetLocalScale(scale); 
+
+		}
+
+
     }
 
 	ImGui::Render();
@@ -538,36 +639,36 @@ void GameInit()
 	tank.AddKeyFrame(9.0f, Pose(glm::vec3(0, 1, 20), glm::quat()));
 
 
-	fish_entity = MainScene.SpawnEntity();
+	fish_entity = MainScene.SpawnEntity("Platform_Root");
 	fish_entity->SetLocalPosition({ 0,30,0 });
 
-	frame_entity = fish_entity->SpawnChild();
+	frame_entity = fish_entity->SpawnChild("Platform_Frame");
 	frame_entity->AddMesh("v_platform_frame");
 	frame_entity->SetLocalPosition({ 0,0.5f,0 });
 
-	platform_entity = fish_entity->SpawnChild();
+	platform_entity = fish_entity->SpawnChild("Platform_Full");
 	platform_entity->AddMesh("v_platform_left");
 	platform_entity->AddMesh("v_platform_right");
 	platform_entity->AddAnimation(anim1);
 	platform_entity->AddAnimation(platform);
 
-	left_entity = fish_entity->SpawnChild();
+	left_entity = fish_entity->SpawnChild("Platform_Left");
 	left_entity->AddMesh("v_platform_left");
 	left_entity->AddAnimation(left);
 
-	right_entity = fish_entity->SpawnChild();
+	right_entity = fish_entity->SpawnChild("Platform_Right");
 	right_entity->AddMesh("v_platform_right");
 	right_entity->AddAnimation(right);
 	//e2->SetLocalPose(glm::translate(glm::vec3(0.0f, 20.0f, 0.0f))*glm::rotate(PI / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-	tank_rb_entity = platform_entity->SpawnChild();
-	tank_entity = tank_rb_entity->SpawnChild();
+	tank_rb_entity = platform_entity->SpawnChild("Tank");
+	tank_entity = tank_rb_entity->SpawnChild("Tank_Mesh_Root");
 	//tank_entity->AddMesh("fulltank");
 	tank_entity->AddAnimation(tank);
 	tank_entity->SetLocalPosition({ 0,1,0 });
-	tank_bot_entity = tank_entity->SpawnChild();
+	tank_bot_entity = tank_entity->SpawnChild("Tank_Bottom");
 	tank_bot_entity->AddMesh("tank_bottom");
-	tank_top_entity = tank_bot_entity->SpawnChild();
+	tank_top_entity = tank_bot_entity->SpawnChild("Tank_Top");
 	tank_top_entity->AddMesh("tank_top");
 	tank_top_entity->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), -10.1f, { 0,1,0 }));
 
@@ -593,14 +694,14 @@ void GameInit()
 
 		wave_animation.SaveAnimation("SimpleWaveTest.txt");
 
-		wave_entity = MainScene.SpawnEntity();
+		wave_entity = MainScene.SpawnEntity("Person");
 		wave_entity->AddAnimation(wave_animation);
-		Entity* head = wave_entity->SpawnChild();
+		Entity* head = wave_entity->SpawnChild("Head");
 		head->AddMesh("Cube");
-		Entity* body = wave_entity->SpawnChild();
+		Entity* body = wave_entity->SpawnChild("Body");
 		body->AddMesh("Cube");
-		Entity* hand_joint = wave_entity->SpawnChild();
-		Entity* hand = hand_joint->SpawnChild();
+		Entity* hand_joint = wave_entity->SpawnChild("Elbow");
+		Entity* hand = hand_joint->SpawnChild("Arm");
 		hand->AddMesh("Cube");
 
 		wave_entity->SetLocalPosition({ 10,100,10 });
@@ -1314,7 +1415,7 @@ int main(int argc, char **argv) {
 	glutMouseFunc(Mouse);
 	glutPassiveMotionFunc(MouseMove);
 	glutMotionFunc(MouseMove);
-    //glutMouseWheelFunc() //TODO
+	//glutMouseWheelFunc(MouseWheel); //TODO
 
 	//imgui init
 	init();

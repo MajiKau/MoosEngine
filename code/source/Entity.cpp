@@ -3,6 +3,8 @@
 #include <gtx/matrix_decompose.hpp>
 #include <gtx/rotate_vector.hpp>
 
+int Entity::amount = 0;
+
 Entity::Entity()
 {
 	m_position = glm::vec3();
@@ -11,6 +13,26 @@ Entity::Entity()
 	m_animations = new AnimationController(); 
 	m_rigidbody = new Rigidbody(this);
 	m_parent = NULL;
+	
+	m_id = amount;
+	amount++;
+
+	m_name = "Entity"+std::to_string(m_id);
+}
+
+Entity::Entity(std::string name)
+{
+	m_position = glm::vec3();
+	m_rotation = glm::quat(1, 0, 0, 0);
+	m_scale = glm::vec3(1, 1, 1);
+	m_animations = new AnimationController();
+	m_rigidbody = new Rigidbody(this);
+	m_parent = NULL;
+
+	m_id = amount;
+	amount++;
+
+	m_name = name;
 }
 
 void Entity::Update(float deltaTime)
@@ -42,6 +64,21 @@ void Entity::Render(BatchRenderer * renderer)
 	{
 		renderer->RenderMesh(mesh, GetWorldModelMatrix(), Material());
 	}
+}
+
+void Entity::SetName(std::string name)
+{
+	m_name = name;
+}
+
+std::string Entity::GetName()
+{
+	return m_name;
+}
+
+int Entity::GetId()
+{
+	return m_id;
 }
 
 void Entity::SetLocalPosition(glm::vec3 position)
@@ -182,6 +219,14 @@ Entity * Entity::SpawnChild()
 	return new_entity;
 }
 
+Entity * Entity::SpawnChild(std::string name)
+{
+	Entity* new_entity = new Entity(name);
+	new_entity->_SetParent(this);
+	m_entities.emplace_back(new_entity);
+	return new_entity;
+}
+
 void Entity::AddChild(Entity * child)
 {
 	if (child)
@@ -199,6 +244,43 @@ Entity * Entity::GetChild(int index)
 		return NULL;
 	}
 	return m_entities[index];
+}
+
+std::vector<Entity*> Entity::GetChildren()
+{
+	return m_entities;
+}
+
+Entity * Entity::FindChildWithId(int id)
+{
+	for each (auto entity in m_entities)
+	{
+		if (entity->GetId() == id)
+			return entity;
+	}
+	for each (auto entity in m_entities)
+	{
+		Entity* result = entity->FindChildWithId(id);
+		if (result != NULL)
+			return result;
+	}
+	return NULL;
+}
+
+Entity * Entity::FindChildWithName(std::string name)
+{
+	for each (auto entity in m_entities)
+	{
+		if (entity->GetName() == name)
+			return entity;
+	}
+	for each (auto entity in m_entities)
+	{
+		Entity* result = entity->FindChildWithName(name);
+		if (result != NULL)
+			return result;
+	}
+	return NULL;
 }
 
 void Entity::_RemoveChild(Entity * child)
@@ -221,4 +303,9 @@ void Entity::_SetParent(Entity * parent)
 		m_parent->_RemoveChild(this);
 	}
 	m_parent = parent;
+}
+
+int Entity::GetAmount()
+{
+	return amount;
 }
