@@ -290,6 +290,9 @@ void EntitiesToTreeNode(std::vector<Entity*> entities)
 void drawGUI()
 {
 	ImGui_ImplGLUT_NewFrame(screenWidth, screenHeight);
+
+	
+
     // Show a simple window
 	{
 		ImGui::Value("Money:", score);
@@ -348,16 +351,20 @@ void drawGUI()
 			}
 
 		}
-
+	}
 
 		//Entity browser!
-
-
-		ImGui::BeginChild("EntityTree", { 0,200 },true);
+	{
+		ImGui::Begin("Browser");
+		ImGui::BeginChild("EntityTree", { 0,200 }, true);
 		EntitiesToTreeNode(MainScene.GetChildren());
 		ImGui::EndChild();
+		ImGui::End(); 
+	}
 
-		Entity* selected_entity = MainScene.FindEntityWithId(selected_tree_node);
+	Entity* selected_entity = MainScene.FindEntityWithId(selected_tree_node);
+	{
+		ImGui::Begin("Entity");
 		if (selected_entity != NULL)
 		{
 			glm::vec3 position = selected_entity->GetLocalPosition();
@@ -365,14 +372,14 @@ void drawGUI()
 			glm::vec3 scale = selected_entity->GetLocalScale();
 			ImGui::BeginChild("EntityInfo", { 0,200 }, true);
 			ImGui::Text(("Name: " + selected_entity->GetName()).c_str());
-			ImGui::DragFloat3("Position", &position[0],0.25f);
+			ImGui::DragFloat3("Position", &position[0], 0.25f);
 			ImGui::DragFloat4("Rotation", &rotation[0], 0.25f);
 			ImGui::DragFloat3("Scale", &scale[0], 0.25f);
 			static char name[20];
 			ImGui::InputText("NewChildName", name, 20);
 			if (ImGui::Button("SpawnChild"))
 			{
-				if(name[0]!='\0')
+				if (name[0] != '\0')
 					selected_entity->SpawnChild(name);
 				else
 					selected_entity->SpawnChild();
@@ -386,12 +393,105 @@ void drawGUI()
 			ImGui::EndChild();
 			selected_entity->SetLocalPosition(position);
 			selected_entity->SetLocalRotation(rotation);
-			selected_entity->SetLocalScale(scale); 
-
+			selected_entity->SetLocalScale(scale);
 		}
+		ImGui::End();
+	}
+	{
+		ImGui::Begin("Animation"); 
+		KeyFrame frame(0, {});
+		if (selected_entity != NULL)
+		{
+			auto animation_controller = selected_entity->GetAnimationController();
+			auto animations = animation_controller->GetAnimations();
+			int anim_num = 0;
+			static int selected_animation = 0;
+			static int selected_pair = 0;
+			static int selected_keyframe = 0;
+			//Animations inside the animation controller
+			for each (auto animation in animations)
+			{
+				AnimationGroup data = animation.GetAnimationData();
+				if (ImGui::Selectable(data.m_name.c_str(), selected_animation == anim_num, 0, { 0,0 }))
+				{
+					selected_animation = anim_num;
+				}
+				if (ImGui::IsItemClicked())
+				{
+					selected_pair = 0;
+					selected_keyframe = 0;
+				}
+				anim_num++;
+			}
+			ImGui::Separator();
+			if (selected_animation < animations.size())
+			{
+				AnimationGroup data = animations[selected_animation].GetAnimationData();
+
+				ImGui::InputText("Name", &data.m_name[0], 16);
+				ImGui::Checkbox("Loop", &data.m_looping);
 
 
-    }
+				int pair_num = 0;
+				for each (auto pair in data.m_keyframes)
+				{
+					std::string child = selected_entity->GetChild(pair.first)->GetName();
+
+
+					if (ImGui::Selectable(("Anim:" + child).c_str(), selected_pair == pair_num, 0, { 0,0 }))
+					{
+						selected_pair = pair_num;
+					}
+					if (ImGui::IsItemClicked())
+					{
+						selected_keyframe = 0;
+					}
+
+					pair_num++;
+				}
+				ImGui::Separator();
+				if (selected_pair < data.m_keyframes.size())
+				{
+					ImGui::BeginChild("Frames", { 0,45 }, true, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+					int frame_amount = data.m_keyframes[selected_pair].second.size();
+					for (int i = 0; i < frame_amount; i++)
+					{
+						if (ImGui::Selectable(std::to_string(i).c_str(), selected_keyframe == i, 0, { 10,0 }))
+							selected_keyframe = i;
+						if (i + 1 < frame_amount)
+							ImGui::SameLine();
+					}
+					ImGui::EndChild();
+
+					ImGui::Separator();
+
+					if (selected_keyframe < data.m_keyframes[selected_pair].second.size())
+					{
+						frame = data.m_keyframes[selected_pair].second[selected_keyframe];
+					}
+					else
+					{
+						selected_keyframe = 0;
+					}
+				}
+				else
+				{
+					selected_pair = 0;
+				}
+
+				ImGui::DragFloat("Time", &frame.time, 0.05f);
+				ImGui::DragFloat3("Position", &frame.pose.Position[0], 0.05f);
+				ImGui::DragFloat4("Rotation", &frame.pose.Rotation[0], 0.05f);
+				ImGui::DragFloat3("Scale", &frame.pose.Scale[0], 0.05f);
+			}
+		}
+		ImGui::End();
+
+		//Keyframe editing
+		ImGui::Begin("KeyFrame");
+		ImGui::End();
+	}
+
 
 	ImGui::Render();
 }
@@ -595,7 +695,7 @@ void GameInit()
 		{
 			for (int z = -5; z < 5; z++)
 			{
-				test_objects.push_back({ x * 100.0f - rand() % 10,y * 100.0f - rand() % 10,z * 100.0f - rand() % 10,3,6,4 });
+				//test_objects.push_back({ x * 100.0f - rand() % 10,y * 100.0f - rand() % 10,z * 100.0f - rand() % 10,3,6,4 });
 			}
 		}
 	}
@@ -638,9 +738,18 @@ void GameInit()
 	tank.AddKeyFrame(6.0f, Pose(glm::vec3(0, 1, 0), glm::quat()));
 	tank.AddKeyFrame(9.0f, Pose(glm::vec3(0, 1, 20), glm::quat()));
 
+	Entity* ground = MainScene.SpawnEntity("Ground");
+	ground->AddMesh("testcube");
+	ground->SetLocalPosition({ 0,-10,0 });
+	ground->SetLocalScale({ 100,1,100 });
+
+	Entity* cube = MainScene.SpawnEntity("Cube");
+	cube->AddMesh("testcube");
+	cube->SetLocalPosition({ 0,10,0 });
+	cube->SetLocalScale({ 20,20,20 });
 
 	fish_entity = MainScene.SpawnEntity("Platform_Root");
-	fish_entity->SetLocalPosition({ 0,30,0 });
+	fish_entity->SetLocalPosition({ 0,-30,0 });
 
 	frame_entity = fish_entity->SpawnChild("Platform_Frame");
 	frame_entity->AddMesh("v_platform_frame");
@@ -891,11 +1000,11 @@ void renderScene(void)
     //renderer->RenderRegularTetrahedron(renderer->m_point_light[0].Position, 3, Color3f(renderer->m_point_light[0].Color.x, renderer->m_point_light[0].Color.y, renderer->m_point_light[0].Color.z));
     //renderer->RenderRegularTetrahedron(renderer->m_point_light[1].Position, 3, Color3f(renderer->m_point_light[1].Color.x, renderer->m_point_light[1].Color.y, renderer->m_point_light[1].Color.z));
 
-    modelMat = glm::translate(glm::vec3(0.0f, -2.0f, 0.0f));
-    renderer->RenderMesh("flatplane", modelMat, CustomMaterial);
+    /*modelMat = glm::translate(glm::vec3(0.0f, -2.0f, 0.0f));
+    renderer->RenderMesh("flatplane", modelMat, CustomMaterial);*/
 
-	modelMat = glm::translate(glm::vec3(0, -2.0f, 0))*glm::scale(glm::vec3(1000,1,1000));
-	renderer->RenderMesh("Cube", modelMat, DefaultMaterial);
+	/*modelMat = glm::translate(glm::vec3(0, -2.0f, 0))*glm::scale(glm::vec3(1000,1,1000));
+	renderer->RenderMesh("Cube", modelMat, DefaultMaterial);*/
 
     /*modelMat = glm::translate(glm::vec3(0.0f, 90.0f, 0.0f));
     renderer->RenderMesh("flatplane", modelMat, CustomMaterial);*/
@@ -1365,6 +1474,11 @@ void game()
     {
         glutFullScreenToggle();
     }
+
+	if (inputManager->IsSpecialReleased(GLUT_KEY_F5))
+	{
+		renderer->CompileShaders();
+	}
 
     mouseDelta = { 0,0 }; //TODO remove
     inputManager->_Clear();

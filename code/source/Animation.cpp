@@ -62,6 +62,11 @@ Entity * Animation::GetTarget()
 	return m_parent;
 }
 
+void Animation::SetName(std::string name)
+{
+	m_animation.m_name = name;
+}
+
 std::string Animation::GetName()
 {
 	return m_animation.m_name;
@@ -76,6 +81,11 @@ std::string Animation::GetName()
 void Animation::SetLooping(bool loops)
 {
 	m_animation.m_looping = loops;
+}
+
+bool Animation::GetLooping()
+{
+	return m_animation.m_looping;
 }
 
 void Animation::Play(bool start_from_beginning)
@@ -199,12 +209,12 @@ void Animation::AddKeyFrame(KeyFrame keyframe, std::vector<int> child)
 		m_animation.m_end_time = keyframe.time;
 	}
 
-	printf("Animation: %s(%d)\n",m_animation.m_name.c_str(),index);
-	printf("Frames: %d\n", (int)m_animation.m_keyframes[index].second.size());
+	//printf("Animation: %s(%d)\n",m_animation.m_name.c_str(),index);
+	//printf("Frames: %d\n", (int)m_animation.m_keyframes[index].second.size());
 	int i = 0;
 	for each(auto frame in m_animation.m_keyframes[index].second)
 	{
-		printf("[%d]: Time:%.1f Pose:%.1f,%.1f,%.1f\n", i, frame.time,frame.pose.Position.x, frame.pose.Position.y, frame.pose.Position.z);
+		//printf("[%d]: Time:%.1f Pose:%.1f,%.1f,%.1f\n", i, frame.time,frame.pose.Position.x, frame.pose.Position.y, frame.pose.Position.z);
 		i++;
 	}
 }
@@ -212,6 +222,16 @@ void Animation::AddKeyFrame(KeyFrame keyframe, std::vector<int> child)
 void Animation::AddKeyFrame(float time, Pose pose, std::vector<int> child)
 {
 	AddKeyFrame(KeyFrame(time, pose), child);
+}
+
+AnimationGroup Animation::GetAnimationData()
+{
+	return m_animation;
+}
+
+void Animation::SetAnimationData(AnimationGroup data)
+{
+	m_animation = data;
 }
 
 //TODO: Make more readable
@@ -311,4 +331,14 @@ void AnimationController::PlayAnimation(std::string name)
 	{
 		printf("Animation not found: %s\n", name.c_str());
 	}
+}
+
+std::vector<Animation> AnimationController::GetAnimations()
+{
+	return m_animations;
+}
+
+void AnimationController::SetAnimations(std::vector<Animation> animations)
+{
+	m_animations = animations;
 }

@@ -196,6 +196,11 @@ void Entity::PlayAnimation(std::string name)
 	m_animations->PlayAnimation(name);
 }
 
+AnimationController * Entity::GetAnimationController()
+{
+	return m_animations;
+}
+
 void Entity::EnableRigidbody()
 {
 	m_rigidbody->Enable();
@@ -244,6 +249,17 @@ Entity * Entity::GetChild(int index)
 		return NULL;
 	}
 	return m_entities[index];
+}
+
+Entity * Entity::GetChild(std::vector<int> indexes, int _depth)
+{
+	if (indexes.size() == 0)
+		return this;
+
+	if (_depth+1 == indexes.size())
+		return GetChild(indexes[_depth]);
+
+	return GetChild(indexes[_depth])->GetChild(indexes, _depth+1);
 }
 
 std::vector<Entity*> Entity::GetChildren()

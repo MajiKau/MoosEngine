@@ -45,6 +45,7 @@ public:
 	void AddMesh(std::string mesh);
 	void AddAnimation(Animation animation);
 	void PlayAnimation(std::string name);
+	AnimationController* GetAnimationController();
 
 	void EnableRigidbody();
 	void DisableRigidbody();
@@ -54,6 +55,7 @@ public:
 	Entity* SpawnChild(std::string name);
 	void AddChild(Entity* child);
 	Entity* GetChild(int index);
+	Entity* GetChild(std::vector<int> indexes, int _depth = 0);
 	std::vector<Entity*> GetChildren();
 	Entity* FindChildWithId(int id);
 	Entity* FindChildWithName(std::string name);

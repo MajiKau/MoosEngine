@@ -87,11 +87,19 @@ Mesh::Mesh()
     m_Textures.resize(1);
     m_Textures[0] = new Texture(GL_TEXTURE_2D, "Content/Images/white.png");
     m_Textures_Specular.resize(1);
-    m_Textures_Specular[0] = new Texture(GL_TEXTURE_2D, "Content/Images/white.png");
+    m_Textures_Specular[0] = new Texture(GL_TEXTURE_2D, "Content/Images/white.png"); 
+	m_Textures_Normal.resize(1);
+	m_Textures_Normal[0] = new Texture(GL_TEXTURE_2D, "Content/Images/white.png");
 	bool success = m_Textures[0]->Load();
 	assert(success);
 	success = m_Textures_Specular[0]->Load();
-    assert(success);
+    assert(success); 
+	success = m_Textures_Normal[0]->Load();
+}
+
+Mesh::Mesh(const std::string & Filename)
+{
+	LoadMesh(Filename);
 }
 
 
@@ -108,6 +116,9 @@ void Mesh::Clear()
     for (unsigned int i = 0; i < m_Textures_Specular.size(); i++) {
         delete(m_Textures_Specular[i]);
     }
+	for (unsigned int i = 0; i < m_Textures_Normal.size(); i++) {
+		delete(m_Textures_Normal[i]);
+	}
 }
 
 bool Mesh::LoadMesh(const std::string& Filename)
@@ -126,11 +137,14 @@ bool Mesh::LoadMesh(const std::string& Filename)
 
     if (pScene) {
         Ret = InitFromScene(pScene, Filename);
+		if (!Ret)
+		{
+			printf("Error InitFromScene file: '%s'\n", Filename.c_str());
+		}
     }
     else {
         printf("Error parsing '%s': '%s'\n", Filename.c_str(), importer.GetErrorString());
     }
-
     return Ret;
 }
 
@@ -139,6 +153,7 @@ bool Mesh::InitFromScene(const aiScene* pScene, const std::string& Filename)
     m_Entries.resize(pScene->mNumMeshes);
     m_Textures.resize(pScene->mNumMaterials);
     m_Textures_Specular.resize(pScene->mNumMaterials);
+	m_Textures_Normal.resize(pScene->mNumMaterials);
 
     // Initialize the meshes in the scene one by one
     for (unsigned int i = 0; i < m_Entries.size(); i++) {
@@ -159,12 +174,16 @@ void Mesh::InitMesh(unsigned int Index, const aiMesh* paiMesh)
 
     for (unsigned int i = 0; i < paiMesh->mNumVertices; i++) {
         const aiVector3D* pPos = &(paiMesh->mVertices[i]);
-        const aiVector3D* pNormal = paiMesh->HasNormals() ? &(paiMesh->mNormals[i]) : &Zero3D;
         const aiVector3D* pTexCoord = paiMesh->HasTextureCoords(0) ? &(paiMesh->mTextureCoords[0][i]) : &Zero3D;
+        const aiVector3D* pNormal = paiMesh->HasNormals() ? &(paiMesh->mNormals[i]) : &Zero3D;
+		const aiVector3D* pTangent = paiMesh->HasTangentsAndBitangents() ? &(paiMesh->mTangents[i]) : &Zero3D;
+		const aiVector3D* pBitangent = paiMesh->HasTangentsAndBitangents() ? &(paiMesh->mBitangents[i]) : &Zero3D;
        
         Vertex v(Vector3f(pPos->x, pPos->y, pPos->z),
             Vector2f(pTexCoord->x, pTexCoord->y),
-            Vector3f(pNormal->x, pNormal->y, pNormal->z));
+            Vector3f(pNormal->x, pNormal->y, pNormal->z),
+			Vector3f(pTangent->x, pTangent->y, pTangent->z),
+			Vector3f(pBitangent->x, pBitangent->y, pBitangent->z));
 
         Vertices.push_back(v);
     }
@@ -202,7 +221,8 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
 
         m_Textures[i] = NULL;
         m_Textures_Specular[i] = NULL;
-
+		m_Textures_Normal[i] = NULL;
+		
         if (pMaterial->GetTextureCount(aiTextureType_DIFFUSE) > 0) 
         {
             aiString Path;
@@ -212,13 +232,13 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
                 m_Textures[i] = new Texture(GL_TEXTURE_2D, FullPath.c_str());
 
                 if (!m_Textures[i]->Load()) {
-                    printf("Error loading texture '%s'\n", FullPath.c_str());
+                    printf("Error loading DIFF texture '%s'\n", FullPath.c_str());
                     delete m_Textures[i];
                     m_Textures[i] = NULL;
                     Ret = false;
                 }
                 else {
-                    printf("Loaded texture '%s'\n", FullPath.c_str());
+                    printf("Loaded DIFF texture '%s'\n", FullPath.c_str());
                 }
             }
         }
@@ -231,16 +251,35 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
                 m_Textures_Specular[i] = new Texture(GL_TEXTURE_2D, FullPath.c_str());
 
                 if (!m_Textures_Specular[i]->Load()) {
-                    printf("Error loading texture '%s'\n", FullPath.c_str());
+                    printf("Error loading SPEC texture '%s'\n", FullPath.c_str());
                     delete m_Textures_Specular[i];
                     m_Textures_Specular[i] = NULL;
                     Ret = false;
                 }
                 else {
-                    printf("Loaded texture '%s'\n", FullPath.c_str());
+                    printf("Loaded SPEC texture '%s'\n", FullPath.c_str());
                 }
             }
         }
+		if (pMaterial->GetTextureCount(aiTextureType_HEIGHT) > 0)
+		{
+			aiString Path;
+
+			if (pMaterial->GetTexture(aiTextureType_HEIGHT, 0, &Path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+				std::string FullPath = Dir + "/" + Path.data;
+				m_Textures_Normal[i] = new Texture(GL_TEXTURE_2D, FullPath.c_str());
+
+				if (!m_Textures_Normal[i]->Load()) {
+					printf("Error loading NORMAL texture '%s'\n", FullPath.c_str());
+					delete m_Textures_Normal[i];
+					m_Textures_Normal[i] = NULL;
+					Ret = false;
+				}
+				else {
+					printf("Loaded NORMAL texture '%s'\n", FullPath.c_str());
+				}
+			}
+		}
 
         // Load a white texture in case the model does not include its own texture
         if (!m_Textures[i]) {
@@ -253,6 +292,11 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
 
             Ret = m_Textures_Specular[i]->Load();
         }
+		if (!m_Textures_Normal[i]) {
+			m_Textures_Normal[i] = new Texture(GL_TEXTURE_2D, "Content/Images/blue.png");
+
+			Ret = m_Textures_Normal[i]->Load();
+		}
     }
 
     return Ret;
@@ -265,18 +309,38 @@ void Mesh::Render()
     glEnableVertexAttribArray(2);*/
 
     for (unsigned int i = 0; i < m_Entries.size(); i++) {
-        
+		GLuint err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
         glBindBuffer(GL_ARRAY_BUFFER, m_Entries[i].VB);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)12);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20);
-
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)20); 
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)32); 
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
+		glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*)44);
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Entries[i].IB);
-        /*GLuint err = glGetError();
-        if (GLEW_OK != err)
-        {
-            printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-        }*/
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
         const unsigned int MaterialIndex = m_Entries[i].MaterialIndex;
 
         if (MaterialIndex < m_Textures.size() && m_Textures[MaterialIndex]) {
@@ -285,6 +349,9 @@ void Mesh::Render()
         if (MaterialIndex < m_Textures_Specular.size() && m_Textures_Specular[MaterialIndex]) {
             m_Textures_Specular[MaterialIndex]->Bind(GL_TEXTURE1);
         }
+		if (MaterialIndex < m_Textures_Normal.size() && m_Textures_Normal[MaterialIndex]) {
+			m_Textures_Normal[MaterialIndex]->Bind(GL_TEXTURE2);
+		}
         /*err = glGetError();
         if (GLEW_OK != err)
         {

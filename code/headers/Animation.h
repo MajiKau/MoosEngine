@@ -41,10 +41,12 @@ public:
 	void SetTarget(Entity* target);
 	Entity* GetTarget();
 
+	void SetName(std::string name);
 	std::string GetName();
 
 	//void SetTransformation(Pose start, Pose end);
 	void SetLooping(bool loops);
+	bool GetLooping();
 
 	void Play(bool start_from_beginning);
 	void Stop();
@@ -52,6 +54,8 @@ public:
 
 	void AddKeyFrame(KeyFrame keyframe, std::vector<int> child = {});
 	void AddKeyFrame(float time, Pose pose, std::vector<int> child = {});
+	AnimationGroup GetAnimationData();
+	void SetAnimationData(AnimationGroup data);
 
 	void SaveAnimation(std::string file);
 	void LoadAnimation(std::string file);
@@ -89,6 +93,9 @@ public:
 	void AddAnimation(Animation animation);
 
 	void PlayAnimation(std::string name);
+	std::vector<Animation> GetAnimations();
+	void SetAnimations(std::vector<Animation> animations);
+
 private:
 	std::vector<Animation> m_animations;
 };

@@ -1,5 +1,7 @@
 #include "code/headers/RenderFunctions.h"
 
+#include <fstream>
+
 const float PI = 3.14159265359f; 
 
 const Color3f RED = Color3f(1, 0, 0);
@@ -9,9 +11,33 @@ const Color3f WHITE = Color3f(1, 1, 1);
 const Color3f BLACK = Color3f(0, 0, 0);
 const Color3f YELLOW = Color3f(1, 1, 0);
 
-void BatchRenderer::LoadShader(const char* shader)
+GLchar* BatchRenderer::LoadShader(const char* filename)
 {
+	std::ifstream file(filename, std::ios::in | std::ios::binary);
+	file.seekg(0, file.end);
+	int length = file.tellg();
+	file.seekg(0, file.beg);
+	GLchar* data = new GLchar[length + 1];
+	file.read(data, length); 
+	data[length] = '\0';
+	file.close();
+	return data;
 
+	/*FILE* file;
+	fopen_s(&file, filename, "rb");
+
+	if (file == NULL) {
+		std::cerr << "Cannot open shader " << filename << std::endl;
+		abort();
+	}
+
+	fseek(file, 0, SEEK_END);
+	const int size = ftell(file);
+	rewind(file);
+
+	const GLchar* source = new GLchar[size + 1];
+	fread(const_cast<char*>(source), sizeof(char), size, file);
+	const_cast<char&>(source[size]) = '\0';*/
 }
 
 GLuint BatchRenderer::LoadTexture(const char * filename)
@@ -93,6 +119,29 @@ GLint BatchRenderer::compileShader(const char* filename, GLenum type) {
 	}
 
 	return shader;
+}
+
+void BatchRenderer::CompileShaders()
+{
+	//Not textured
+	GLchar* vertex = LoadShader("Content/Shaders/Basic/shader.vertex");
+	GLchar* fragment = LoadShader("Content/Shaders/Basic/shader.fragment");
+	m_shaderprogram = compileShaderProgramDefault(vertex, fragment);
+
+	//Textured
+	vertex = LoadShader("Content/Shaders/Basic_Textured/shader.vertex");
+	fragment = LoadShader("Content/Shaders/Basic_Textured/shader.fragment");
+	m_shaderprogram_textured = compileShaderProgramDefault(vertex, fragment);
+
+	//Better textured
+	vertex = LoadShader("Content/Shaders/MVP_Textured/shader.vertex");
+	fragment = LoadShader("Content/Shaders/MVP_Textured/shader.fragment");
+	m_shaderprogram_mvp_textured = compileShaderProgramDefault(vertex, fragment);
+
+	//Unlit textured
+	vertex = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.vertex");
+	fragment = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.fragment");
+	m_shaderprogram_mvp_textured_unlit = compileShaderProgramDefault(vertex, fragment);
 }
 
 void RenderVector3(Vec3 vector, Color3f color)

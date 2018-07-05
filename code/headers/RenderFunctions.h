@@ -111,29 +111,35 @@ public:
 			"}";
 
 		//TODO
-        const char* vertex_shader_mvp =
+        /*const char* vertex_shader_mvp =
             "#version 430\n"
-            "layout(location = 0) in vec3 vertex_position;"
-            "layout(location = 1) in vec2 texture_coordinate;"
-            "layout(location = 2) in vec3 vertex_normal;"
-            "layout(location = 3) uniform mat4 MVP;"
-            "layout(location = 11) uniform mat4 M;"
-            "layout(location = 12) uniform mat4 V;"
-            "out vec3 Normal0;"
-            "out vec2 tex_coord;"
-            "out vec3 WorldPos0;"
-            "out vec3 FragPos;"
-            "void main() {"
-            "  gl_Position = MVP * vec4(vertex_position, 1.0);"
-            "  FragPos = vec3(M * vec4(vertex_position, 1.0));"
-            "  tex_coord = texture_coordinate;"
-            //"  Normal0 = (M* vec4(vertex_normal,1.0)).xyz;"
-            "  Normal0 = (M * vec4(vertex_normal, 0.0)).xyz;"
-            "  WorldPos0 = (M * vec4(vertex_position, 1.0)).xyz;"
-            "}";
+				"layout(location = 0) in vec3 vertex_position;"
+				"layout(location = 1) in vec2 texture_coordinate;"
+				"layout(location = 2) in vec3 vertex_normal;"
+				"layout(location = 3) uniform mat4 MVP;"
+				"layout(location = 4) in vec3 vertex_tangent;"
+				"layout(location = 5) in vec3 vertex_bitangent;"
+				"layout(location = 11) uniform mat4 M;"
+				"layout(location = 12) uniform mat4 V;"
+				"out vec3 Normal0;"
+				"out vec3 Tangent0;"
+				"out vec3 Bitangent0;"
+				"out vec2 tex_coord;"
+				"out vec3 WorldPos0;"
+				"out vec3 FragPos;"
+				"void main() {"
+				"  gl_Position = MVP * vec4(vertex_position, 1.0);"
+				"  FragPos = vec3(M * vec4(vertex_position, 1.0));"
+				"  tex_coord = texture_coordinate;"
+				//"  Normal0 = (M* vec4(vertex_normal,1.0)).xyz;"
+				"  Normal0 = (M * vec4(vertex_normal, 0.0)).xyz;"
+				"  Tangent0 = (M * vec4(vertex_tangent, 0.0)).xyz;"
+				"  Bitangent0 = (M * vec4(vertex_bitangent, 0.0)).xyz;"
+				"  WorldPos0 = (M * vec4(vertex_position, 1.0)).xyz;"
+				"}";*/
 
-		//TODO
-            const char* fragment_shader_mvp =
+		//TODO: MAYBE CHANGE FACTORS OR SOMETHING I DON'T KNOW
+           /* const char* fragment_shader_mvp =
                 "#version 430\n"
                 "struct PointLight"
                 "{"
@@ -162,6 +168,7 @@ public:
                 "layout(location = 13) uniform Material material;"
                 "layout(location = 17) uniform sampler2D texture;"
                 "layout(location = 18) uniform sampler2D specular_texture;"
+                "layout(location = 28) uniform sampler2D normal_texture;"
                 "layout(location = 23) uniform bool blinn;"
                 "const int MAX_LIGHTS = 10;"
                 "layout(location = 24) uniform int num_lights_p;"
@@ -170,20 +177,22 @@ public:
                 "layout(location = 200) uniform PointLight gPointLight[MAX_LIGHTS];"
                 "in vec3 WorldPos0;"
                 "in vec3 Normal0;"
+                "in vec3 Tangent0;"
+                "in vec3 Bitangent0;"
                 "in vec2 tex_coord;"
                 "in vec3 FragPos;"
                 "out vec4 frag_colour;"
-                "vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir)"//TODO Attenuation
+                "vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, mat3 tbnMat)"//TODO Attenuation
                 "{"
-                "   vec3 lightDir = normalize(light.Position - FragPos); "
-
+                "   vec3 lightDir = tbnMat * normalize(-light.Position + WorldPos0); "
+				"   vec3 WorldPos = tbnMat * WorldPos0;"
 				"   float constant = 1.0f;"//
 				"   float linear = 0.0014f;"//
 				"   float quadratic = 0.000007f;"//
 				"   float distance = length(light.Position - FragPos);"//
 				"   float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));"//
 
-                "   float DiffuseFactor = max(dot(normal, lightDir), 0.0);"
+                "   float DiffuseFactor = max(dot(normal, -lightDir), 0.0);"
                 "   float SpecularFactor = 0.0;"
                 "   if (blinn)"
                 "   {"
@@ -205,10 +214,10 @@ public:
 
                 "   return (AmbientColor + DiffuseColor + SpecularColor);"
                 "}"
-                "vec3 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir)"
+                "vec3 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir, mat3 tbnMat)"
                 "{"
-                "   vec3 lightDir = normalize(-light.Direction);"
-                "   float DiffuseFactor = max(dot(normal, lightDir), 0.0);"
+                "   vec3 lightDir = tbnMat * normalize(light.Direction);"
+                "   float DiffuseFactor = max(dot(normal, -lightDir), 0.0);"
                 "   float SpecularFactor = 0.0;"
                 "   if(blinn)"
                 "   {"
@@ -227,43 +236,28 @@ public:
                 "}"
                 "void main() {"
                 //"  vec3 LightDirection = -gDirectionalLight.Direction; "
-                //"  vec3 LightDirection = normalize(gPointLight.Position - FragPos); "
-                "  vec3 VertexToEye = normalize(gEyeWorldPos - WorldPos0);"
-                //"  vec3 halfwayDir = normalize(LightDirection + VertexToEye);"
+                //"  vec3 LightDirection = normalize(gPointLight.Position - FragPos); " 
                 "  vec3 Normal = normalize(Normal0);"
+                "  vec3 Tangent = normalize(Tangent0);"
+                "  vec3 Bitangent = normalize(Bitangent0);" 
+				//"  Tangent = normalize(Tangent - dot(Tangent, Normal) * Normal);"
+				//"  vec3 Bitangent = cross(Normal, Tangent);"
+				"  mat3 TBN = transpose(mat3("
+				"  Tangent,"
+				"  Bitangent,"
+				"  Normal"
+				"  ));"
+				"  Normal = normalize(texture2D(normal_texture, tex_coord).rgb*2.0 - 1.0);"
+                "  vec3 VertexToEye = TBN * normalize(-gEyeWorldPos + WorldPos0);"
+                //"  vec3 halfwayDir = normalize(LightDirection + VertexToEye);"
                 "  vec3 result = vec3(0.0,0.0,0.0);"
                 "  for (int i = 0; i < num_lights_p; i++)"
-                "    result += CalcPointLight(gPointLight[i], Normal, VertexToEye);"
+                "    result += CalcPointLight(gPointLight[i], Normal, VertexToEye, TBN);"
                 "  for (int i = 0; i < num_lights_d; i++)"
-                "    result += CalcDirectionalLight(gDirectionalLight[i], Normal, VertexToEye);"
+                "    result += CalcDirectionalLight(gDirectionalLight[i], Normal, VertexToEye, TBN);"
                 "  frag_colour = vec4(result, 1.0);"
-                /*"  float DiffuseFactor = dot(Normal, LightDirection);"
-
-                "  vec3 AmbientColor = (gDirectionalLight.Color * gDirectionalLight.AmbientIntensity) * vec3(texture2D(texture, tex_coord));"
-                "  vec3 DiffuseColor = vec3(0, 0, 0);"
-                "  vec3 SpecularColor = vec3(0, 0, 0);"
-                "  if (DiffuseFactor > 0) {"
-                "    DiffuseColor = (gDirectionalLight.Color * gDirectionalLight.DiffuseIntensity)  * DiffuseFactor * vec3(texture2D(texture, tex_coord));"
-                "    if (blinn)"
-                "    {"
-                "      float SpecularFactor = pow(max(dot(Normal, halfwayDir), 0.0), material.shininess); "
-                "      SpecularColor = (gDirectionalLight.Color * gMatSpecularIntensity) * SpecularFactor * vec3(texture2D(specular_texture, tex_coord));"
-                "    }"
-                "    else"
-                "    {"
-                "      vec3 LightReflect = normalize(reflect(-LightDirection, Normal));"
-                "      float SpecularFactor = dot(VertexToEye, LightReflect);"
-                "      if (SpecularFactor > 0) {"
-                "        SpecularFactor = pow(SpecularFactor, material.shininess);"
-                "        SpecularColor = (gDirectionalLight.Color * gMatSpecularIntensity) * SpecularFactor * vec3(texture2D(specular_texture, tex_coord));"
-                "      }"
-                "    }"
-                "  }"
-                "  else {"
-                "    DiffuseColor = vec3(0, 0, 0);"
-                "  }"
-                "  frag_colour = vec4(AmbientColor + DiffuseColor + SpecularColor, 1.0);"*/
-                "}";
+				//"  frag_colour = 0.001 * vec4(result, 1.0) + vec4(normalize(TBN*vec3(1.0,0.2,0.6)),1.0);"
+                "}";*/
 
         //TODO
         const char* vertex_shader_mvp_unlit =
@@ -272,9 +266,13 @@ public:
             "layout(location = 1) in vec2 texture_coordinate;"
             "layout(location = 2) in vec3 vertex_normal;"
             "layout(location = 3) uniform mat4 MVP;"
+            "layout(location = 4) in vec3 vertex_tangent;"
+            "layout(location = 5) in vec3 vertex_bitangent;"
             "layout(location = 11) uniform mat4 M;"
             "layout(location = 12) uniform mat4 V;"
             "out vec3 Normal0;"
+            "out vec3 Tangent0;"
+            "out vec3 Bitangent0;"
             "out vec2 tex_coord;"
             "out vec3 WorldPos0;"
             "void main() {"
@@ -344,7 +342,9 @@ public:
 		glBindVertexArray(0);
 
         //Better textured
-        m_shaderprogram_mvp_textured = compileShaderProgramDefault(vertex_shader_mvp, fragment_shader_mvp);
+		GLchar* vertex = LoadShader("Content/Shaders/MVP_Textured/shader.vertex");
+		GLchar* fragment = LoadShader("Content/Shaders/MVP_Textured/shader.fragment");
+        m_shaderprogram_mvp_textured = compileShaderProgramDefault(vertex, fragment);
         
         //Unlit textured
         m_shaderprogram_mvp_textured_unlit = compileShaderProgramDefault(vertex_shader_mvp_unlit, fragment_shader_mvp_unlit);
@@ -375,12 +375,14 @@ public:
 		m_loaded_meshes.insert({ "v_platform_right",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_right.obj") });
 		m_loaded_meshes.insert({ "v_platform_frame",new Mesh("Content/Models/VehiclePlatform/vehicle_platform_frame.obj") });
 
+		m_loaded_meshes.insert({ "testcube",new Mesh("Content/Models/TestCube/TestCube.obj") });
+
 
         //CUBE
         {
             
             const std::vector<Vertex> cube_vertices = {
-                // positions          // texture coords          // normals 
+                // positions          // texture coords          // normals				//tangents?	//bitangents?
                 Vertex({ -0.5f, -0.5f, -0.5f},  { 0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
                 Vertex({0.5f, -0.5f, -0.5f}, {1.0f, 0.0f }, {0.0f,  0.0f, -1.0f}) ,
                 Vertex({ 0.5f,  0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f,  0.0f, -1.0f}),
@@ -510,6 +512,9 @@ public:
 		m_default_material.shininess = 32.0f;
         //m_texture_new = new Texture(GL_TEXTURE_2D, "test.png");
         //m_texture_new->Load();
+		/*GLchar* test = LoadShader("Content/Shaders/MVP_Textured/shader.vertex");
+		printf("%s\n", test);
+		printf("\n");*/
 	}
 	void Render()
 	{
@@ -548,8 +553,9 @@ public:
         SetFloat(10, 32.0f);//Specular Power
 
         SetInt(18, 1);//Set specular texture to GL_TEXTURE1
+		SetInt(28, 2);//Set normal texture to GL_TEXTURE2
         SetBlinn(Blinn);
-        const std::vector<Vertex> cube_vertices = std::vector<Vertex>
+        /*const std::vector<Vertex> cube_vertices = std::vector<Vertex>
         {
             Vertex({ -0.5f,-0.5f,-0.5f },{ 0.0f,0.0f },{ -0.5f,-0.5f,-0.5f }),
             Vertex({ 0.5f,-0.5f,-0.5f },{ 0.0f,0.0f },{ 0.5f,-0.5f,-0.5f }),
@@ -577,42 +583,122 @@ public:
             0,4,7,
             1,2,6,
             1,5,6
-        }; 
+        }; */
         GLuint err = glGetError();
         if (GLEW_OK != err)
         {
             printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
         }
-
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
+		GLint pos = GetAttributeLocation("vertex_position");
+		glEnableVertexAttribArray(pos);
+		GLint tex = GetAttributeLocation("texture_coordinate");
+		glEnableVertexAttribArray(tex);
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
+		GLint nor = GetAttributeLocation("vertex_normal");
+		glEnableVertexAttribArray(nor);
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
+		GLint tan = GetAttributeLocation("vertex_tangent");
+		GLint test3 = GetAttributeLocation("vertex_bitangent");
+		glEnableVertexAttribArray(tan);
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
+		GLint bit = GetAttributeLocation("vertex_bitangent");
+		glEnableVertexAttribArray(bit);
+		err = glGetError();
+		if (GLEW_OK != err)
+		{
+			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+		}
         for each (auto mo in m_meshes)
         {
+			GLuint err = glGetError();
+			if (GLEW_OK != err)
+			{
+				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+			}
             m_mvp_new = m_projection * m_view *std::get<1>(mo);
             glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]); 
-            GLuint err = glGetError();
-            if (GLEW_OK != err)
-            {
-                printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-            }
+			err = glGetError();
+			if (GLEW_OK != err)
+			{
+				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+			}
             glUniformMatrix4fv(11, 1, GL_FALSE, &std::get<1>(mo)[0][0]);
-            
+			err = glGetError();
+			if (GLEW_OK != err)
+			{
+				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+			}
             if (m_loaded_meshes[std::get<0>(mo)])
             {
                 if (std::get<0>(mo) == "Skybox")
                 {
-                    glUseProgram(m_shaderprogram_mvp_textured_unlit);
-                    glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+                    glUseProgram(m_shaderprogram_mvp_textured_unlit); 
+					err = glGetError();
+					if (GLEW_OK != err)
+					{
+						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+					}
+                    glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]); 
+					err = glGetError();
+					if (GLEW_OK != err)
+					{
+						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+					}
                 }
                 else
                 {
-                    glUseProgram(m_shaderprogram_mvp_textured);
-                    glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-                    SetMaterial(std::get<2>(mo));
+                    glUseProgram(m_shaderprogram_mvp_textured); 
+					err = glGetError();
+					if (GLEW_OK != err)
+					{
+						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+					}
+                    glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]); 
+					err = glGetError();
+					if (GLEW_OK != err)
+					{
+						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+					}
+                    SetMaterial(std::get<2>(mo)); 
+					err = glGetError();
+					if (GLEW_OK != err)
+					{
+						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+					}
+					err = glGetError();
+					if (GLEW_OK != err)
+					{
+						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+					}
                 }
-
-                m_loaded_meshes[std::get<0>(mo)]->Render();
+				err = glGetError();
+				if (GLEW_OK != err)
+				{
+					printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+				}
+                m_loaded_meshes[std::get<0>(mo)]->Render(); 
+				err = glGetError();
+				if (GLEW_OK != err)
+				{
+					printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+				}
             }
         }
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -622,6 +708,8 @@ public:
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
+		glDisableVertexAttribArray(tan);
+		glDisableVertexAttribArray(bit);
          
         err = glGetError();
         if (GLEW_OK != err)
@@ -1095,8 +1183,8 @@ public:
         m_meshes.push_back({ mesh, model_mat, material });
     }
 
-    //TODO: May not work
-	void LoadShader(const char* shader);
+    //Works
+	GLchar* LoadShader(const char* filename);
 
     //TODO: May not work
 	GLuint LoadTexture(const char * filename);
@@ -1182,6 +1270,18 @@ public:
 		return program;
 
 	}
+
+	void CompileShaders();
+
+	GLint GetUniformLocation(GLchar* uniform_name)
+	{
+		return glGetUniformLocation(m_shaderprogram_mvp_textured, uniform_name);
+	}
+	GLint GetAttributeLocation(GLchar* attribute_name)
+	{
+		return glGetAttribLocation(m_shaderprogram_mvp_textured, attribute_name);
+	}
+
     void SetInt(int location, int value)
     {
         glUniform1i(location, value);
