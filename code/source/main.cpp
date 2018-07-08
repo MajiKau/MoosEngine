@@ -464,7 +464,7 @@ void drawGUI()
 					ImGui::EndChild();
 
 					ImGui::Separator();
-
+					assert(data.m_keyframes[selected_pair].second.size() != 0);
 					if (selected_keyframe < data.m_keyframes[selected_pair].second.size())
 					{
 						frame = data.m_keyframes[selected_pair].second[selected_keyframe];
@@ -472,6 +472,7 @@ void drawGUI()
 					else
 					{
 						selected_keyframe = 0;
+						frame = data.m_keyframes[selected_pair].second[selected_keyframe];
 					}
 				}
 				else
@@ -482,7 +483,20 @@ void drawGUI()
 				ImGui::DragFloat("Time", &frame.time, 0.05f);
 				ImGui::DragFloat3("Position", &frame.pose.Position[0], 0.05f);
 				ImGui::DragFloat4("Rotation", &frame.pose.Rotation[0], 0.05f);
-				ImGui::DragFloat3("Scale", &frame.pose.Scale[0], 0.05f);
+				ImGui::DragFloat3("Scale", &frame.pose.Scale[0], 0.05f); 
+				data.m_keyframes[selected_pair].second[selected_keyframe] = frame;
+				animations[selected_animation].SetAnimationData(data);
+				animation_controller->SetAnimations(animations);
+
+				if (ImGui::Button("Save Animation"))
+				{
+					animations[selected_animation].SaveAnimation("Content/Animations/"+data.m_name+".txt");
+				}
+				if (ImGui::Button("Load Animation"))
+				{
+					if(animations[selected_animation].LoadAnimation("Content/Animations/" + data.m_name + ".txt"))
+						animation_controller->SetAnimations(animations);
+				}
 			}
 		}
 		ImGui::End();
@@ -802,6 +816,10 @@ void GameInit()
 		wave_animation.AddKeyFrame(0.0f, Pose({ 1.5f,0.0f,0.0f }, { 1,0,0,0 }, { 3,1,1 }), { 2,0 });//HAND
 
 		wave_animation.SaveAnimation("SimpleWaveTest.txt");
+
+		Animation LoadTestAnimation;
+		LoadTestAnimation.LoadAnimation("SimpleWaveTest.txt");
+		LoadTestAnimation.SaveAnimation("LoadTest.txt");
 
 		wave_entity = MainScene.SpawnEntity("Person");
 		wave_entity->AddAnimation(wave_animation);

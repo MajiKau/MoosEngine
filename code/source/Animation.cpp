@@ -238,49 +238,97 @@ void Animation::SetAnimationData(AnimationGroup data)
 void Animation::SaveAnimation(std::string file)
 {
 	std::ofstream ofile(file);
-	ofile << "Name: " << m_animation.m_name << "\n";
-	ofile << "Looping: " << m_animation.m_looping << "\n";
-	ofile << "Animation Components: " << m_animation.m_keyframes.size() << "\n";
+	ofile << "{\n";
+	ofile << "\t[Name]: " << m_animation.m_name << "\n";
+	ofile << "\t[Looping]: " << m_animation.m_looping << "\n";
+	ofile << "\t[Animation Components]: " << m_animation.m_keyframes.size() << "\n";
+	ofile << "\t{\n";
 	for each(auto animation in m_animation.m_keyframes)
 	{
-		ofile << "Hierarchy:" << animation.first.size() << "\n";
-		ofile << "Child";
+		ofile << "\t\t{\n";
+		ofile << "\t\t\t[Hierarchy]: " << animation.first.size() << "\n";
+		ofile << "\t\t\t[Child]: { ";
 		for each(auto child in animation.first)
 		{
-			ofile << ": " << child << " ";
+			ofile << child << " ";
 		}
-		ofile << "\nFrames: " << animation.second.size() << "\n";
+		ofile << "}\n";
+
+		ofile << "\t\t\t[Frames]: " << animation.second.size() << "\n";
+		ofile << "\t\t\t{\n";
 		for each(auto frame in animation.second)
 		{
-			ofile << "Time: " << frame.time << " Pos:" << frame.pose.Position.x << " " << frame.pose.Position.y << " " << frame.pose.Position.z 
-				<< " Rot: "	<< frame.pose.Rotation.w << " " << frame.pose.Rotation.x << " " << frame.pose.Rotation.y << " " << frame.pose.Rotation.z
-				<< " Scale: " << frame.pose.Scale.x << " " << frame.pose.Scale.y << " " << frame.pose.Scale.z
-				<< "\n";
+			ofile << "\t\t\t\t{\n";
+			ofile << "\t\t\t\t\t[Time]: " << frame.time << "\n";
+			ofile << "\t\t\t\t\t[Position]: { " << frame.pose.Position.x << " " << frame.pose.Position.y << " " << frame.pose.Position.z << " }\n";
+			ofile << "\t\t\t\t\t[Rotation]: { " << frame.pose.Rotation.w << " " << frame.pose.Rotation.x << " " << frame.pose.Rotation.y << " " << frame.pose.Rotation.z << " }\n";
+			ofile << "\t\t\t\t\t[Scale]: { " << frame.pose.Scale.x << " " << frame.pose.Scale.y << " " << frame.pose.Scale.z << " }\n";
+			ofile << "\t\t\t\t}\n";
 		}
+		ofile << "\t\t\t}\n";
+		ofile << "\t\t}\n";
 	}
+	ofile << "\t}\n";
+	ofile << "}\n";
 	ofile.close();
 
 }
 
-//TODO: Make it work
-void Animation::LoadAnimation(std::string file)
+bool Animation::LoadAnimation(std::string file)
 {
-	/*std::ifstream ifile(file);
-	ifile >> m_name;
-	int number_of_frames;
-	ifile >> number_of_frames;
-	ifile >> m_looping;
-	m_keyframes.clear();
-	for (int i=0;i<number_of_frames;i++)
+	std::ifstream ifile(file);
+	if (!ifile)
 	{
-		float time;
-		glm::vec3 position;
-		glm::quat rotation;
-		ifile >> time >> position.x >> position.y >> position.z
-			>> rotation.w >> rotation.x >> rotation.y >> rotation.z;
-		m_keyframes.push_back(KeyFrame(time, Pose(position, rotation)));
+		return false;
 	}
-	ifile.close();*/
+
+	ifile.ignore(2000, ':');
+	ifile >> m_animation.m_name;
+	ifile.ignore(2000, ':');
+	ifile >> m_animation.m_looping;
+	int number_of_components;
+	ifile.ignore(2000, ':');
+	ifile >> number_of_components;
+	m_animation.m_keyframes.clear();
+	for (int i = 0; i < number_of_components; i++)
+	{
+		int depth_of_hierarchy;
+		ifile.ignore(2000, ':');
+		ifile >> depth_of_hierarchy;
+		ifile.ignore(2000, '{');
+		std::vector<int> hierarchy;
+		for (int i = 0; i < depth_of_hierarchy; i++)
+		{
+			int child_id;
+			ifile >> child_id;
+			hierarchy.push_back(child_id);
+		}
+
+		int number_of_frames;
+		ifile.ignore(2000, ':');
+		ifile >> number_of_frames; 
+		std::vector<KeyFrame> keyframes;
+		for (int i = 0; i < number_of_frames; i++)
+		{
+			float time;
+			glm::vec3 position;
+			glm::quat rotation;
+			glm::vec3 scale;
+			ifile.ignore(2000, ':');
+			ifile >> time;
+			ifile.ignore(2000, '{');
+			ifile >> position.x >> position.y >> position.z;
+			ifile.ignore(2000, '{');
+			ifile >> rotation.w >> rotation.x >> rotation.y >> rotation.z;
+			ifile.ignore(2000, '{');
+			ifile >> scale.x >> scale.y >> scale.z;
+			keyframes.push_back(KeyFrame(time, Pose(position, rotation, scale)));
+		}
+		m_animation.m_keyframes.push_back({ hierarchy,  keyframes });
+	}
+
+	ifile.close();
+	return true;
 }
 
 bool IsKeyFrameEarlier(KeyFrame& const k1, KeyFrame& const k2)

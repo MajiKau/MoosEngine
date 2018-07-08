@@ -10,20 +10,20 @@
 			{
 				{
 					[Time]: 0
-					[Position]: { 10 10 0 }
-					[Rotation]: { 0.99875 0 -0.0499792 0 }
+					[Position]: { 10 30 0 }
+					[Rotation]: { 1 0 0 0 }
 					[Scale]: { 1 1 1 }
 				}
 				{
 					[Time]: 1
-					[Position]: { 10 10 0 }
-					[Rotation]: { 0.99875 0 0.0499792 0 }
-					[Scale]: { 0.5 5 3 }
+					[Position]: { 10 30 0 }
+					[Rotation]: { 1 0 0 0 }
+					[Scale]: { 1 1 1 }
 				}
 				{
 					[Time]: 2
-					[Position]: { 10 10 0 }
-					[Rotation]: { 0.99875 0 -0.0499792 0 }
+					[Position]: { 10 30 0 }
+					[Rotation]: { 1 0 0 0 }
 					[Scale]: { 1 1 1 }
 				}
 			}
@@ -35,20 +35,20 @@
 			{
 				{
 					[Time]: 0
-					[Position]: { 1 4 0 }
-					[Rotation]: { 1 0 0 0 }
+					[Position]: { 0.25 4 0 }
+					[Rotation]: { 1 0 0 -0.1 }
 					[Scale]: { 2 2 2 }
 				}
 				{
 					[Time]: 1
-					[Position]: { -1 4 0 }
-					[Rotation]: { 1 0 0 0 }
+					[Position]: { -0.25 4 0 }
+					[Rotation]: { 1 0 0 0.1 }
 					[Scale]: { 2 2 2 }
 				}
 				{
 					[Time]: 2
-					[Position]: { 1 4 0 }
-					[Rotation]: { 1 0 0 0 }
+					[Position]: { 0.25 4 0 }
+					[Rotation]: { 1 0 0 -0.1 }
 					[Scale]: { 2 2 2 }
 				}
 			}
@@ -81,7 +81,7 @@
 					[Time]: 1
 					[Position]: { 2 2 0 }
 					[Rotation]: { 0.866025 0 0 0.5 }
-					[Scale]: { 1 1 1 }
+					[Scale]: { 2 1 1 }
 				}
 				{
 					[Time]: 2

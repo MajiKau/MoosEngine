@@ -58,7 +58,7 @@ public:
 	void SetAnimationData(AnimationGroup data);
 
 	void SaveAnimation(std::string file);
-	void LoadAnimation(std::string file);
+	bool LoadAnimation(std::string file);
 
 private:
 
