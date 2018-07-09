@@ -758,7 +758,7 @@ void GameInit()
 	ground->SetLocalScale({ 100,1,100 });
 
 	Entity* cube = MainScene.SpawnEntity("Cube");
-	cube->AddMesh("testcube");
+	cube->AddMesh("Cube");
 	cube->SetLocalPosition({ 0,10,0 });
 	cube->SetLocalScale({ 20,20,20 });
 
@@ -1526,6 +1526,9 @@ int main(int argc, char **argv) {
 
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
 	glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
+
+	glEnable(GL_CULL_FACE); // enable face culling
+	//glCullFace(GL_BACK);
 
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	fprintf(stdout, "Status: Using GLU %s\n", gluGetString(GLU_VERSION));

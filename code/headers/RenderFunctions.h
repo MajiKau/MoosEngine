@@ -69,242 +69,10 @@ public:
 
 		//m_texture = LoadTexture("test3.bmp");
 
-		const char* vertex_shader_example =
-			"#version 430\n"
-			"layout(location = 0) in vec3 vertex_position;"
-			"layout(location = 1) in vec3 vertex_colour;"
-			"layout(location = 2) uniform mat4 MVP;"
-			"out vec3 colour;"
-			"void main() {"
-			"  colour = vertex_colour;"
-			"  gl_Position = MVP * vec4(vertex_position, 1.0);"
-			"}";
-		const char* fragment_shader_example =
-			"#version 430\n"
-			"in vec3 colour;"
-			"out vec4 frag_colour;"
-			"void main() {"
-			"  frag_colour = vec4(colour, 1.0);"
-			"}";
-
-		const char* vertex_shader_textured =
-			"#version 430\n"
-			"layout(location = 0) in vec2 vertex_position;"
-			"layout(location = 1) in vec3 vertex_colour;"
-			"layout(location = 2) uniform mat4 MVP;"
-			"layout(location = 3) in vec2 texture_coordinate;"
-			"out vec3 colour;"
-			"out vec2 tex_coord;"
-			"void main() {"
-			"  colour = vertex_colour;"
-			"  tex_coord = texture_coordinate;"
-			"  gl_Position = MVP * vec4(vertex_position, 1.0, 1.0);"
-			"}";
-		const char* fragment_shader_textured =
-			"#version 430\n"
-			"in vec3 colour;"
-			"in vec2 tex_coord;"
-			"uniform sampler2D texture;"
-			"out vec4 frag_colour;"
-			"void main() {"
-			"  frag_colour = vec4(colour,1.0)*texture2D(texture, tex_coord);"
-			"}";
-
-		//TODO
-        /*const char* vertex_shader_mvp =
-            "#version 430\n"
-				"layout(location = 0) in vec3 vertex_position;"
-				"layout(location = 1) in vec2 texture_coordinate;"
-				"layout(location = 2) in vec3 vertex_normal;"
-				"layout(location = 3) uniform mat4 MVP;"
-				"layout(location = 4) in vec3 vertex_tangent;"
-				"layout(location = 5) in vec3 vertex_bitangent;"
-				"layout(location = 11) uniform mat4 M;"
-				"layout(location = 12) uniform mat4 V;"
-				"out vec3 Normal0;"
-				"out vec3 Tangent0;"
-				"out vec3 Bitangent0;"
-				"out vec2 tex_coord;"
-				"out vec3 WorldPos0;"
-				"out vec3 FragPos;"
-				"void main() {"
-				"  gl_Position = MVP * vec4(vertex_position, 1.0);"
-				"  FragPos = vec3(M * vec4(vertex_position, 1.0));"
-				"  tex_coord = texture_coordinate;"
-				//"  Normal0 = (M* vec4(vertex_normal,1.0)).xyz;"
-				"  Normal0 = (M * vec4(vertex_normal, 0.0)).xyz;"
-				"  Tangent0 = (M * vec4(vertex_tangent, 0.0)).xyz;"
-				"  Bitangent0 = (M * vec4(vertex_bitangent, 0.0)).xyz;"
-				"  WorldPos0 = (M * vec4(vertex_position, 1.0)).xyz;"
-				"}";*/
-
-		//TODO: MAYBE CHANGE FACTORS OR SOMETHING I DON'T KNOW
-           /* const char* fragment_shader_mvp =
-                "#version 430\n"
-                "struct PointLight"
-                "{"
-                "   vec3 Color;"
-                "   float AmbientIntensity;"
-                "   float DiffuseIntensity;"
-                "   vec3 Position;"//Currently only using Position from PointLight, everything else from DirectionalLight
-                "};"
-                "struct DirectionalLight"
-                "{"
-                "   vec3 Color;"
-                "   float AmbientIntensity;"
-                "   float DiffuseIntensity;"
-                "   vec3 Direction;"
-                "};"
-                "struct Material"
-                "{"
-                "   vec3 ambient;"//TODO: Not used
-                "   vec3 diffuse;"//Not used
-                "   vec3 specular;"//Not used
-                "   float shininess;"
-                "};"
-                "layout(location = 4) uniform vec3 gEyeWorldPos;"
-                "layout(location = 9) uniform float gMatSpecularIntensity;"
-                "layout(location = 10) uniform float gSpecularPower;"//Not used, comes from material(shininess)
-                "layout(location = 13) uniform Material material;"
-                "layout(location = 17) uniform sampler2D texture;"
-                "layout(location = 18) uniform sampler2D specular_texture;"
-                "layout(location = 28) uniform sampler2D normal_texture;"
-                "layout(location = 23) uniform bool blinn;"
-                "const int MAX_LIGHTS = 10;"
-                "layout(location = 24) uniform int num_lights_p;"
-                "layout(location = 25) uniform int num_lights_d;"
-                "layout(location = 100) uniform DirectionalLight gDirectionalLight[MAX_LIGHTS];"
-                "layout(location = 200) uniform PointLight gPointLight[MAX_LIGHTS];"
-                "in vec3 WorldPos0;"
-                "in vec3 Normal0;"
-                "in vec3 Tangent0;"
-                "in vec3 Bitangent0;"
-                "in vec2 tex_coord;"
-                "in vec3 FragPos;"
-                "out vec4 frag_colour;"
-                "vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, mat3 tbnMat)"//TODO Attenuation
-                "{"
-                "   vec3 lightDir = tbnMat * normalize(-light.Position + WorldPos0); "
-				"   vec3 WorldPos = tbnMat * WorldPos0;"
-				"   float constant = 1.0f;"//
-				"   float linear = 0.0014f;"//
-				"   float quadratic = 0.000007f;"//
-				"   float distance = length(light.Position - FragPos);"//
-				"   float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));"//
-
-                "   float DiffuseFactor = max(dot(normal, -lightDir), 0.0);"
-                "   float SpecularFactor = 0.0;"
-                "   if (blinn)"
-                "   {"
-                "     vec3 halfwayDir = normalize(lightDir + viewDir);"
-                "     SpecularFactor = pow(max(dot(normal, halfwayDir), 0.0), material.shininess); "
-                "   }"
-                "   else"
-                "   {"
-                "     vec3 reflectDir = reflect(-lightDir, normal);"
-                "     SpecularFactor = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);"
-                "   }"
-                "   vec3 AmbientColor = (light.Color * light.AmbientIntensity) * vec3(texture2D(texture, tex_coord));"
-                "   vec3 DiffuseColor = (light.Color * light.DiffuseIntensity)  * DiffuseFactor * vec3(texture2D(texture, tex_coord));"
-                "   vec3  SpecularColor = (light.Color * gMatSpecularIntensity) * SpecularFactor * vec3(texture2D(specular_texture, tex_coord));"
-
-				"   AmbientColor *= attenuation;"
-				"   DiffuseColor *= attenuation;"
-				"   SpecularColor *= attenuation;"
-
-                "   return (AmbientColor + DiffuseColor + SpecularColor);"
-                "}"
-                "vec3 CalcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir, mat3 tbnMat)"
-                "{"
-                "   vec3 lightDir = tbnMat * normalize(light.Direction);"
-                "   float DiffuseFactor = max(dot(normal, -lightDir), 0.0);"
-                "   float SpecularFactor = 0.0;"
-                "   if(blinn)"
-                "   {"
-                "     vec3 halfwayDir = normalize(lightDir + viewDir);"
-                "     SpecularFactor = pow(max(dot(normal, halfwayDir), 0.0), material.shininess); "
-                "   }"
-                "   else"
-                "   {"
-                "     vec3 reflectDir = reflect(-lightDir, normal);"
-                "     SpecularFactor = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);"
-                "   }"
-                "   vec3 AmbientColor = (light.Color * light.AmbientIntensity) * vec3(texture2D(texture, tex_coord));"
-                "   vec3 DiffuseColor = (light.Color * light.DiffuseIntensity)  * DiffuseFactor * vec3(texture2D(texture, tex_coord));"
-                "   vec3  SpecularColor = (light.Color * gMatSpecularIntensity) * SpecularFactor * vec3(texture2D(specular_texture, tex_coord));"
-                "   return (AmbientColor + DiffuseColor + SpecularColor);"
-                "}"
-                "void main() {"
-                //"  vec3 LightDirection = -gDirectionalLight.Direction; "
-                //"  vec3 LightDirection = normalize(gPointLight.Position - FragPos); " 
-                "  vec3 Normal = normalize(Normal0);"
-                "  vec3 Tangent = normalize(Tangent0);"
-                "  vec3 Bitangent = normalize(Bitangent0);" 
-				//"  Tangent = normalize(Tangent - dot(Tangent, Normal) * Normal);"
-				//"  vec3 Bitangent = cross(Normal, Tangent);"
-				"  mat3 TBN = transpose(mat3("
-				"  Tangent,"
-				"  Bitangent,"
-				"  Normal"
-				"  ));"
-				"  Normal = normalize(texture2D(normal_texture, tex_coord).rgb*2.0 - 1.0);"
-                "  vec3 VertexToEye = TBN * normalize(-gEyeWorldPos + WorldPos0);"
-                //"  vec3 halfwayDir = normalize(LightDirection + VertexToEye);"
-                "  vec3 result = vec3(0.0,0.0,0.0);"
-                "  for (int i = 0; i < num_lights_p; i++)"
-                "    result += CalcPointLight(gPointLight[i], Normal, VertexToEye, TBN);"
-                "  for (int i = 0; i < num_lights_d; i++)"
-                "    result += CalcDirectionalLight(gDirectionalLight[i], Normal, VertexToEye, TBN);"
-                "  frag_colour = vec4(result, 1.0);"
-				//"  frag_colour = 0.001 * vec4(result, 1.0) + vec4(normalize(TBN*vec3(1.0,0.2,0.6)),1.0);"
-                "}";*/
-
-        //TODO
-        const char* vertex_shader_mvp_unlit =
-            "#version 430\n"
-            "layout(location = 0) in vec3 vertex_position;"
-            "layout(location = 1) in vec2 texture_coordinate;"
-            "layout(location = 2) in vec3 vertex_normal;"
-            "layout(location = 3) uniform mat4 MVP;"
-            "layout(location = 4) in vec3 vertex_tangent;"
-            "layout(location = 5) in vec3 vertex_bitangent;"
-            "layout(location = 11) uniform mat4 M;"
-            "layout(location = 12) uniform mat4 V;"
-            "out vec3 Normal0;"
-            "out vec3 Tangent0;"
-            "out vec3 Bitangent0;"
-            "out vec2 tex_coord;"
-            "out vec3 WorldPos0;"
-            "void main() {"
-            "  tex_coord = texture_coordinate;"
-            "  gl_Position = MVP * vec4(vertex_position, 1.0);"
-            "}";
-
-        //TODO
-        const char* fragment_shader_mvp_unlit =
-            "#version 430\n"
-            "layout(location = 4) uniform vec3 gEyeWorldPos;"
-            "struct DirectionalLight"
-            "{"
-            "   vec3 Color;"
-            "   float AmbientIntensity;"
-            "   float DiffuseIntensity;"
-            "   vec3 Direction;"
-            "};"
-            "layout(location = 5) uniform DirectionalLight gDirectionalLight;"
-            "layout(location = 9) uniform float gMatSpecularIntensity;"
-            "layout(location = 10) uniform float gSpecularPower;"
-            "in vec3 WorldPos0;"
-            "in vec3 Normal0;"
-            "in vec2 tex_coord;"
-            "uniform sampler2D texture;"
-            "out vec4 frag_colour;"
-            "void main() {"
-            "  frag_colour = texture2D(texture, tex_coord);"
-            "}";
-
 		//Not textured
-		m_shaderprogram = compileShaderProgramDefault(vertex_shader_example,fragment_shader_example);
+		GLchar* vertex = LoadShader("Content/Shaders/Basic/shader.vertex");
+		GLchar* fragment = LoadShader("Content/Shaders/Basic/shader.fragment");
+		m_shaderprogram = compileShaderProgramDefault(vertex, fragment);
 
 		glGenBuffers(1, &m_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -322,7 +90,9 @@ public:
 		glBindVertexArray(0);
 
 		//Textured
-		m_shaderprogram_textured = compileShaderProgramDefault(vertex_shader_textured, fragment_shader_textured);
+		vertex = LoadShader("Content/Shaders/Basic_Textured/shader.vertex");
+		fragment = LoadShader("Content/Shaders/Basic_Textured/shader.fragment");
+		m_shaderprogram_textured = compileShaderProgramDefault(vertex, fragment);
 
 		glGenBuffers(1, &m_vbo_textured);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_textured);
@@ -342,12 +112,14 @@ public:
 		glBindVertexArray(0);
 
         //Better textured
-		GLchar* vertex = LoadShader("Content/Shaders/MVP_Textured/shader.vertex");
-		GLchar* fragment = LoadShader("Content/Shaders/MVP_Textured/shader.fragment");
+		vertex = LoadShader("Content/Shaders/MVP_Textured/shader.vertex");
+		fragment = LoadShader("Content/Shaders/MVP_Textured/shader.fragment");
         m_shaderprogram_mvp_textured = compileShaderProgramDefault(vertex, fragment);
         
         //Unlit textured
-        m_shaderprogram_mvp_textured_unlit = compileShaderProgramDefault(vertex_shader_mvp_unlit, fragment_shader_mvp_unlit);
+		vertex = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.vertex");
+		fragment = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.fragment");
+        m_shaderprogram_mvp_textured_unlit = compileShaderProgramDefault(vertex, fragment);
 
 		m_projection = glm::ortho(-Zoom * Ratio, Zoom*Ratio, -Zoom, Zoom, -10.0f, 10.0f);
 		m_view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
@@ -383,60 +155,63 @@ public:
             
             const std::vector<Vertex> cube_vertices = {
                 // positions          // texture coords          // normals				//tangents?	//bitangents?
-                Vertex({ -0.5f, -0.5f, -0.5f},  { 0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
-                Vertex({0.5f, -0.5f, -0.5f}, {1.0f, 0.0f }, {0.0f,  0.0f, -1.0f}) ,
-                Vertex({ 0.5f,  0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f,  0.0f, -1.0f}),
-                Vertex({ 0.5f,  0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f,  0.0f, -1.0f}),
-                Vertex({ -0.5f,  0.5f, -0.5f },{ 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f}),
-                Vertex({ -0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f}),
+                Vertex({ 0.5f, -0.5f, -0.5f},  { 0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f },{ 1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f }, {0.0f,  0.0f, -1.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }) ,
+                Vertex({ -0.5f,  0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f,  0.0f, -1.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f,  0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f,  0.0f, -1.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f,  0.5f, -0.5f },{ 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f, -0.5f, -0.5f },{ 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
 
-                Vertex({ -0.5f, -0.5f,  0.5f },{ 0.0f, 0.0f}, {  0.0f,  0.0f, 1.0f }),
-                Vertex({ 0.5f, -0.5f,  0.5f },{ 1.0f, 0.0f }, { 0.0f,  0.0f, 1.0f}),
-                Vertex({ 0.5f,  0.5f,  0.5f },{ 1.0f, 1.0f } ,{ 0.0f,  0.0f, 1.0f}),
-                Vertex({ 0.5f,  0.5f,  0.5f },{ 1.0f, 1.0f },{ 0.0f,  0.0f, 1.0f}),
-                Vertex({ -0.5f,  0.5f,  0.5f },{ 0.0f, 1.0f }, {  0.0f,  0.0f, 1.0f}),
-                Vertex({ -0.5f, -0.5f,  0.5f },{ 0.0f, 0.0f }, {  0.0f,  0.0f, 1.0f}),
+                Vertex({ -0.5f, -0.5f,  0.5f },{ 0.0f, 0.0f}, {  0.0f,  0.0f, 1.0f },{ -1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f, -0.5f,  0.5f },{ 1.0f, 0.0f }, { 0.0f,  0.0f, 1.0f},{ -1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f,  0.5f,  0.5f },{ 1.0f, 1.0f } ,{ 0.0f,  0.0f, 1.0f},{ -1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f,  0.5f,  0.5f },{ 1.0f, 1.0f },{ 0.0f,  0.0f, 1.0f},{ -1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f,  0.5f,  0.5f },{ 0.0f, 1.0f }, {  0.0f,  0.0f, 1.0f},{ -1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f, -0.5f,  0.5f },{ 0.0f, 0.0f }, {  0.0f,  0.0f, 1.0f},{ -1.0f,  0.0f, 0.0f },{ 0.0f,  1.0f, 0.0f }),
 
-                Vertex({ -0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f}),
-                Vertex({ -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f}),
-                Vertex({ -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f}),
-                Vertex({ -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f}),
-                Vertex({ -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f}),
-                Vertex({ -0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f}),
+                Vertex({ -0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, -1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, -1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, -1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f }, { -1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, -1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f }, { -1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, -1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ -0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f }, { -1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, -1.0f },{ 0.0f,  1.0f, 0.0f }),
 
-                Vertex({ 0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f}),
-                Vertex({ 0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f },{ 1.0f, 0.0f, 0.0f}),
-                Vertex({ 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f },{ 1.0f, 0.0f, 0.0f}),
-                Vertex({ 0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f },{ 1.0f, 0.0f, 0.0f}),
-                Vertex({ 0.5f, -0.5f,  0.5f }, { 0.0f, 0.0f },{ 1.0f, 0.0f, 0.0f}),
-                Vertex({ 0.5f,  0.5f,  0.5f }, { 1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f}),
+                Vertex({ 0.5f,  0.5f,  -0.5f }, { 1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, 1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f,  0.5f, 0.5f }, { 1.0f, 1.0f },{ 1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, 1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f },{ 1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, 1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f },{ 1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, 1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f, -0.5f,  -0.5f }, { 0.0f, 0.0f },{ 1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, 1.0f },{ 0.0f,  1.0f, 0.0f }),
+                Vertex({ 0.5f,  0.5f,  -0.5f }, { 1.0f, 0.0f },{ 1.0f, 0.0f, 0.0f},{ 0.0f,  0.0f, 1.0f },{ 0.0f,  1.0f, 0.0f }),
 
-                Vertex({ -0.5f, -0.5f, -0.5f },{ 0.0f, 1.0f},{ 0.0f, -1.0f,  0.0f }),
-                Vertex({ 0.5f, -0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f, -1.0f,  0.0f}),
-                Vertex({ 0.5f, -0.5f,  0.5f },{ 1.0f, 0.0f }, { 0.0f, -1.0f,  0.0f}),
-                Vertex({ 0.5f, -0.5f,  0.5f },{ 1.0f, 0.0f }, { 0.0f, -1.0f,  0.0f}),
-                Vertex({ -0.5f, -0.5f,  0.5f } ,{  0.0f, 0.0f},{ 0.0f, -1.0f,  0.0f }),
-                Vertex({ -0.5f, -0.5f, -0.5f } ,{  0.0f, 1.0f},{ 0.0f, -1.0f,  0.0f }),
+                Vertex({ -0.5f, -0.5f, -0.5f },{ 0.0f, 1.0f},{ 0.0f, -1.0f,  0.0f },{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, 1.0f }),
+                Vertex({ 0.5f, -0.5f, -0.5f },{ 1.0f, 1.0f }, { 0.0f, -1.0f,  0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, 1.0f }),
+                Vertex({ 0.5f, -0.5f,  0.5f },{ 1.0f, 0.0f }, { 0.0f, -1.0f,  0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, 1.0f }),
+                Vertex({ 0.5f, -0.5f,  0.5f },{ 1.0f, 0.0f }, { 0.0f, -1.0f,  0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, 1.0f }),
+                Vertex({ -0.5f, -0.5f,  0.5f } ,{  0.0f, 0.0f},{ 0.0f, -1.0f,  0.0f },{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, 1.0f }),
+                Vertex({ -0.5f, -0.5f, -0.5f } ,{  0.0f, 1.0f},{ 0.0f, -1.0f,  0.0f },{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, 1.0f }),
 
-                Vertex({ -0.5f,  0.5f, -0.5f },{ 0.0f, 1.0f},{ 0.0f,  1.0f,  0.0f}),
-                Vertex({ 0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f },{ 0.0f, 1.0f, 0.0f}),
-                Vertex({ 0.5f,  0.5f,  0.5f },{  1.0f, 0.0f },{ 0.0f, 1.0f, 0.0f}),
-                Vertex({ 0.5f,  0.5f,  0.5f },{  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f}),
-                Vertex({ -0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f, 1.0f, 0.0f}),
-                Vertex({ -0.5f,  0.5f, -0.5f },{  0.0f, 1.0f }, {  0.0f, 1.0f, 0.0f})
+                Vertex({ 0.5f,  0.5f, -0.5f },{ 0.0f, 1.0f},{ 0.0f,  1.0f,  0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
+                Vertex({ -0.5f,  0.5f, -0.5f }, { 1.0f, 1.0f },{ 0.0f, 1.0f, 0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
+                Vertex({ -0.5f,  0.5f,  0.5f },{  1.0f, 0.0f },{ 0.0f, 1.0f, 0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
+                Vertex({ -0.5f,  0.5f,  0.5f },{  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
+                Vertex({ 0.5f,  0.5f,  0.5f }, { 0.0f, 0.0f }, {  0.0f, 1.0f, 0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f }),
+                Vertex({ 0.5f,  0.5f, -0.5f },{  0.0f, 1.0f }, {  0.0f, 1.0f, 0.0f},{ 1.0f,  0.0f, 0.0f },{ 0.0f,  0.0f, -1.0f })
             };
             const std::vector<GLuint> cube_indices
             {
                 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36
             };
-            Mesh* Cube = new Mesh();
-            Cube->m_Entries[0].Init(cube_vertices, cube_indices);
-            Cube->m_Textures[0] = new Texture(GL_TEXTURE_2D, "Content/Images/box_d.png"); 
-			bool success = Cube->m_Textures[0]->Load();
+            Mesh* Cube = new Mesh("Content/Models/TestCube/TestCube.obj");
+            //Cube->m_Entries[0].Init(cube_vertices, cube_indices);
+            Cube->m_Textures[1] = new Texture(GL_TEXTURE_2D, "Content/Images/box_d.png"); 
+			bool success = Cube->m_Textures[1]->Load();
             assert(success);
-            Cube->m_Textures_Specular[0] = new Texture(GL_TEXTURE_2D, "Content/Images/box_s.png");
-			success = Cube->m_Textures_Specular[0]->Load();
+            Cube->m_Textures_Specular[1] = new Texture(GL_TEXTURE_2D, "Content/Images/box_s.png");
+			success = Cube->m_Textures_Specular[1]->Load();
             assert(success);
+			Cube->m_Textures_Normal[1] = new Texture(GL_TEXTURE_2D, "Content/Images/box_n.png");
+			success = Cube->m_Textures_Normal[1]->Load();
+			assert(success);
 
             m_loaded_meshes.insert({ "Cube",Cube });
         }
@@ -487,6 +262,7 @@ public:
                 9,2,6,
                 9,11,6
             };
+			//TODO: Make skybox with cube map
             Mesh* Skybox = new Mesh();
             Skybox->m_Entries[0].Init(skybox_vertices, skybox_indices);
             Skybox->m_Textures[0] = new Texture(GL_TEXTURE_2D, "Content/Images/skybox.jpg"); 

@@ -133,7 +133,7 @@ bool Mesh::LoadMesh(const std::string& Filename)
         aiProcess_CalcTangentSpace |
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
-        aiProcess_SortByPType);
+        aiProcess_SortByPType );
 
     if (pScene) {
         Ret = InitFromScene(pScene, Filename);
@@ -346,11 +346,23 @@ void Mesh::Render()
         if (MaterialIndex < m_Textures.size() && m_Textures[MaterialIndex]) {
             m_Textures[MaterialIndex]->Bind(GL_TEXTURE0);
         }
+		else
+		{
+			printf("Missing DIFF\n");
+		}
         if (MaterialIndex < m_Textures_Specular.size() && m_Textures_Specular[MaterialIndex]) {
             m_Textures_Specular[MaterialIndex]->Bind(GL_TEXTURE1);
         }
+		else
+		{
+			printf("Missing SPEC\n");
+		}
 		if (MaterialIndex < m_Textures_Normal.size() && m_Textures_Normal[MaterialIndex]) {
 			m_Textures_Normal[MaterialIndex]->Bind(GL_TEXTURE2);
+		}
+		else
+		{
+			printf("Missing NORMAL\n");
 		}
         /*err = glGetError();
         if (GLEW_OK != err)
