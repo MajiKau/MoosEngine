@@ -866,16 +866,16 @@ void renderScene(void)
 
 	MainScene.Render(renderer);
 
-	test_octree.Render(renderer);
-	follower_quadtree.Render(renderer);
+	//test_octree.Render(renderer);
+	//follower_quadtree.Render(renderer);
 
 	//Draw all nodes as Tetrahedrons
-	for each (auto node in nodes)
+	/*for each (auto node in nodes)
 	{
 		Color3f nodecolor{ 1 - 10000 / node->H, 1 - 10000 / node->H, 1 - 10000 / node->H };
         
-        //renderer->RenderRegularTetrahedron({ node->x,-2,node->y }, 2, nodecolor);
-	}
+        renderer->RenderRegularTetrahedron({ node->x,-2,node->y }, 2, nodecolor);
+	}*/
 
 	//Draw Lines to show connections between nodes
 	/*float distance;
@@ -908,24 +908,24 @@ void renderScene(void)
 		}
 	}*/
 
-    for each (Follower* fol in followers)
+    /*for each (Follower* fol in followers)
     {
         fol->Render(renderer);
-    }  
-    for each (Turret* tur in turrets)
+    }*/  
+    /*for each (Turret* tur in turrets)
     {
         tur->Render(renderer);
-    }    
+    }*/    
 
     //Render walls
-    if (walls.size() != 0)
+    /*if (walls.size() != 0)
     {
         for (int i = 0; i < walls.size(); i ++)
         {
             std::vector<glm::vec3> points = { ToVec3(walls[i].v1),ToVec3(walls[i].v2),ToVec3(walls[i].v3),ToVec3(walls[i].v4) };
             renderer->RenderExtrudedShape(points, 4, RED);
         }
-    }
+    }*/
 
     if (rotateLight)
     {
@@ -944,8 +944,8 @@ void renderScene(void)
 
     Material material = DefaultMaterial;
 
-    glm::mat4 modelMat = glm::translate(glm::vec3(0, 100, -20)); 
-	renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);
+    /*glm::mat4 modelMat = glm::translate(glm::vec3(0, 100, -20)); 
+	renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);*/
 
 
     /*renderer->RenderMesh("dragon", modelMat, DefaultMaterial);
@@ -976,22 +976,22 @@ void renderScene(void)
     modelMat = glm::rotate(totalTime/800, glm::vec3(0.0f, 1.0f, 0.0f))*glm::translate(glm::vec3(0, 40+10*sinf(totalTime/1000), 40))*glm::scale(glm::vec3(5, 5, 5));
     renderer->RenderMesh("f16", modelMat, DefaultMaterial);*/
 
-    if (renderPlane)
+    /*if (renderPlane)
     {
         PlaneRot = glm::lerp(PlaneRot, renderer->Camera.Rotation, 0.1f);
         modelMat = glm::translate(renderer->Camera.Position + 2.0f*renderer->Camera.Forward - 0.75f*renderer->Camera.Up)*glm::rotate(PlaneRot.x + PI / 2.0f, renderer->Camera.Up)*glm::rotate(PlaneRot.y, renderer->Camera.Right)*glm::rotate(-PlaneRot.z, renderer->Camera.Forward);
         renderer->RenderMesh("f16", modelMat, DefaultMaterial);
-    }
+    }*/
 
-	modelMat = glm::translate(glm::vec3(0, 100, 0));
+	/*modelMat = glm::translate(glm::vec3(0, 100, 0));
 	renderer->RenderMesh("v_platform_full", modelMat, DefaultMaterial);
 	modelMat = glm::translate(glm::vec3(-10, 100, 0));
 	renderer->RenderMesh("v_platform_left", modelMat, DefaultMaterial);
 	modelMat = glm::translate(glm::vec3(10, 100, 0));
-	renderer->RenderMesh("v_platform_right", modelMat, DefaultMaterial);
+	renderer->RenderMesh("v_platform_right", modelMat, DefaultMaterial);*/
 
     //Render Player
-	tank.Render(renderer);
+	//tank.Render(renderer);
     /*modelMat = glm::translate(glm::vec3(renderer->Camera.Position.x, 2, renderer->Camera.Position.z))*glm::rotate(renderer->Camera.Rotation.x - PI / 2.0f, glm::vec3(0, 1, 0));
     renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);*/
 
@@ -1011,10 +1011,10 @@ void renderScene(void)
     }
 
     //Render light source
-    for each (auto light in renderer->m_point_light)
+    /*for each (auto light in renderer->m_point_light)
     {
         renderer->RenderRegularTetrahedron(light.Position, 3, Color3f(light.Color.x, light.Color.y, light.Color.z));
-    }
+    }*/
     //renderer->RenderRegularTetrahedron(renderer->m_point_light[0].Position, 3, Color3f(renderer->m_point_light[0].Color.x, renderer->m_point_light[0].Color.y, renderer->m_point_light[0].Color.z));
     //renderer->RenderRegularTetrahedron(renderer->m_point_light[1].Position, 3, Color3f(renderer->m_point_light[1].Color.x, renderer->m_point_light[1].Color.y, renderer->m_point_light[1].Color.z));
 
@@ -1027,7 +1027,7 @@ void renderScene(void)
     /*modelMat = glm::translate(glm::vec3(0.0f, 90.0f, 0.0f));
     renderer->RenderMesh("flatplane", modelMat, CustomMaterial);*/
 
-    if (showTurret)
+    /*if (showTurret)
     {
         //renderer->RenderRegularTetrahedron(cursor, 1.0f, BLUE);
         renderer->RenderCircleHollow({ cursor.x,cursor.z }, 10, BLUE);
@@ -1036,10 +1036,10 @@ void renderScene(void)
     {
         //renderer->RenderRegularTetrahedron(cursor, 0.5f, GREEN);
 		renderer->RenderRegularTriangle({ cursor.x,cursor.z }, 0.5f,0, GREEN);
-    }
+    }*/
 
-    modelMat = glm::translate(renderer->Camera.Position)*glm::rotate(PI, glm::vec3(0, 1, 0))*glm::scale(glm::vec3(1000));
-    renderer->RenderMesh("Skybox", modelMat, DefaultMaterial);
+    //modelMat = glm::translate(renderer->Camera.Position)*glm::rotate(PI, glm::vec3(0, 1, 0))*glm::scale(glm::vec3(1000));
+    //renderer->RenderMesh("Skybox", modelMat, DefaultMaterial);
 
 	renderer->Render();
     err = glGetError();
@@ -1525,10 +1525,11 @@ int main(int argc, char **argv) {
 	}
 
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
-	glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
+	glDepthFunc(GL_LEQUAL); 
+	//glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 
 	glEnable(GL_CULL_FACE); // enable face culling
-	//glCullFace(GL_BACK);
+	//glCullFace(GL_FRONT); // culls front faces
 
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	fprintf(stdout, "Status: Using GLU %s\n", gluGetString(GLU_VERSION));

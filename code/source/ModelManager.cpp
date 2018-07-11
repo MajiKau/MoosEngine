@@ -9,20 +9,26 @@ Texture::Texture(GLenum TextureTarget, const std::string& FileName)
 
 bool Texture::Load()
 {
+	if (m_textureTarget == GL_TEXTURE_CUBE_MAP)
+	{
+		return LoadCubeMap();
+	}
     int width, height;
 
     FREE_IMAGE_FORMAT formato = FreeImage_GetFileType(m_fileName.c_str(), 0);
     assert(formato != FIF_UNKNOWN);
     FIBITMAP* imagen = FreeImage_Load(formato, m_fileName.c_str());
-	
+	if (!imagen)
+	{
+		printf("Failed to load %s\n", m_fileName.c_str());
+		return false;
+	}
     assert(imagen != NULL);
     FIBITMAP* temp = FreeImage_ConvertTo32Bits(imagen);
     assert(imagen != NULL);
     
     width = FreeImage_GetWidth(imagen);
     height = FreeImage_GetHeight(imagen);
-
-    
 
     glGenTextures(1, &m_textureObj);
     glBindTexture(m_textureTarget, m_textureObj);
@@ -41,6 +47,54 @@ void Texture::Bind(GLenum TextureUnit)
 {
     glActiveTexture(TextureUnit);
     glBindTexture(m_textureTarget, m_textureObj);
+}
+
+bool Texture::LoadCubeMap()
+{
+	std::vector<std::string> faces
+	{
+			"right.jpg",
+			"left.jpg",
+			"bottom.jpg",
+			"top.jpg",
+			"front.jpg",
+			"back.jpg"
+	};
+
+	glGenTextures(1, &m_textureObj);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
+
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		int width, height;
+		std::string fileName = m_fileName + faces[i];
+		FREE_IMAGE_FORMAT formato = FreeImage_GetFileType(fileName.c_str(), 0);
+		assert(formato != FIF_UNKNOWN);
+		FIBITMAP* imagen = FreeImage_Load(formato, fileName.c_str());
+		if (!imagen)
+		{
+			printf("Failed to load %s\n", fileName.c_str());
+			return false;
+		}
+		assert(imagen != NULL);
+		FIBITMAP* temp = FreeImage_ConvertTo32Bits(imagen);
+		assert(imagen != NULL);
+
+		width = FreeImage_GetWidth(imagen);
+		height = FreeImage_GetHeight(imagen);
+
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, FreeImage_GetBits(temp));
+
+		FreeImage_Unload(imagen);
+		FreeImage_Unload(temp);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 
@@ -133,7 +187,7 @@ bool Mesh::LoadMesh(const std::string& Filename)
         aiProcess_CalcTangentSpace |
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
-        aiProcess_SortByPType );
+        aiProcess_SortByPType);
 
     if (pScene) {
         Ret = InitFromScene(pScene, Filename);

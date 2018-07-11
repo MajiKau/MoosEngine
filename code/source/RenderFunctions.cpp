@@ -11,6 +11,29 @@ const Color3f WHITE = Color3f(1, 1, 1);
 const Color3f BLACK = Color3f(0, 0, 0);
 const Color3f YELLOW = Color3f(1, 1, 0);
 
+void BatchRenderer::RenderSkybox()
+{
+	glm::mat4 view = glm::mat4(glm::mat3(m_view));
+
+	glDepthMask(GL_FALSE);
+	glUseProgram(m_shaderprogram_skybox);
+	glUniformMatrix4fv(1, 1, GL_FALSE, &m_projection[0][0]);
+	glUniformMatrix4fv(2, 1, GL_FALSE, &view[0][0]);	
+	
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(m_vao_skybox);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skybox);
+
+	m_skybox_texture->Bind(GL_TEXTURE0);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glDisableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDepthMask(GL_TRUE);
+}
+
 GLchar* BatchRenderer::LoadShader(const char* filename)
 {
 	std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -142,6 +165,11 @@ void BatchRenderer::CompileShaders()
 	vertex = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.vertex");
 	fragment = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.fragment");
 	m_shaderprogram_mvp_textured_unlit = compileShaderProgramDefault(vertex, fragment);
+
+	//Skybox
+	vertex = LoadShader("Content/Shaders/Skybox/shader.vertex");
+	fragment = LoadShader("Content/Shaders/Skybox/shader.fragment");
+	m_shaderprogram_skybox = compileShaderProgramDefault(vertex, fragment);
 }
 
 void RenderVector3(Vec3 vector, Color3f color)

@@ -25,6 +25,9 @@ public:
     void Bind(GLenum TextureUnit);
 
 private:
+
+	bool LoadCubeMap();
+
     std::string m_fileName;
     GLenum m_textureTarget;
     GLuint m_textureObj;

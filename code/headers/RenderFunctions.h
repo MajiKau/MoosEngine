@@ -121,6 +121,93 @@ public:
 		fragment = LoadShader("Content/Shaders/MVP_Textured_Unlit/shader.fragment");
         m_shaderprogram_mvp_textured_unlit = compileShaderProgramDefault(vertex, fragment);
 
+		//Skybox
+		float skyboxVertices[] =
+		{
+			// positions          
+			1.0f, -1.0f, -1.0f	   ,
+			1.0f, 1.0f, -1.0f	   ,
+			-1.0f, 1.0f, -1.0f	   ,
+			-1.0f, 1.0f, -1.0f	   ,
+			-1.0f, -1.0f, -1.0f	   ,
+			1.0f, -1.0f, -1.0f	   ,
+
+			-1.0f, -1.0f, 1.0f	   ,
+			-1.0f, 1.0f, 1.0f	   ,
+			1.0f, 1.0f, 1.0f	   ,
+			1.0f, 1.0f, 1.0f	   ,
+			1.0f, -1.0f, 1.0f	   ,
+			-1.0f, -1.0f, 1.0f	   ,
+
+			-1.0f, 1.0f, 1.0f	   ,
+			-1.0f, -1.0f, 1.0f	   ,
+			-1.0f, -1.0f, -1.0f    ,
+			-1.0f, -1.0f, -1.0f    ,
+			-1.0f, 1.0f, -1.0f	   ,
+			-1.0f, 1.0f, 1.0f	   ,
+
+			1.0f, 1.0f, -1.0f	   ,
+			1.0f, -1.0f, -1.0f	   ,
+			1.0f, -1.0f, 1.0f	   ,
+			1.0f, -1.0f, 1.0f	   ,
+			1.0f, 1.0f, 1.0f	   ,
+			1.0f, 1.0f, -1.0f	   ,
+
+			-1.0f, -1.0f, -1.0f	   ,
+			-1.0f, -1.0f, 1.0f	   ,
+			1.0f, -1.0f, 1.0f	   ,
+			1.0f, -1.0f, 1.0f	   ,
+			1.0f, -1.0f, -1.0f	   ,
+			-1.0f, -1.0f, -1.0f	   ,
+
+			1.0f, 1.0f, -1.0f	   ,
+			1.0f, 1.0f, 1.0f	   ,
+			-1.0f, 1.0f, 1.0f	   ,
+			-1.0f, 1.0f, 1.0f	   ,
+			-1.0f, 1.0f, -1.0f	   ,
+			1.0f, 1.0f, -1.0f
+		};
+		vertex = LoadShader("Content/Shaders/Skybox/shader.vertex");
+		fragment = LoadShader("Content/Shaders/Skybox/shader.fragment");
+		m_shaderprogram_skybox = compileShaderProgramDefault(vertex, fragment);
+		glUseProgram(m_shaderprogram_skybox);
+		glGenBuffers(1, &m_vbo_skybox);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skybox);
+
+		glGenVertexArrays(1, &m_vao_skybox);
+		glBindVertexArray(m_vao_skybox);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skybox);
+
+
+		/*glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
+		glEnableVertexAttribArray(3);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_skybox);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), NULL);//X,Y
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(sizeof(float) * 2));//R,B,G
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(sizeof(float) * 5));//U,V
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);*/
+
+
+
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, NULL, NULL);//X,Y,Z
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		m_skybox_texture = new Texture(GL_TEXTURE_CUBE_MAP, "Content/Images/skybox/");
+		m_skybox_texture->Load(); 
+		//
+
 		m_projection = glm::ortho(-Zoom * Ratio, Zoom*Ratio, -Zoom, Zoom, -10.0f, 10.0f);
 		m_view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 		m_model = glm::mat4(1.0f);
@@ -294,16 +381,18 @@ public:
 	}
 	void Render()
 	{
+		//RenderSkybox();
+
 		//printf("Lines: %d\n", (int)m_lines.size());
 		//printf("Linestrips: %d\n", (int)m_linestrips.size());
 
         m_mvp = m_projection * m_view;
         m_mvp_new = m_projection * m_view*m_model;
 
-		_RenderTriangles();
+		/*_RenderTriangles();
 		_RenderTriangleFans();
 		_RenderLines();
-        _RenderLineStrips();
+        _RenderLineStrips();*/
 
         Material material;
         material.ambient = { 1.0f,1.0f,1.0f };
@@ -365,42 +454,23 @@ public:
         {
             printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
         }
-		err = glGetError();
-		if (GLEW_OK != err)
-		{
-			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-		}
+
 		GLint pos = GetAttributeLocation("vertex_position");
 		glEnableVertexAttribArray(pos);
+
 		GLint tex = GetAttributeLocation("texture_coordinate");
 		glEnableVertexAttribArray(tex);
-		err = glGetError();
-		if (GLEW_OK != err)
-		{
-			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-		}
+
 		GLint nor = GetAttributeLocation("vertex_normal");
 		glEnableVertexAttribArray(nor);
-		err = glGetError();
-		if (GLEW_OK != err)
-		{
-			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-		}
+
 		GLint tan = GetAttributeLocation("vertex_tangent");
 		GLint test3 = GetAttributeLocation("vertex_bitangent");
 		glEnableVertexAttribArray(tan);
-		err = glGetError();
-		if (GLEW_OK != err)
-		{
-			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-		}
+
 		GLint bit = GetAttributeLocation("vertex_bitangent");
 		glEnableVertexAttribArray(bit);
-		err = glGetError();
-		if (GLEW_OK != err)
-		{
-			printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-		}
+
         for each (auto mo in m_meshes)
         {
 			GLuint err = glGetError();
@@ -410,71 +480,21 @@ public:
 			}
             m_mvp_new = m_projection * m_view *std::get<1>(mo);
             glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]); 
-			err = glGetError();
-			if (GLEW_OK != err)
-			{
-				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-			}
             glUniformMatrix4fv(11, 1, GL_FALSE, &std::get<1>(mo)[0][0]);
-			err = glGetError();
-			if (GLEW_OK != err)
-			{
-				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-			}
             if (m_loaded_meshes[std::get<0>(mo)])
             {
                 if (std::get<0>(mo) == "Skybox")
                 {
                     glUseProgram(m_shaderprogram_mvp_textured_unlit); 
-					err = glGetError();
-					if (GLEW_OK != err)
-					{
-						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-					}
                     glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]); 
-					err = glGetError();
-					if (GLEW_OK != err)
-					{
-						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-					}
                 }
                 else
                 {
                     glUseProgram(m_shaderprogram_mvp_textured); 
-					err = glGetError();
-					if (GLEW_OK != err)
-					{
-						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-					}
                     glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]); 
-					err = glGetError();
-					if (GLEW_OK != err)
-					{
-						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-					}
                     SetMaterial(std::get<2>(mo)); 
-					err = glGetError();
-					if (GLEW_OK != err)
-					{
-						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-					}
-					err = glGetError();
-					if (GLEW_OK != err)
-					{
-						printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-					}
                 }
-				err = glGetError();
-				if (GLEW_OK != err)
-				{
-					printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-				}
                 m_loaded_meshes[std::get<0>(mo)]->Render(); 
-				err = glGetError();
-				if (GLEW_OK != err)
-				{
-					printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-				}
             }
         }
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -505,13 +525,13 @@ public:
 		m_linestrips.clear();
 
 		//Test
-		int numvertices = 3;
+		/*int numvertices = 3;
 		float vertices[3 * 7]
 		{
 			0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,
 			20.0f,0.0f,0.0f,1.0f,0.0f,1.0f,0.0f,
 			20.0f,20.0f,0.0f,0.0f,1.0f,1.0f,1.0f
-		};
+		};*/
 
         //Render a test triangle
 		/*glUseProgram(m_shaderprogram_textured);
@@ -524,7 +544,11 @@ public:
 		glUseProgram(0);
 		glBindVertexArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);*/
+
+		RenderSkybox();
 	}
+
+	void RenderSkybox();
 
     void RenderTriangle(float* vertices)
     {
@@ -1253,6 +1277,12 @@ private:
     //Texture* m_texture_new;
     //Mesh mesh;
 
+
+	//Skybox
+	GLuint m_vbo_skybox;
+	GLuint m_vao_skybox;
+	GLuint m_shaderprogram_skybox;
+	Texture* m_skybox_texture;
 
 
 	std::vector<float> m_triangles;
