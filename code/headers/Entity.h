@@ -51,9 +51,12 @@ public:
 	void DisableRigidbody();
 	Rigidbody* GetRidigbody();
 
+	Entity* SpawnParent();
+
 	Entity* SpawnChild();
 	Entity* SpawnChild(std::string name);
 	void AddChild(Entity* child);
+
 	Entity* GetChild(int index);
 	Entity* GetChild(std::vector<int> indexes, int _depth = 0);
 	std::vector<Entity*> GetChildren();

@@ -216,6 +216,20 @@ Rigidbody * Entity::GetRidigbody()
 	return m_rigidbody;
 }
 
+Entity * Entity::SpawnParent()
+{
+	if (m_parent)
+	{
+		Entity * new_parent = m_parent->SpawnChild();
+		if (new_parent)
+		{
+			new_parent->AddChild(this);
+			return new_parent;
+		}
+	}
+	return NULL;
+}
+
 Entity * Entity::SpawnChild()
 {
 	Entity* new_entity = new Entity(); 
@@ -305,7 +319,6 @@ void Entity::_RemoveChild(Entity * child)
 	{
 		if (m_entities[i] == child)
 		{
-			m_entities[i]->_SetParent(NULL);
 			m_entities.erase(m_entities.begin() + i);
 			return;
 		}

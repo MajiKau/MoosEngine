@@ -30,6 +30,8 @@
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
+const char* window_name = "GLUT Window";
+bool window_focus = false;
 
 Vector3f ToVec3(Point2 p)
 {
@@ -172,12 +174,20 @@ void KeyboardSpecialUp(int key, int x, int y)
 	io.KeyShift = GLUT_ACTIVE_SHIFT & mods;
 	io.KeyAlt = GLUT_ACTIVE_ALT & mods;
 }
+bool CheckWindowFocus(LPCSTR windowName)
+{
+	HWND windowHwnd = FindWindow(NULL, windowName);
+	if (windowHwnd == NULL)
+		return false;
+	return windowHwnd == GetFocus();
+}
+
 void MouseMove(int x, int y)
 {
     mouseDelta += {-x + screenWidth / 2.0f, -y + screenHeight / 2.0f};
     if (mouselock)
     {
-        if (!warped)
+        if (!warped && window_focus)
         {
             glutWarpPointer(screenWidth / 2, screenHeight / 2);
             warped = true;
@@ -370,8 +380,8 @@ void drawGUI()
 			glm::vec3 position = selected_entity->GetLocalPosition();
 			glm::quat rotation = selected_entity->GetLocalRotation();
 			glm::vec3 scale = selected_entity->GetLocalScale();
-			ImGui::BeginChild("EntityInfo", { 0,200 }, true);
-			ImGui::Text(("Name: " + selected_entity->GetName()).c_str());
+			ImGui::BeginChild("EntityInfo", { 0,220 }, true);
+			ImGui::Text(("Name: " + selected_entity->GetName() + "[%d]").c_str(), selected_entity->GetId());
 			ImGui::DragFloat3("Position", &position[0], 0.25f);
 			ImGui::DragFloat4("Rotation", &rotation[0], 0.25f);
 			ImGui::DragFloat3("Scale", &scale[0], 0.25f);
@@ -383,6 +393,13 @@ void drawGUI()
 					selected_entity->SpawnChild(name);
 				else
 					selected_entity->SpawnChild();
+			}
+			if (ImGui::Button("SpawnParent"))
+			{
+				/*if (name[0] != '\0')
+					selected_entity->SpawnChild(name);
+				else*/
+					selected_entity->SpawnParent();
 			}
 			static char mesh_name[20];
 			ImGui::InputText("NewMeshName", mesh_name, 20);
@@ -458,22 +475,56 @@ void drawGUI()
 					{
 						if (ImGui::Selectable(std::to_string(i).c_str(), selected_keyframe == i, 0, { 10,0 }))
 							selected_keyframe = i;
-						if (i + 1 < frame_amount)
+						//if (i + 1 < frame_amount)
 							ImGui::SameLine();
 					}
+					bool add_frame = ImGui::Button("+", { 15,13 });
+					ImGui::SameLine();
+					bool remove_frame = ImGui::Button("-", { 15,13 });
 					ImGui::EndChild();
 
 					ImGui::Separator();
-					assert(data.m_keyframes[selected_pair].second.size() != 0);
+					//assert(data.m_keyframes[selected_pair].second.size() != 0);
 					if (selected_keyframe < data.m_keyframes[selected_pair].second.size())
 					{
-						frame = data.m_keyframes[selected_pair].second[selected_keyframe];
+						//TODO: Breaks if last frame is removed. Add RemoveFrame function to Animation.
+						if (remove_frame && frame_amount > 1)
+						{
+							data.m_keyframes[selected_pair].second.erase(data.m_keyframes[selected_pair].second.begin() + selected_keyframe);
+							if (selected_keyframe == data.m_keyframes[selected_pair].second.size())
+							{
+								selected_keyframe--;
+								if (selected_keyframe < 0)
+								{
+									selected_keyframe = 0;
+								}
+								else
+								{
+									frame = data.m_keyframes[selected_pair].second[selected_keyframe];
+								}
+							}
+							else
+							{
+								frame = data.m_keyframes[selected_pair].second[selected_keyframe];
+							}
+						}
+						else
+						{
+							frame = data.m_keyframes[selected_pair].second[selected_keyframe];
+						}
 					}
 					else
 					{
 						selected_keyframe = 0;
-						frame = data.m_keyframes[selected_pair].second[selected_keyframe];
+						//frame = data.m_keyframes[selected_pair].second[selected_keyframe];
 					}
+					if (add_frame)
+					{
+						data.m_keyframes[selected_pair].second.push_back(frame);
+					}
+
+
+
 				}
 				else
 				{
@@ -484,7 +535,11 @@ void drawGUI()
 				ImGui::DragFloat3("Position", &frame.pose.Position[0], 0.05f);
 				ImGui::DragFloat4("Rotation", &frame.pose.Rotation[0], 0.05f);
 				ImGui::DragFloat3("Scale", &frame.pose.Scale[0], 0.05f); 
-				data.m_keyframes[selected_pair].second[selected_keyframe] = frame;
+
+				if (selected_keyframe < data.m_keyframes[selected_pair].second.size())
+				{
+					data.m_keyframes[selected_pair].second[selected_keyframe] = frame;
+				}
 				animations[selected_animation].SetAnimationData(data);
 				animation_controller->SetAnimations(animations);
 
@@ -927,14 +982,7 @@ void renderScene(void)
         }
     }*/
 
-    if (rotateLight)
-    {
-        renderer->m_point_light[0].Position.x = lightDistance * sinf(totalTime / 500.0f);
-        renderer->m_point_light[0].Position.z = lightDistance * cosf(totalTime / 500.0f);
-
-        renderer->m_point_light[1].Position.x = lightDistance * sinf(PI + totalTime / 500.0f);
-        renderer->m_point_light[1].Position.z = lightDistance * cosf(PI + totalTime / 500.0f);
-    }
+    
 
     Material DefaultMaterial;
     DefaultMaterial.ambient = { 1.0f,1.0f,1.0f };//Currently does nothing
@@ -1098,12 +1146,23 @@ void game()
 	{
 		deltaTime = 1.0f;
 	}
+	
+	window_focus = CheckWindowFocus(window_name);
 
 	MainScene.Update(deltaTime);
 
 	tank.Update(deltaTime);
 
 	totalTime = (float)glutGet(GLUT_ELAPSED_TIME);
+
+	if (rotateLight)
+	{
+		renderer->m_point_light[0].Position.x = lightDistance * sinf(totalTime / 500.0f);
+		renderer->m_point_light[0].Position.z = lightDistance * cosf(totalTime / 500.0f);
+
+		renderer->m_point_light[1].Position.x = lightDistance * sinf(PI + totalTime / 500.0f);
+		renderer->m_point_light[1].Position.z = lightDistance * cosf(PI + totalTime / 500.0f);
+	}
 
 	//PATHFINDING
 	Node* target = nodes.front();
@@ -1146,7 +1205,7 @@ void game()
 	}
 
 	//INPUTS
-	if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock)
+	if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock && window_focus)
 	{
 		renderer->Camera.Rotation.x += mouseDelta.x*0.001f;
 		renderer->Camera.Rotation.y += mouseDelta.y*0.001f;
@@ -1516,7 +1575,7 @@ int main(int argc, char **argv) {
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(300, 100);
     glutInitWindowSize(screenWidth, screenHeight);
-    glutCreateWindow("GLUT Window");
+    glutCreateWindow(window_name);
 	GLenum err = glewInit();
 	if (GLEW_OK != err)
 	{

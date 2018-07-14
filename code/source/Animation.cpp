@@ -209,19 +209,50 @@ void Animation::AddKeyFrame(KeyFrame keyframe, std::vector<int> child)
 		m_animation.m_end_time = keyframe.time;
 	}
 
-	//printf("Animation: %s(%d)\n",m_animation.m_name.c_str(),index);
-	//printf("Frames: %d\n", (int)m_animation.m_keyframes[index].second.size());
+	/*printf("Animation: %s(%d)\n",m_animation.m_name.c_str(),index);
+	printf("Frames: %d\n", (int)m_animation.m_keyframes[index].second.size());
 	int i = 0;
 	for each(auto frame in m_animation.m_keyframes[index].second)
 	{
-		//printf("[%d]: Time:%.1f Pose:%.1f,%.1f,%.1f\n", i, frame.time,frame.pose.Position.x, frame.pose.Position.y, frame.pose.Position.z);
+		printf("[%d]: Time:%.1f Pose:%.1f,%.1f,%.1f\n", i, frame.time,frame.pose.Position.x, frame.pose.Position.y, frame.pose.Position.z);
 		i++;
-	}
+	}*/
 }
 
 void Animation::AddKeyFrame(float time, Pose pose, std::vector<int> child)
 {
 	AddKeyFrame(KeyFrame(time, pose), child);
+}
+
+void Animation::RemoveKeyFrame(uint keyframe, std::vector<int> child)
+{
+	int index = -1;
+	for (int i = 0; i < m_animation.m_keyframes.size(); i++)
+	{
+		if (child == m_animation.m_keyframes[i].first)
+		{
+			index = i;
+		}
+	}
+	if (index == -1)
+	{
+		printf("Failed to remove KeyFrame (Child doesn't exist).\n");
+		return;
+	}
+	if (keyframe > m_animation.m_keyframes[index].second.size()-1)
+	{
+		printf("Failed to remove KeyFrame (KeyFrame doesn't exist).\n");
+		return;
+	}
+
+	float time = m_animation.m_keyframes[index].second[keyframe].time;
+
+	m_animation.m_keyframes[index].second.erase(m_animation.m_keyframes[index].second.begin() + keyframe);
+
+	if (m_animation.m_end_time == time)
+	{
+		_CheckEndTime();
+	}
 }
 
 AnimationGroup Animation::GetAnimationData()
@@ -341,6 +372,22 @@ bool IsKeyFrameEarlier(KeyFrame& const k1, KeyFrame& const k2)
 void Animation::_SortKeyframes(int index)
 {
 	std::sort(m_animation.m_keyframes[index].second.begin(), m_animation.m_keyframes[index].second.end(),IsKeyFrameEarlier);
+}
+
+void Animation::_CheckEndTime()
+{
+	float end_time = 0;
+	for (int i = 0; i < m_animation.m_keyframes.size(); i++)
+	{
+		for (int k = 0; k < m_animation.m_keyframes[i].second.size(); k++)
+		{
+			if (m_animation.m_keyframes[i].second[k].time > end_time)
+			{
+				end_time = m_animation.m_keyframes[i].second[k].time;
+			}
+		}
+	}
+	m_animation.m_end_time = end_time;
 }
 
 void AnimationController::Update(float deltaTime)

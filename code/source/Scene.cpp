@@ -1,53 +1,84 @@
 #include "code/headers/Scene.h"
 
+Scene::Scene()
+{
+	m_root = new Entity("Root");
+}
+
 void Scene::Update(float deltaTime)
 {
-	for each (auto entity in m_entities)
+	m_root->Update(deltaTime);
+	/*for each (auto entity in m_entities)
 	{
 		entity->Update(deltaTime);
-	}
+	}*/
 }
 
 void Scene::Render(BatchRenderer * renderer)
 {
-	for each (auto entity in m_entities)
+	m_root->Render(renderer);
+	/*for each (auto entity in m_entities)
 	{
 		entity->Render(renderer);
-	}
+	}*/
 }
 
 Entity * Scene::SpawnEntity()
 {
-	Entity* new_entity = new Entity();
+	return m_root->SpawnChild();
+
+	/*Entity* new_entity = new Entity();
 	m_entities.emplace_back(new_entity);
-	return new_entity;
+	return new_entity;*/
 }
 
 Entity * Scene::SpawnEntity(std::string name)
 {
-	Entity* new_entity = new Entity(name);
+	return m_root->SpawnChild(name);
+
+	/*Entity* new_entity = new Entity(name);
 	m_entities.emplace_back(new_entity);
-	return new_entity;
+	return new_entity;*/
+}
+
+Entity * Scene::GetRoot()
+{
+	return m_root;
 }
 
 Entity * Scene::GetChild(int index)
 {
-	if (m_entities.size() <= index)
+	return m_root->GetChild(index);
+
+	/*if (m_entities.size() <= index)
 	{
 		printf("Child doesn't exist!\n");
 		return NULL;
 	}
-	return m_entities[index];
+	return m_entities[index];*/
 }
 
 std::vector<Entity*> Scene::GetChildren()
 {
-	return m_entities;
+	return m_root->GetChildren();
+	/*return m_entities;*/
 }
 
 Entity * Scene::FindEntityWithId(int id)
 {
-	for each (auto entity in m_entities)
+	if (m_root->GetId() == id)
+	{
+		return m_root;
+	}
+
+	Entity* result = m_root->FindChildWithId(id);
+	if (result != NULL)
+	{
+		return result;
+	}
+	return NULL;
+
+	/*for each (auto entity in m_entities)
 	{
 		if (entity->GetId() == id)
 			return entity;
@@ -58,12 +89,25 @@ Entity * Scene::FindEntityWithId(int id)
 		if (result != NULL)
 			return result;
 	}
-	return NULL;
+	return NULL;*/
 }
 
 Entity * Scene::FindEntityWithName(std::string name)
 {
-	for each (auto entity in m_entities)
+	if (m_root->GetName() == name)
+	{
+		return m_root;
+	}
+
+	Entity* result = m_root->FindChildWithName(name);
+	if (result != NULL)
+	{
+		return result;
+	}
+	return NULL;
+
+
+	/*for each (auto entity in m_entities)
 	{
 		if (entity->GetName() == name)
 			return entity;
@@ -74,5 +118,5 @@ Entity * Scene::FindEntityWithName(std::string name)
 		if (result != NULL)
 			return result;
 	}
-	return NULL;
+	return NULL;*/
 }

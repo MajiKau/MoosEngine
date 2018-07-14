@@ -54,6 +54,9 @@ public:
 
 	void AddKeyFrame(KeyFrame keyframe, std::vector<int> child = {});
 	void AddKeyFrame(float time, Pose pose, std::vector<int> child = {});
+	void RemoveKeyFrame(uint keyframe, std::vector<int> child = {});
+
+
 	AnimationGroup GetAnimationData();
 	void SetAnimationData(AnimationGroup data);
 
@@ -63,6 +66,7 @@ public:
 private:
 
 	void _SortKeyframes(int index);
+	void _CheckEndTime();
 
 	//std::string m_name;
 	AnimationGroup m_animation;

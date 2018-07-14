@@ -5,13 +5,14 @@
 class Scene
 {
 public:
-	Scene() {};
+	Scene();
 	void Update(float deltaTime);
 	void Render(BatchRenderer* renderer);
 
 	Entity* SpawnEntity();
 	Entity* SpawnEntity(std::string name);
 
+	Entity* GetRoot();
 	Entity* GetChild(int index);
 	std::vector<Entity*> GetChildren();
 
@@ -19,5 +20,6 @@ public:
 	Entity* FindEntityWithName(std::string name);
 
 private:
-	std::vector<Entity*> m_entities;
+	//std::vector<Entity*> m_entities;
+	Entity* m_root;
 };
