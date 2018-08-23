@@ -921,6 +921,8 @@ BatchRenderer::BatchRenderer(float Zoom, float Ratio)
 
 	m_loaded_meshes.insert({ "testcube",new Mesh("Content/Models/TestCube/TestCube.obj") });
 
+	m_loaded_meshes.insert({ "gasmask",new Mesh("Content/Models/Gasmask/GasmaskV2_5.obj") });
+
 
 	//CUBE
 	{
@@ -1103,6 +1105,9 @@ void BatchRenderer::Render()
 
 	SetInt(18, 1);//Set specular texture to GL_TEXTURE1
 	SetInt(28, 2);//Set normal texture to GL_TEXTURE2
+	SetInt(29, 3);//Set skybox cubemap to GL_TEXTURE3
+	m_skybox_texture->Bind(GL_TEXTURE3);
+
 	SetBlinn(Blinn);
 
 	GLuint err = glGetError();

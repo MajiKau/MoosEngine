@@ -1371,8 +1371,10 @@ void game()
     float speed = 100.0f;
     if (inputManager->IsMouseDown(GLUT_RIGHT_BUTTON))
     {
-        speed = 200.0f;
+        speed = 10.0f;
     }
+	if (window_focus)
+	{
 	if (GetAsyncKeyState(0x57))
 	{
 		renderer->Camera.Position += Forward * speed * (float)deltaTime;
@@ -1390,54 +1392,55 @@ void game()
 		renderer->Camera.Position += Right * speed * (float)deltaTime;
 	}
 	
-	if (GetAsyncKeyState(0x57))//W
-	{
-		tank.Move(0);
-	}
-	else if (GetAsyncKeyState(0x53))//S
-	{
-		tank.Move(1);
-	}
-	else
-	{
-		tank.Move(2);
-	}
-	if (GetAsyncKeyState(0x41))//A
-	{
-		tank.Move(3);
-	}
-	else if (GetAsyncKeyState(0x44))//D
-	{
-		tank.Move(4);
-	}
-	else
-	{
-		tank.Move(5);
-	}
-	if (GetAsyncKeyState(0x51))//Q
-	{
-		tank.Move(6);
-	}
-	else if (GetAsyncKeyState(0x45))//E
-	{
-		tank.Move(7);
-	}
-	else
-	{
-		tank.Move(8);
-	}
+		if (GetAsyncKeyState(0x57))//W
+		{
+			tank.Move(0);
+		}
+		else if (GetAsyncKeyState(0x53))//S
+		{
+			tank.Move(1);
+		}
+		else
+		{
+			tank.Move(2);
+		}
+		if (GetAsyncKeyState(0x41))//A
+		{
+			tank.Move(3);
+		}
+		else if (GetAsyncKeyState(0x44))//D
+		{
+			tank.Move(4);
+		}
+		else
+		{
+			tank.Move(5);
+		}
+		if (GetAsyncKeyState(0x51))//Q
+		{
+			tank.Move(6);
+		}
+		else if (GetAsyncKeyState(0x45))//E
+		{
+			tank.Move(7);
+		}
+		else
+		{
+			tank.Move(8);
+		}
 
-	if (GetAsyncKeyState(0x48))//H
-	{
+		if (GetAsyncKeyState(0x48))//H
+		{
 
-	}
-	if (GetAsyncKeyState(0x4A))//J
-	{
+		}
+		if (GetAsyncKeyState(0x4A))//J
+		{
 
-	}
-	if (GetAsyncKeyState(0x4B))//K
-	{
+		}
+		if (GetAsyncKeyState(0x4B))//K
+		{
 
+		}
 	}
 
 	/*glm::mat4 rotation = glm::eulerAngleY(renderer->Camera.Rotation.x)*glm::eulerAngleX(renderer->Camera.Rotation.y);
