@@ -17,13 +17,6 @@
 #include "code/headers/RenderFunctions.h"
 #include "code/headers/InputManager.h"
 
-#include "code/headers/Pathfinding.h"
-#include "code/headers/Follower.h"
-#include "code/headers/Turret.h"
-
-#include "code/headers/Quadtree.h"
-#include "code/headers/Octree.h"
-
 #include "code/headers/Vehicle.h"
 #include "code/headers/Scene.h"
 
@@ -57,25 +50,12 @@ bool show_another_window2 = false;
 
 InputManager* inputManager;
 
-std::vector<Node*> nodes;
-
-Node* startNode;
-Node* endNode;
-
 int selectedNode = 0;
 
 float zoom = 100.0f;
 
 BatchRenderer* renderer;
 
-struct Wall
-{
-    Point2 v1;
-    Point2 v2;
-    Point2 v3;
-    Point2 v4;
-};
-std::vector<Wall> walls;
 
 glm::mat4 Projection;
 glm::mat4 View;
@@ -83,16 +63,8 @@ glm::vec3 PlaneRot;
 
 Material CustomMaterial;
 
-//Pathfinding
-std::vector<Follower*> followers;
-std::vector<Turret*> turrets;
 
 float score = 500.0f;
-int followerAmount = 1;
-int followerUpdateIterator = 0;
-int pathfindingUpdates = 50;
-int nodenum = 1000;
-int wallnum = 0;
 
 glm::vec3 cursor;
 bool showTurret = false;
@@ -564,141 +536,6 @@ void drawGUI()
 
 	ImGui::Render();
 }
-void CalculateNodeNeighbours()
-{
-    for each (auto node in nodes)
-    {
-        node->neighbours.clear();
-        for each (auto node2 in nodes)
-        {
-            if (node == node2) continue;
-            if (DistanceSquared({ node->x,node->y }, { node2->x,node2->y }) < 400)
-            {
-                LineSegment2 line(node->x, node->y, node2->x, node2->y);
-                bool intersect = false;
-                for each (Wall wall in walls)
-                {
-                    if (DoLineSegmentsIntersect(line, LineSegment2(wall.v1,wall.v2)))
-                    {
-                        intersect = true;
-                    }
-                    else if (DoLineSegmentsIntersect(line, LineSegment2(wall.v2, wall.v3)))
-                    {
-                        intersect = true;
-                    }
-                    else if (DoLineSegmentsIntersect(line, LineSegment2(wall.v3, wall.v4)))
-                    {
-                        intersect = true;
-                    }
-                    else if (DoLineSegmentsIntersect(line, LineSegment2(wall.v4, wall.v1)))
-                    {
-                        intersect = true;
-                    }
-                }
-                if (!intersect)
-                    node->AddNeighbour(node2);
-            }
-        }
-    }
-}
-
-Node* RandomEdgeNode()
-{
-    int wh = (int)sqrt(nodenum);
-    int x;
-    int y;
-    int s = rand() % 4;
-    switch (s)
-    {
-    case 0:
-        x = rand() % 10;
-        y = rand() % (wh - 1);
-        break;
-    case 1:
-        x = wh - rand() % 10;
-        y = rand() % (wh - 1);
-        break;
-    case 2:
-        x = rand() % wh;
-        y = rand() % 10;
-        break;
-    case 3:
-        x = rand() % wh;
-        y = (wh - 1) - rand() % 10;
-        break;
-    default:
-        printf("Error 4");
-        break;
-    }
-    return nodes[y*wh + x];
-}
-
-void reset()
-{
-    score = 500.0f;
-    walls.clear();
-    int s = (int)sqrt(wallnum);
-    for (int i = 0; i < s; i++)
-    {
-        for (int j = 0; j < s; j++)
-        {
-            Point2 p1((float)(i * 40 - 20 * s), (float)(j * 40 - 20 * s));
-            Point2 p2(p1.x + (float)(rand() % 40 + 0), p1.y + (float)(rand() % 10 - 5));
-            Point2 p3(p2.x + (float)(rand() % 10 - 5), p2.y + (float)(rand() % 40 + 0));
-            Point2 p4(p3.x + (float)(rand() % 40 - 40), p3.y + (float)(rand() % 10 - 5));
-            Wall wall;
-            wall.v1 = p1;
-            wall.v2 = p2;
-            wall.v3 = p3;
-            wall.v4 = p4;
-            walls.push_back(wall);
-        }
-    }
-	for (size_t i = 0; i < nodes.size(); i++)
-	{
-		delete nodes[i];
-	}
-    nodes.clear();
-    s = (int)sqrt(nodenum);
-
-    for (int i = 0; i < s; i++)
-    {
-        for (int j = 0; j < s; j++)
-        {
-            Node* newNode = new Node((float)(j * 10 - 5 * s), (float)(i * 10 - 5 * s));
-            nodes.push_back(newNode);//TODO Check if inside a wall!
-        }
-    }
-
-    CalculateNodeNeighbours();
-
-    startNode = nodes.front();
-    endNode = nodes.back();
-    selectedNode = 0;
-
-	for (size_t i = 0; i < turrets.size(); i++)
-	{
-		delete turrets[i];
-	}
-    turrets.clear();
-
-	for (size_t i = 0; i < followers.size(); i++)
-	{
-		delete followers[i];
-	}
-    followers.clear();
-    for (int i = 0; i < followerAmount; i++)
-    {
-        Follower* fol = new Follower();
-        int j = rand() % nodes.size();
-        Node* randomnode = RandomEdgeNode();
-        fol->x = randomnode->x;
-        fol->y = randomnode->y;
-        fol->m_target = randomnode;
-
-        followers.push_back(fol);
-    }
-}
 
 void changeSize(int w, int h) 
 {
@@ -721,10 +558,6 @@ void changeSize(int w, int h)
 	printf("W:%d,H:%d,Ration:%.2f\n", screenWidth, screenHeight, ratio);
 }
 
-Octree<Cuboid> test_octree(0, { -500,-500,-500,1000,1000,1000 });
-std::vector<Cuboid> test_objects;
-
-Quadtree<Follower> follower_quadtree(0, { -500,-500,1000,1000 });
 
 Entity* fish_entity;
 Entity* frame_entity;
@@ -755,8 +588,7 @@ void GameInit()
     CustomMaterial.shininess = 256.0f;
 
     renderer->m_point_light.push_back(light);
-
-    reset();    
+   
 
 	for (int x = -5; x < 5; x++)
 	{
@@ -921,67 +753,10 @@ void renderScene(void)
 
 	MainScene.Render(renderer);
 
-	//test_octree.Render(renderer);
-	//follower_quadtree.Render(renderer);
-
-	//Draw all nodes as Tetrahedrons
-	/*for each (auto node in nodes)
+	for each (auto light in renderer->m_point_light)
 	{
-		Color3f nodecolor{ 1 - 10000 / node->H, 1 - 10000 / node->H, 1 - 10000 / node->H };
-        
-        renderer->RenderRegularTetrahedron({ node->x,-2,node->y }, 2, nodecolor);
-	}*/
-
-	//Draw Lines to show connections between nodes
-	/*float distance;
-	for each (auto node in nodes)
-	{
-		Color3f nodecolor{ 1 - 10000 / node->H, 1 - 10000 / node->H, 1 - 10000 / node->H };
-
-		for each (auto node2 in node->neighbours)
-		{
-			LineSegment2 line(node->x, node->y, node2->x, node2->y);
-			distance = DistanceSquared(mousePosWorld, ClosestPointOnLineSegment(mousePosWorld, line));
-			Color3f color{ 1,1,1 };
-			if (distance > 10000.0f)
-			{
-				color.r = 1 - (1.0f / 10000.0f) * (distance - 10000.0f);
-				color.b = 0;
-				color.g = 0;
-			}
-			else if (distance > 2500)
-			{
-				color.g = 1 - (1.0f / 10000.0f) * (distance - 2500.0f);
-				color.b = 0;
-			}
-			else
-			{
-				color.b = 1 - (1.0f / 2500.0f) * (distance);
-			}
-
-			renderer->RenderLine(node->x, node->y, node2->x, node2->y, color);
-		}
-	}*/
-
-    /*for each (Follower* fol in followers)
-    {
-        fol->Render(renderer);
-    }*/  
-    /*for each (Turret* tur in turrets)
-    {
-        tur->Render(renderer);
-    }*/    
-
-    //Render walls
-    /*if (walls.size() != 0)
-    {
-        for (int i = 0; i < walls.size(); i ++)
-        {
-            std::vector<glm::vec3> points = { ToVec3(walls[i].v1),ToVec3(walls[i].v2),ToVec3(walls[i].v3),ToVec3(walls[i].v4) };
-            renderer->RenderExtrudedShape(points, 4, RED);
-        }
-    }*/
-
+		renderer->RenderRegularTetrahedron(light.Position, 3, Color3f(light.Color.x, light.Color.y, light.Color.z));
+	}
     
 
     Material DefaultMaterial;
@@ -991,66 +766,6 @@ void renderScene(void)
     DefaultMaterial.shininess = 32.0f;
 
     Material material = DefaultMaterial;
-
-    /*glm::mat4 modelMat = glm::translate(glm::vec3(0, 100, -20)); 
-	renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);*/
-
-
-    /*renderer->RenderMesh("dragon", modelMat, DefaultMaterial);
-    //
-    modelMat = glm::translate(glm::vec3(20, 100, 0))*glm::rotate(totalTime / 800.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    renderer->RenderMesh("dragon", modelMat, DefaultMaterial);
-
-    modelMat = glm::translate(glm::vec3(0, 100, 0))*glm::rotate(totalTime / 800.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    material.shininess = 128.0f;
-    renderer->RenderMesh("dragon", modelMat, material);
-
-    modelMat = glm::translate(glm::vec3(-20, 100, 0))*glm::rotate(totalTime / 800.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    material.shininess = 256.0f;
-    renderer->RenderMesh("dragon", modelMat, material);
-
-    modelMat = glm::translate(glm::vec3(-40, 100, -0))*glm::rotate(totalTime / 800.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    renderer->RenderMesh("dragon", modelMat, CustomMaterial);
-
-    modelMat = glm::translate(glm::vec3(-60, 100, 0))*glm::scale(glm::vec3(100, 100, 100));
-    renderer->RenderMesh("bunny", modelMat, DefaultMaterial);
-
-    modelMat = glm::translate(glm::vec3(-80, 100, 0));
-    renderer->RenderMesh("airboat", modelMat, DefaultMaterial);
-
-    modelMat = glm::translate(glm::vec3(-100, 100, 0));
-    renderer->RenderMesh("cruiser", modelMat, DefaultMaterial);
-
-    modelMat = glm::rotate(totalTime/800, glm::vec3(0.0f, 1.0f, 0.0f))*glm::translate(glm::vec3(0, 40+10*sinf(totalTime/1000), 40))*glm::scale(glm::vec3(5, 5, 5));
-    renderer->RenderMesh("f16", modelMat, DefaultMaterial);*/
-
-    /*if (renderPlane)
-    {
-        PlaneRot = glm::lerp(PlaneRot, renderer->Camera.Rotation, 0.1f);
-        modelMat = glm::translate(renderer->Camera.Position + 2.0f*renderer->Camera.Forward - 0.75f*renderer->Camera.Up)*glm::rotate(PlaneRot.x + PI / 2.0f, renderer->Camera.Up)*glm::rotate(PlaneRot.y, renderer->Camera.Right)*glm::rotate(-PlaneRot.z, renderer->Camera.Forward);
-        renderer->RenderMesh("f16", modelMat, DefaultMaterial);
-    }*/
-
-	/*modelMat = glm::translate(glm::vec3(0, 100, 0));
-	renderer->RenderMesh("v_platform_full", modelMat, DefaultMaterial);
-	modelMat = glm::translate(glm::vec3(-10, 100, 0));
-	renderer->RenderMesh("v_platform_left", modelMat, DefaultMaterial);
-	modelMat = glm::translate(glm::vec3(10, 100, 0));
-	renderer->RenderMesh("v_platform_right", modelMat, DefaultMaterial);*/
-
-    //Render Player
-	//tank.Render(renderer);
-    /*modelMat = glm::translate(glm::vec3(renderer->Camera.Position.x, 2, renderer->Camera.Position.z))*glm::rotate(renderer->Camera.Rotation.x - PI / 2.0f, glm::vec3(0, 1, 0));
-    renderer->RenderMesh("fulltank", modelMat, DefaultMaterial);*/
-
-    /*modelMat = glm::translate(glm::vec3(0, 100, 20));
-    renderer->RenderMesh("Cube", modelMat, CustomMaterial);
-    modelMat = glm::translate(glm::vec3(0, 100, 40))*glm::scale(glm::vec3(4));
-    renderer->RenderMesh("Cube", modelMat, DefaultMaterial);
-    modelMat = glm::translate(glm::vec3(0, 100, 60))*glm::scale(glm::vec3(8));
-    renderer->RenderMesh("Cube", modelMat, DefaultMaterial);
-    modelMat = glm::translate(glm::vec3(0, 100, 80))*glm::scale(glm::vec3(16))*glm::rotate(totalTime / 5000.0f, glm::vec3(1.0f, 0.0f, 0.0f))*glm::rotate(totalTime / 3000.0f, glm::vec3(0.0f, 1.0f, 0.0f))*glm::rotate(totalTime / 2000.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    renderer->RenderMesh("Cube", modelMat, DefaultMaterial);*/
 
     GLenum err = glGetError();
     if (GLEW_OK != err)
@@ -1120,20 +835,6 @@ void renderScene(void)
     printf("Total:%dKB , Available:%dKB\n", nTotalMemoryInKB, nCurAvailMemoryInKB);*/
 
 }
-bool PlaceTurretAt(Vector3f pos)
-{
-    for each (auto tur in turrets)
-    {
-        float distance = glm::distance(tur->m_position ,pos);
-        if (distance < 10.0f)
-        {
-            return false;
-        }
-    }
-    Turret* turret = new Turret(pos, 0.01f);
-    turrets.push_back(turret);
-    return true;
-}
 
 
 
@@ -1164,45 +865,7 @@ void game()
 		renderer->m_point_light[1].Position.z = lightDistance * cosf(PI + totalTime / 500.0f);
 	}
 
-	//PATHFINDING
-	Node* target = nodes.front();
-	float distance = 1000;
-	for each (Node* node in nodes)
-	{
-		float distance2 = DistanceSquared({ renderer->Camera.Position.x, renderer->Camera.Position.z }, { node->x,node->y });
-		if (distance2 < distance)
-		{
-			target = node;
-			distance = distance2;
-		}
-	}
-	std::vector<Node*> new_path;
-	for (int i = 0; i < pathfindingUpdates; i++)
-	{
-		Follower* fol = followers[followerUpdateIterator];
-
-		followerUpdateIterator++;
-		if (followerUpdateIterator >= followerAmount)followerUpdateIterator = 0;
-
-		new_path = DoPathFinding(fol->m_target, target);
-		if (new_path.size() != 0)
-			fol->SetPath(new_path);
-
-
-	}
-	//Turrets damage followers
-	for each (Follower* fol in followers)
-	{
-		for each (Turret* tur in turrets)
-		{
-			distance = Distance({ tur->m_position.x,tur->m_position.z }, { fol->x,fol->y });
-			if (distance < 30)
-			{
-				fol->Damage(tur->m_damage*(float)deltaTime);
-			}
-
-		}
-	}
+	
 
 	//INPUTS
 	if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock && window_focus)
@@ -1226,8 +889,7 @@ void game()
 	if (inputManager->IsKeyDown(27))
 		glutExit();
 
-	if (inputManager->IsKeyPressed('r'))
-		reset();
+	//if (inputManager->IsKeyPressed('r'))
 
 	//TODO:
 	if (inputManager->IsKeyPressed('m'))
@@ -1327,29 +989,11 @@ void game()
 	}*/
 	if (inputManager->IsKeyPressed('t'))
 	{
-		float w = rand() % 4 + 1.0f;
-		float h = rand() % 4 + 1.0f;
-		float d = rand() % 4 + 1.0f;
-		Vector3f pos = renderer->Camera.Position + 5.0f*renderer->Camera.Forward;
-		test_objects.push_back({ pos.x - w / 2.0f, pos.y - h / 2.0f, pos.z - d / 2.0f,w,h,d });
-		//test_objects[0] = { cursor.x - w / 2.0f,cursor.z - h / 2.0f,w,h };
 	}
 	if (inputManager->IsKeyPressed('y'))
 	{
-		printf("%d\n", (int)test_objects.size());
 	}
 
-	test_octree.clear();
-	for (int i = 0; i < test_objects.size(); i++)
-	{
-		test_octree.insert(&test_objects[i]);
-	}
-
-	follower_quadtree.clear();
-	for (int i = 0; i < followers.size(); i++)
-	{
-		follower_quadtree.insert(followers[i]);
-	}
 
     /*if (inputManager->IsMousePressed(GLUT_LEFT_BUTTON))
     {
@@ -1499,43 +1143,7 @@ void game()
     if (renderer->Camera.Rotation.y < -PI / 2.0f + 0.1f)
         renderer->Camera.Rotation.y = -PI / 2.0f + 0.1f;
 
-    //Follower updates
-    for each (Follower* fol in followers)
-    {
-        int res = fol->Update((float)deltaTime);
-        if (res == 1)//Dead
-        {
-            score += 1.0f;
-            Node* randomnode = RandomEdgeNode();
-            fol->x = randomnode->x;
-            fol->y = randomnode->y;
-            fol->m_target = randomnode;            
-        }
-       
-        else if (res == 2)//No path
-        {
-            float distance = Distance({ renderer->Camera.Position.x, renderer->Camera.Position.z }, { fol->x,fol->y });
-            if (distance < 10)
-            {
-                score -= 1.0f;
-                Node* randomnode = RandomEdgeNode();
-                fol->x = randomnode->x;
-                fol->y = randomnode->y;
-                fol->m_target = randomnode;
-            }
-            else
-            {
-                fol->Damage(-0.1f);
-            }
-        }
-        else if (res == 3)//Dead from being stuck
-        {
-            Node* randomnode = RandomEdgeNode();
-            fol->x = randomnode->x;
-            fol->y = randomnode->y;
-            fol->m_target = randomnode;
-        }
-    }
+    
     
 	mousePos.x = (float)inputManager->GetMousePosition()[0];
 	mousePos.y = (float)inputManager->GetMousePosition()[1];
