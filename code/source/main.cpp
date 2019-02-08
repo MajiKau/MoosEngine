@@ -641,16 +641,22 @@ void GameInit()
 
 	Entity* ground = MainScene.SpawnEntity("Ground");
 	ground->AddMesh("testcube");
-	ground->SetLocalPosition({ 0,-10,0 });
-	ground->SetLocalScale({ 100,1,100 });
+	ground->SetLocalPosition({ 50,10,0 });
+	ground->SetLocalScale({ 20,1,20 });
+
+	Entity* basiccube = MainScene.SpawnEntity("BasicCube");
+	basiccube->AddMesh("BasicCube");
+	basiccube->SetLocalPosition({ 0,10,0 });
+	basiccube->SetLocalScale({ 10,10,10 });
+
 
 	Entity* cube = MainScene.SpawnEntity("Cube");
 	cube->AddMesh("Cube");
-	cube->SetLocalPosition({ 0,10,0 });
+	cube->SetLocalPosition({ -30,20,-50 });
 	cube->SetLocalScale({ 20,20,20 });
 
 	fish_entity = MainScene.SpawnEntity("Platform_Root");
-	fish_entity->SetLocalPosition({ 0,-30,0 });
+	fish_entity->SetLocalPosition({ 0,30,0 });
 
 	frame_entity = fish_entity->SpawnChild("Platform_Frame");
 	frame_entity->AddMesh("v_platform_frame");
@@ -747,7 +753,7 @@ void renderScene(void)
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glUseProgram(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	//Rendering
 
@@ -772,37 +778,6 @@ void renderScene(void)
     {
         printf("%s\n", glewGetErrorString(err));
     }
-
-    //Render light source
-    /*for each (auto light in renderer->m_point_light)
-    {
-        renderer->RenderRegularTetrahedron(light.Position, 3, Color3f(light.Color.x, light.Color.y, light.Color.z));
-    }*/
-    //renderer->RenderRegularTetrahedron(renderer->m_point_light[0].Position, 3, Color3f(renderer->m_point_light[0].Color.x, renderer->m_point_light[0].Color.y, renderer->m_point_light[0].Color.z));
-    //renderer->RenderRegularTetrahedron(renderer->m_point_light[1].Position, 3, Color3f(renderer->m_point_light[1].Color.x, renderer->m_point_light[1].Color.y, renderer->m_point_light[1].Color.z));
-
-    /*modelMat = glm::translate(glm::vec3(0.0f, -2.0f, 0.0f));
-    renderer->RenderMesh("flatplane", modelMat, CustomMaterial);*/
-
-	/*modelMat = glm::translate(glm::vec3(0, -2.0f, 0))*glm::scale(glm::vec3(1000,1,1000));
-	renderer->RenderMesh("Cube", modelMat, DefaultMaterial);*/
-
-    /*modelMat = glm::translate(glm::vec3(0.0f, 90.0f, 0.0f));
-    renderer->RenderMesh("flatplane", modelMat, CustomMaterial);*/
-
-    /*if (showTurret)
-    {
-        //renderer->RenderRegularTetrahedron(cursor, 1.0f, BLUE);
-        renderer->RenderCircleHollow({ cursor.x,cursor.z }, 10, BLUE);
-    }
-    else
-    {
-        //renderer->RenderRegularTetrahedron(cursor, 0.5f, GREEN);
-		renderer->RenderRegularTriangle({ cursor.x,cursor.z }, 0.5f,0, GREEN);
-    }*/
-
-    //modelMat = glm::translate(renderer->Camera.Position)*glm::rotate(PI, glm::vec3(0, 1, 0))*glm::scale(glm::vec3(1000));
-    //renderer->RenderMesh("Skybox", modelMat, DefaultMaterial);
 
 	renderer->Render();
     err = glGetError();
@@ -956,56 +931,12 @@ void game()
 	dir *= 10.0f;
 	tank_rb_entity->GetRidigbody()->SetVelocity({ dir.x, tank_rb_entity->GetRidigbody()->GetVelocity().y, dir.z });
 
-	//Turret placing
-    /*if (inputManager->IsKeyDown('q') || inputManager->IsMouseDown(GLUT_LEFT_BUTTON))
-    {
-        showTurret = true;
-    }
-    else
-    {
-        showTurret = false;
-    }
-
-    if (inputManager->IsKeyReleased('q') || inputManager->IsMouseReleased(GLUT_LEFT_BUTTON))
-    {
-        if (score >= 100.0f)
-        {
-            if (PlaceTurretAt(cursor))
-            {
-                score -= 100.0f;
-            }
-        }
-    }*/
-
-	//Place test objects into octree
-	/*if (inputManager->IsKeyDown('e'))
-	{
-		float w = rand() % 4 + 1.0f;
-		float h = rand() % 4 + 1.0f;
-		float d = rand() % 4 + 1.0f;
-		Vector3f pos = renderer->Camera.Position + 5.0f*renderer->Camera.Forward;
-		test_objects.push_back({ pos.x - w / 2.0f, pos.y - h / 2.0f, pos.z - d / 2.0f,w,h,d });
-		//test_objects.push_back({ cursor.x-w/2.0f,cursor.z-h/2.0f,w,h });
-	}*/
 	if (inputManager->IsKeyPressed('t'))
 	{
 	}
 	if (inputManager->IsKeyPressed('y'))
 	{
 	}
-
-
-    /*if (inputManager->IsMousePressed(GLUT_LEFT_BUTTON))
-    {
-        for each (Follower* fol in followers)
-        {
-            float distance = Distance({ renderer->Camera.Position.x, renderer->Camera.Position.z }, { fol->x,fol->y });
-            if (distance < 30)
-            {
-                fol->Damage(20.0f);
-            }
-        }
-    }*/
 
     //Movement
     glm::vec3 Forward = glm::normalize(glm::vec3(renderer->Camera.Forward.x, 0, renderer->Camera.Forward.z));
@@ -1087,36 +1018,6 @@ void game()
 		}
 	}
 
-	/*glm::mat4 rotation = glm::eulerAngleY(renderer->Camera.Rotation.x)*glm::eulerAngleX(renderer->Camera.Rotation.y);
-	renderer->Camera.Position = glm::vec4(tank.GetPosition(),1.0f) + rotation * glm::translate(glm::vec3(0,0,10))* glm::vec4(0,0,0,1);*/
-
-    /*if (inputManager->IsKeyDown('w'))
-    {
-        renderer->Camera.Position += Forward*speed;
-    }
-    if (inputManager->IsKeyDown('s'))
-    {
-        renderer->Camera.Position -= Forward*speed;
-    }
-    if (inputManager->IsKeyDown('a'))
-    {
-        renderer->Camera.Position -= Right*speed;
-    }
-    if (inputManager->IsKeyDown('d'))
-    {
-        renderer->Camera.Position += Right*speed;
-    }*/
-
-    /*if (inputManager->IsMouseDown(GLUT_MIDDLE_BUTTON))
-    {
-        for each (auto fol in followers)
-        {
-            if (DistanceToLine({ fol->x,fol->y }, Line2(renderer->Camera.Position.x, renderer->Camera.Position.z, renderer->Camera.Position.x + renderer->Camera.Forward.x, renderer->Camera.Position.z + renderer->Camera.Forward.z)) < 1)
-            {
-                fol->Damage(20.0f);
-            }
-        }
-    }*/
     if (inputManager->IsMousePressed(3))//Scroll up
     {
         renderer->Camera.Position.y += 1.0f;
@@ -1197,9 +1098,11 @@ int main(int argc, char **argv) {
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
 	glDepthFunc(GL_LEQUAL); 
 	//glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
+	//glEnable(GL_STENCIL_TEST); // Enable stencil testing
 
 	glEnable(GL_CULL_FACE); // enable face culling
 	//glCullFace(GL_FRONT); // culls front faces
+	glCullFace(GL_BACK); // culls back faces
 
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	fprintf(stdout, "Status: Using GLU %s\n", gluGetString(GLU_VERSION));
@@ -1230,7 +1133,7 @@ int main(int argc, char **argv) {
 
 	//printf("%s\n",glGetString(GL_EXTENSIONS));
 	
-	wglSwapIntervalEXT(0);
+	wglSwapIntervalEXT(0);//Vsync
     // enter GLUT event processing loop
     glutMainLoop();
 

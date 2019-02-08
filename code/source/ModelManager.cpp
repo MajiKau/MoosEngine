@@ -349,7 +349,7 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
             Ret = m_Textures_Specular[i]->Load();
         }
 		if (!m_Textures_Normal[i]) {
-			m_Textures_Normal[i] = new Texture(GL_TEXTURE_2D, "Content/Images/blue.png");
+			m_Textures_Normal[i] = new Texture(GL_TEXTURE_2D, "Content/Images/normal.png");
 
 			Ret = m_Textures_Normal[i]->Load();
 		}

@@ -4,6 +4,10 @@
 #include <glm.hpp>
 #include <ext.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+//#include <gtx/matrix_decompose.hpp>
+#include <gtx/rotate_vector.hpp>
+
 #include <stdio.h>
 #include <iostream>
 
