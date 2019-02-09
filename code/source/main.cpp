@@ -55,6 +55,7 @@ int selectedNode = 0;
 float zoom = 100.0f;
 
 BatchRenderer* renderer;
+glm::vec3 previousCameraPosition;
 
 
 glm::mat4 Projection;
@@ -652,8 +653,8 @@ void GameInit()
 
 	Entity* cube = MainScene.SpawnEntity("Cube");
 	cube->AddMesh("Cube");
-	cube->SetLocalPosition({ -30,20,-50 });
-	cube->SetLocalScale({ 20,20,20 });
+	cube->SetLocalPosition({ -20,20,-130 });
+	cube->SetLocalScale({ 10,10,10 });
 
 	fish_entity = MainScene.SpawnEntity("Platform_Root");
 	fish_entity->SetLocalPosition({ 0,30,0 });
@@ -688,6 +689,30 @@ void GameInit()
 	tank_top_entity->AddMesh("tank_top");
 	tank_top_entity->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), -10.1f, { 0,1,0 }));
 
+	Entity* door = MainScene.SpawnEntity("Door");
+	door->AddMesh("DoorFrame");
+	Entity* portal = door->SpawnChild("Portal");
+	//portal->AddMesh("Door");
+	Entity* tunnel = door->SpawnChild("Tunnel");
+	tunnel->AddMesh("DoorFrame");
+	tunnel->SetLocalScale({ 1,1,4 });
+	tunnel->SetLocalPosition({ 0,0,-1.9f });
+	door->SetLocalPosition({ 0,1,-100 });
+
+	Entity* door2 = MainScene.SpawnEntity("Door2");
+	door2->AddMesh("DoorFrame");
+	Entity* portal2 = door2->SpawnChild("Portal2");
+	portal2->SetLocalPosition({ 0,0,-9.6f });
+	//portal2->AddMesh("Door");
+	Entity* tunnel2 = door2->SpawnChild("Tunnel2");
+	tunnel2->AddMesh("DoorFrame");
+	tunnel2->SetLocalScale({ 1,1,20 });
+	tunnel2->SetLocalPosition({ 0,0,-9.6f });
+	Entity* door2c = door2->SpawnChild("Door2c");
+	//door2c->AddMesh("DoorFrame");
+	door2c->SetLocalPosition({ 0,0,-20.0f });
+	door2->SetLocalPosition({ 0,-99,-100 });
+
 	{
 		Animation wave_animation("Wave");
 		wave_animation.SetLooping(true);
@@ -710,9 +735,12 @@ void GameInit()
 
 		wave_animation.SaveAnimation("SimpleWaveTest.txt");
 
+		wave_animation.LoadAnimation("Content/Animations/Wave.txt");
+
 		Animation LoadTestAnimation;
 		LoadTestAnimation.LoadAnimation("SimpleWaveTest.txt");
 		LoadTestAnimation.SaveAnimation("LoadTest.txt");
+
 
 		wave_entity = MainScene.SpawnEntity("Person");
 		wave_entity->AddAnimation(wave_animation);
@@ -724,8 +752,16 @@ void GameInit()
 		Entity* hand = hand_joint->SpawnChild("Arm");
 		hand->AddMesh("Cube");
 
+
 		wave_entity->SetLocalPosition({ 10,100,10 });
-		wave_entity->PlayAnimation("Wave"); 
+		wave_entity->PlayAnimation("Wave");
+
+		Entity* person_root = wave_entity->SpawnParent("Person_Root");
+		person_root->SetLocalPosition({ 20,-20,-120 });
+		person_root->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), 2*PI/3,glm::vec3(0,1,0)));
+
+		//wave_animation.LoadAnimation("Content/Animations/Wave.txt");
+		//wave_entity->GetAnimationController()->SetAnimations({ wave_animation });
 	}
 }
 
@@ -950,22 +986,23 @@ void game()
     }
 	if (window_focus)
 	{
-	if (GetAsyncKeyState(0x57))
-	{
-		renderer->Camera.Position += Forward * speed * (float)deltaTime;
-	}
-	if (GetAsyncKeyState(0x53))
-	{
-		renderer->Camera.Position -= Forward * speed * (float)deltaTime;
-	}
-	if (GetAsyncKeyState(0x41))
-	{
-		renderer->Camera.Position -= Right * speed * (float)deltaTime;
-	}
-	if (GetAsyncKeyState(0x44))
-	{
-		renderer->Camera.Position += Right * speed * (float)deltaTime;
-	}
+		if (GetAsyncKeyState(0x57))//W
+		{
+			renderer->Camera.Position += Forward * speed * (float)deltaTime;
+		}
+		if (GetAsyncKeyState(0x53))//S
+		{
+			renderer->Camera.Position -= Forward * speed * (float)deltaTime;
+		}
+		if (GetAsyncKeyState(0x41))//A
+		{
+			renderer->Camera.Position -= Right * speed * (float)deltaTime;
+		}
+		if (GetAsyncKeyState(0x44))//D
+		{
+			renderer->Camera.Position += Right * speed * (float)deltaTime;
+		}
+	
 	
 		if (GetAsyncKeyState(0x57))//W
 		{
@@ -1044,7 +1081,50 @@ void game()
     if (renderer->Camera.Rotation.y < -PI / 2.0f + 0.1f)
         renderer->Camera.Rotation.y = -PI / 2.0f + 0.1f;
 
-    
+	if (previousCameraPosition.x > -2.0f &&  previousCameraPosition.x < 2.0f)
+	{
+		if (renderer->Camera.Position.y > 0)
+		{
+
+			if (renderer->Camera.Position.z < -99.0f && previousCameraPosition.z >= -99.0f)//Forward
+			{
+				renderer->Camera.Position.y -= 100.0f;
+				glm::vec3 res;
+				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
+				if (hit) printf("Hit!\n");
+			}
+			else if (renderer->Camera.Position.z > -100.0f && previousCameraPosition.z <= -100.0f)//Backward
+			{
+				renderer->Camera.Position.y -= 100.0f;
+				renderer->Camera.Position.z -= 7.7f;
+				glm::vec3 res;
+				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
+				if (hit) printf("Hit!\n");
+			}
+		}
+		else
+		{
+			if (renderer->Camera.Position.z > -99.0f && previousCameraPosition.z <= -99.0f)//Backward
+			{
+				renderer->Camera.Position.y += 100.0f;
+				glm::vec3 res;
+				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
+				if (hit) printf("Hit!\n");
+			}
+			else if (renderer->Camera.Position.z < -109.0f && previousCameraPosition.z >= -109.0f)//Forward
+			{
+				renderer->Camera.Position.z += 7.7f;
+				renderer->Camera.Position.y += 100.0f;
+				glm::vec3 res;
+				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
+				if (hit) printf("Hit!\n");
+			}
+		}
+	}
+
+	previousCameraPosition = renderer->Camera.Position;
+
+	//printf("X:%.2f,Y:%.2f,Z:%.2f\n", renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z);
     
 	mousePos.x = (float)inputManager->GetMousePosition()[0];
 	mousePos.y = (float)inputManager->GetMousePosition()[1];
@@ -1076,7 +1156,8 @@ void game()
 
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 	inputManager = InputManager::Inst();
 	mouseLeft = Point2(0, 0);
 	mouseRight = Point2(0, 0);

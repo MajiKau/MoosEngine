@@ -52,6 +52,7 @@ public:
 	Rigidbody* GetRidigbody();
 
 	Entity* SpawnParent();
+	Entity* SpawnParent(std::string name);
 
 	Entity* SpawnChild();
 	Entity* SpawnChild(std::string name);

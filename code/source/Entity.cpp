@@ -230,6 +230,20 @@ Entity * Entity::SpawnParent()
 	return NULL;
 }
 
+Entity * Entity::SpawnParent(std::string name)
+{
+	if (m_parent)
+	{
+		Entity * new_parent = m_parent->SpawnChild(name);
+		if (new_parent)
+		{
+			new_parent->AddChild(this);
+			return new_parent;
+		}
+	}
+	return NULL;
+}
+
 Entity * Entity::SpawnChild()
 {
 	Entity* new_entity = new Entity(); 

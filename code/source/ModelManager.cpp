@@ -344,7 +344,7 @@ bool Mesh::InitMaterials(const aiScene* pScene, const std::string& Filename)
             Ret = m_Textures[i]->Load();
         }
         if (!m_Textures_Specular[i]) {
-            m_Textures_Specular[i] = new Texture(GL_TEXTURE_2D, "Content/Images/white.png");
+            m_Textures_Specular[i] = new Texture(GL_TEXTURE_2D, "Content/Images/black.png");
 
             Ret = m_Textures_Specular[i]->Load();
         }
