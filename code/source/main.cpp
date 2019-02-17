@@ -20,6 +20,8 @@
 #include "code/headers/Vehicle.h"
 #include "code/headers/Scene.h"
 
+#include "code/headers/Portal.h"
+
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
@@ -691,19 +693,37 @@ void GameInit()
 
 	Entity* door = MainScene.SpawnEntity("Door");
 	door->AddMesh("DoorFrame");
-	Entity* portal = door->SpawnChild("Portal");
-	//portal->AddMesh("Door");
 	Entity* tunnel = door->SpawnChild("Tunnel");
 	tunnel->AddMesh("DoorFrame");
 	tunnel->SetLocalScale({ 1,1,4 });
 	tunnel->SetLocalPosition({ 0,0,-1.9f });
 	door->SetLocalPosition({ 0,1,-100 });
 
+	Portal* portal_top_in_forward = new Portal();
+	door->AddChild(portal_top_in_forward);
+	portal_top_in_forward->AddMesh("Door");
+
+	Portal* portal_top_out_forward = new Portal();
+	door->AddChild(portal_top_out_forward);
+	portal_top_out_forward->SetLocalPosition({ 0,0,-2.0f });
+	portal_top_out_forward->AddMesh("Door");
+
+	Portal* portal_top_out_backward = new Portal();
+	door->AddChild(portal_top_out_backward);
+	portal_top_out_backward->AddMesh("Door");
+	portal_top_out_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
+
+	Portal* portal_top_in_backward = new Portal();
+	door->AddChild(portal_top_in_backward);
+	portal_top_in_backward->SetLocalPosition({ 0,0,-1.5f });
+	portal_top_in_backward->AddMesh("Door");
+	portal_top_in_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
+
+
+	//portal2_t->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0),PI,glm::vec3(0,1,0)));
+
 	Entity* door2 = MainScene.SpawnEntity("Door2");
 	door2->AddMesh("DoorFrame");
-	Entity* portal2 = door2->SpawnChild("Portal2");
-	portal2->SetLocalPosition({ 0,0,-9.6f });
-	//portal2->AddMesh("Door");
 	Entity* tunnel2 = door2->SpawnChild("Tunnel2");
 	tunnel2->AddMesh("DoorFrame");
 	tunnel2->SetLocalScale({ 1,1,20 });
@@ -712,6 +732,39 @@ void GameInit()
 	//door2c->AddMesh("DoorFrame");
 	door2c->SetLocalPosition({ 0,0,-20.0f });
 	door2->SetLocalPosition({ 0,-99,-100 });
+
+	Portal* portal_bot_out_forward = new Portal();
+	door2->AddChild(portal_bot_out_forward);
+	portal_bot_out_forward->SetLocalPosition({ 0,0,0 });
+	portal_bot_out_forward->AddMesh("Door");
+
+	Portal* portal_bot_in_forward = new Portal();
+	door2->AddChild(portal_bot_in_forward);
+	portal_bot_in_forward->SetLocalPosition({ 0,0,-9.6f });
+	portal_bot_in_forward->AddMesh("Door");
+
+	Portal* portal_bot_out_backward = new Portal();
+	door2->AddChild(portal_bot_out_backward);
+	portal_bot_out_backward->SetLocalPosition({ 0,0,-9.6f });
+	portal_bot_out_backward->AddMesh("Door");
+	portal_bot_out_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
+
+
+	Portal* portal_bot_in_backward = new Portal();
+	door2->AddChild(portal_bot_in_backward);
+	portal_bot_in_backward->SetLocalPosition({ 0,0,0.0f });
+	portal_bot_in_backward->AddMesh("Door");
+	portal_bot_in_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
+
+
+	portal_top_in_forward->SetOtherPortal(portal_bot_out_forward);
+	portal_bot_in_forward->SetOtherPortal(portal_top_out_forward);
+
+	portal_top_in_backward->SetOtherPortal(portal_bot_out_backward);
+	portal_bot_in_backward->SetOtherPortal(portal_top_out_backward);
+
+	//portal_top_out_forward->SetOtherPortal(portal_bot_in_forward);
+	//portal_bot_out_forward->SetOtherPortal(portal_top_in_forward);
 
 	{
 		Animation wave_animation("Wave");
@@ -1093,7 +1146,7 @@ void game()
 				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
 				if (hit) printf("Hit!\n");
 			}
-			else if (renderer->Camera.Position.z > -100.0f && previousCameraPosition.z <= -100.0f)//Backward
+			else if (renderer->Camera.Position.z > -102.0f && previousCameraPosition.z <= -102.0f)//Backward
 			{
 				renderer->Camera.Position.y -= 100.0f;
 				renderer->Camera.Position.z -= 7.7f;
@@ -1104,7 +1157,7 @@ void game()
 		}
 		else
 		{
-			if (renderer->Camera.Position.z > -99.0f && previousCameraPosition.z <= -99.0f)//Backward
+			if (renderer->Camera.Position.z > -101.0f && previousCameraPosition.z <= -101.0f)//Backward
 			{
 				renderer->Camera.Position.y += 100.0f;
 				glm::vec3 res;

@@ -110,6 +110,8 @@ public:
 
 	void RenderMesh(std::string mesh, glm::mat4 model_mat, Material material);
 
+	void RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat);
+
     //Works
 	GLchar* LoadShader(const char* filename);
 
@@ -173,6 +175,9 @@ private:
 
 	void _RenderLineStrips();
 
+	void _RenderMeshes();
+
+	void _RenderPortals();
 
     //Not textured
 	GLuint m_vbo;
@@ -208,6 +213,7 @@ private:
 
     std::map<std::string, Mesh*> m_loaded_meshes;
     std::vector<std::tuple<std::string, glm::mat4, Material>> m_meshes;
+	std::vector<std::tuple<std::string, glm::mat4, glm::mat4>> m_portals;
 
 	Material m_default_material;
 };

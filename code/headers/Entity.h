@@ -14,7 +14,7 @@ public:
 	Entity();
 	Entity(std::string name);
 	void Update(float deltaTime);
-	void Render(BatchRenderer* renderer);
+	virtual void Render(BatchRenderer* renderer);
 
 	void SetName(std::string name);
 	std::string GetName();
@@ -69,7 +69,7 @@ public:
 
 	static int GetAmount();
 
-private:
+protected:
 	static int amount;
 
 	glm::vec3 m_position;
