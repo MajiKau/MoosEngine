@@ -1175,12 +1175,14 @@ void BatchRenderer::Render()
 			m_loaded_meshes[std::get<0>(mo)]->Render();
 		}
 	}*/
-	_RenderMeshes();
+
 
 	_RenderPortals();
+	_RenderMeshes();
+
 
 	//Portal1
-	{
+	/*{
 		//Stencil
 		glEnable(GL_STENCIL_TEST);
 
@@ -1189,9 +1191,9 @@ void BatchRenderer::Render()
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilMask(0xFF); // Write to stencil buffer
 		glDepthMask(GL_FALSE); // Don't write to depth buffer
-		glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)*/
+		glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
 
-		m_model = glm::translate(glm::vec3(0, 1, -100));// *glm::rotate(PI / 2.0f, glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(20, 20, 20));
+		m_model = glm::translate(glm::vec3(0, 1, -100));
 		m_mvp_new = m_projection * m_view * m_model;
 		glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
 		glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
@@ -1247,8 +1249,8 @@ void BatchRenderer::Render()
 			}
 		}
 		glDisable(GL_STENCIL_TEST);
-	}
-
+	}*/
+	
 	//Portal2
 	/*{
 		//Stencil
@@ -1627,11 +1629,11 @@ void BatchRenderer::_RenderMeshes()
 				glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
 				SetMaterial(std::get<2>(mo));
 			}
-			else if (std::get<0>(mo) == "DoorFrame")
+			/*else if (std::get<0>(mo) == "DoorFrame")
 			{
 				glUseProgram(m_shaderprogram_mvp_textured_unlit);
 				glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-			}
+			}*/
 			else
 			{
 				glUseProgram(m_shaderprogram_mvp_textured);
@@ -1669,7 +1671,7 @@ void BatchRenderer::_RenderPortals()
 		m_loaded_meshes[std::get<0>(po)]->Render();
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		//glClear(GL_COLOR_BUFFER_BIT);
-		glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
+		//glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
 
 		//Draw objects inside window
 		glStencilFunc(GL_EQUAL, 2, 0xFF); // Pass test if stencil value is 2
@@ -1678,6 +1680,7 @@ void BatchRenderer::_RenderPortals()
 
 		glm::mat4 portal_view = m_view * std::get<1>(po)/std::get<2>(po);
 		glUniformMatrix4fv(12, 1, GL_FALSE, &portal_view[0][0]);
+		SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
 
 		for each (auto mo in m_meshes)
 		{
@@ -1688,6 +1691,7 @@ void BatchRenderer::_RenderPortals()
 			}
 			m_model = std::get<1>(mo);
 			m_mvp_new = m_projection * portal_view * m_model;
+			
 			glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
 			glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
 			if (m_loaded_meshes[std::get<0>(mo)])
@@ -1700,11 +1704,14 @@ void BatchRenderer::_RenderPortals()
 				}
 				else if (std::get<0>(mo) == "DoorFrame")
 				{
-					glUseProgram(m_shaderprogram_mvp_textured_unlit);
+					//SetVec3(GetUniformLocation("gPortalOffset"), glm::vec3(0, 0, 0));
+					//glUseProgram(m_shaderprogram_mvp_textured_unlit);
+					glUseProgram(m_shaderprogram_mvp_textured);
 					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
 				}
 				else
 				{
+					//SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
 					glUseProgram(m_shaderprogram_mvp_textured);
 					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
 					SetMaterial(std::get<2>(mo));
@@ -1713,6 +1720,7 @@ void BatchRenderer::_RenderPortals()
 			}
 		}
 		glDisable(GL_STENCIL_TEST);
+		SetVec3(GetUniformLocation("gPortalOffset"), glm::vec3(0,0,0));
 	}
 
 }
