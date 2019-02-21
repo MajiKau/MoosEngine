@@ -575,6 +575,11 @@ Entity* tank_top_entity;
 
 Entity* wave_entity;
 
+Entity* PortalT1;
+Entity* PortalT2;
+Entity* PortalB1;
+Entity* PortalB2;
+
 void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
@@ -649,7 +654,7 @@ void GameInit()
 
 	Entity* basiccube = MainScene.SpawnEntity("BasicCube");
 	basiccube->AddMesh("BasicCube");
-	basiccube->SetLocalPosition({ 0,10,0 });
+	basiccube->SetLocalPosition({ -50,10,0 });
 	basiccube->SetLocalScale({ 10,10,10 });
 
 
@@ -765,6 +770,64 @@ void GameInit()
 
 	//portal_top_out_forward->SetOtherPortal(portal_bot_in_forward);
 	//portal_bot_out_forward->SetOtherPortal(portal_top_in_forward);
+
+	Entity* PortalRoomTop = MainScene.SpawnEntity("PortalRoomTop");
+	PortalT1 = PortalRoomTop->SpawnChild("Portal1");
+	PortalT1->AddMesh("PortalFrame");
+	Portal* Portal_T1F = new Portal();
+	Portal_T1F->AddMesh("PortalF");
+	PortalT1->AddChild(Portal_T1F);
+	Portal* Portal_T1B = new Portal();
+	Portal_T1B->AddMesh("PortalB");
+	PortalT1->AddChild(Portal_T1B);
+
+	PortalT2 = PortalRoomTop->SpawnChild("Portal2");
+	PortalT2->AddMesh("PortalFrame");
+	Portal* Portal_T2F = new Portal();
+	Portal_T2F->AddMesh("PortalF");
+	PortalT2->AddChild(Portal_T2F);
+	Portal* Portal_T2B = new Portal();
+	Portal_T2B->AddMesh("PortalB");
+	PortalT2->AddChild(Portal_T2B);
+	PortalT2->SetLocalPosition({ 0,0,-5 });
+
+
+	Entity* PortalFrameBot1 = MainScene.SpawnEntity("PortalRoomBot");
+	PortalB1 = PortalFrameBot1->SpawnChild("Portal1");
+	PortalB1->AddMesh("PortalFrame");
+	Portal* Portal_B1F = new Portal();
+	Portal_B1F->AddMesh("PortalF");
+	PortalB1->AddChild(Portal_B1F);
+	Portal* Portal_B1B = new Portal();
+	Portal_B1B->AddMesh("PortalB");
+	PortalB1->AddChild(Portal_B1B);
+
+	PortalB2 = PortalFrameBot1->SpawnChild("Portal2");
+	PortalB2->AddMesh("PortalFrame");
+	Portal* Portal_B2F = new Portal();
+	Portal_B2F->AddMesh("PortalF");
+	PortalB2->AddChild(Portal_B2F);
+	Portal* Portal_B2B = new Portal();
+	Portal_B2B->AddMesh("PortalB");
+	PortalB2->AddChild(Portal_B2B);
+	PortalB2->SetLocalPosition({ 0,0,-15 });
+
+	PortalFrameBot1->SetLocalPosition({ 0,100,0 });
+
+	Entity* RoomB = PortalFrameBot1->SpawnChild("Room");
+	RoomB->AddMesh("Room1");
+
+	Portal_T1F->SetOtherPortal(Portal_B1F);
+	//Portal_T1B->SetOtherPortal(Portal_B1B);
+	//Portal_T2F->SetOtherPortal(Portal_B2F);
+	Portal_T2B->SetOtherPortal(Portal_B2B);
+
+	//Portal_B1F->SetOtherPortal(Portal_T1F);
+	Portal_B1B->SetOtherPortal(Portal_T1B);
+	Portal_B2F->SetOtherPortal(Portal_T2F);
+	//Portal_B2B->SetOtherPortal(Portal_T2B);
+
+
 
 	{
 		Animation wave_animation("Wave");
@@ -1134,7 +1197,43 @@ void game()
     if (renderer->Camera.Rotation.y < -PI / 2.0f + 0.1f)
         renderer->Camera.Rotation.y = -PI / 2.0f + 0.1f;
 
-	if (previousCameraPosition.x > -2.0f &&  previousCameraPosition.x < 2.0f)
+	glm::vec3 cameraPosition = renderer->Camera.Position;
+
+	glm::vec3 pt1 = PortalT1->GetWorldPosition();
+	glm::vec3 pt2 = PortalT2->GetWorldPosition();
+	glm::vec3 pb1 = PortalB1->GetWorldPosition();
+	glm::vec3 pb2 = PortalB2->GetWorldPosition();
+
+
+	glm::vec3 TopToBot1 = pb1 - pt1;
+	glm::vec3 TopToBot2 = pb2 - pt2;
+
+
+	//TopToBot1
+	if (cameraPosition.z < pt1.z && cameraPosition.z > pt1.z - 1.0f && cameraPosition.y < 10)
+	{
+		renderer->Camera.Position += TopToBot1;
+	}
+
+	//TopToBot2
+	if (cameraPosition.z > pt2.z && cameraPosition.z < pt2.z + 1.0f && cameraPosition.y < 10)
+	{
+		renderer->Camera.Position += TopToBot2;
+	}
+
+	//BotToTop1
+	if (cameraPosition.z > pb1.z && cameraPosition.z < pb1.z + 1.0f && cameraPosition.y > 10)
+	{
+		renderer->Camera.Position -= TopToBot1;
+	}
+
+	//BotToTop2
+	if (cameraPosition.z < pb2.z && cameraPosition.z > pb2.z - 1.0f && cameraPosition.y > 10)
+	{
+		renderer->Camera.Position -= TopToBot2;
+	}
+
+/*	if (previousCameraPosition.x > -2.0f &&  previousCameraPosition.x < 2.0f)
 	{
 		if (renderer->Camera.Position.y > 0)
 		{
@@ -1173,7 +1272,7 @@ void game()
 				if (hit) printf("Hit!\n");
 			}
 		}
-	}
+	}*/
 
 	previousCameraPosition = renderer->Camera.Position;
 

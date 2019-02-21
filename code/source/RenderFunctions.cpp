@@ -933,6 +933,10 @@ BatchRenderer::BatchRenderer(float Zoom, float Ratio)
 	m_loaded_meshes.insert({ "Door",new Mesh("Content/Models/Door/Door.obj") });
 	m_loaded_meshes.insert({ "DoorFrame",new Mesh("Content/Models/Door/DoorFrame.obj") });
 
+	m_loaded_meshes.insert({ "PortalFrame",new Mesh("Content/Models/Portals/Frame.obj") });
+	m_loaded_meshes.insert({ "PortalF",new Mesh("Content/Models/Portals/PortalF.obj") });
+	m_loaded_meshes.insert({ "PortalB",new Mesh("Content/Models/Portals/PortalB.obj") });
+	m_loaded_meshes.insert({ "Room1",new Mesh("Content/Models/Portals/Room1.obj") });
 
 	//CUBE
 	{
@@ -1177,8 +1181,13 @@ void BatchRenderer::Render()
 	}*/
 
 
-	_RenderPortals();
 	_RenderMeshes();
+	_RenderPortals();
+
+
+
+	//_RenderTriangles();
+
 
 
 	//Portal1
@@ -1513,8 +1522,102 @@ void BatchRenderer::Render()
 	m_trianglefans.clear();
 	m_linestrips.clear();
 
-	//RenderSkybox();
+	RenderSkybox();
 }
+
+void BatchRenderer::_ClearScreen()
+{
+	/*float vertices[] = {
+		-1.0f,-1.0f,0.0f,1.0f,0.0f,0.0f,
+		 1.0f,-1.0f,0.0f,1.0f,0.0f,0.0f,
+		 1.0f, 1.0f,0.0f,1.0f,0.0f,0.0f,
+					
+		 1.0f, 1.0f,0.0f,1.0f,0.0f,0.0f,
+		-1.0f, 1.0f,0.0f,1.0f,0.0f,0.0f,
+		-1.0f,-1.0f,0.0f,1.0f,0.0f,0.0f,
+	}; */
+	float vertices[] = {
+		-1.0f,-1.0f,1.0f,1.0f,0.0f,0.0f,
+		 1.0f,-1.0f,1.0f,1.0f,0.0f,0.0f,
+		 1.0f, 1.0f,1.0f,1.0f,0.0f,0.0f,
+					
+		 1.0f, 1.0f,1.0f,1.0f,0.0f,0.0f,
+		-1.0f, 1.0f,1.0f,1.0f,0.0f,0.0f,
+		-1.0f,-1.0f,1.0f,1.0f,0.0f,0.0f,
+	};
+
+	_RenderTriangle(vertices, 6); 	
+
+	Material material;
+	material.ambient = { 1.0f,1.0f,1.0f };
+	material.diffuse = { 0.5f,0.5f,0.5f };
+	material.specular = { 1.0f,1.0f,1.0f };
+	material.shininess = 32.0f;
+	glUseProgram(m_shaderprogram_mvp_textured);
+	//glBindVertexArray(m_vao_new);
+	glUniformMatrix4fv(12, 1, GL_FALSE, &m_view[0][0]);
+	SetDirectionalLight(0, m_directional_light);
+	for (uint i = 0; i<m_point_light.size(); i++)
+	{
+		SetPointLight(i, m_point_light[i]);
+	}
+	SetLightAmountP((int)m_point_light.size());
+	SetLightAmountD(1);
+	SetMaterial(material);
+	glUniform3fv(4, 1, &Camera.Position[0]);
+	SetFloat(9, 1.0f);//Specular Intensity
+	SetFloat(10, 32.0f);//Specular Power
+
+	SetInt(18, 1);//Set specular texture to GL_TEXTURE1
+	SetInt(28, 2);//Set normal texture to GL_TEXTURE2
+	SetInt(29, 3);//Set skybox cubemap to GL_TEXTURE3
+	m_skybox_texture->Bind(GL_TEXTURE3);
+
+	SetBlinn(Blinn);
+
+	GLuint err = glGetError();
+	if (GLEW_OK != err)
+	{
+		printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+	}
+
+	GLint pos = GetAttributeLocation("vertex_position");
+	glEnableVertexAttribArray(pos);
+
+	GLint tex = GetAttributeLocation("texture_coordinate");
+	glEnableVertexAttribArray(tex);
+
+	GLint nor = GetAttributeLocation("vertex_normal");
+	glEnableVertexAttribArray(nor);
+
+	GLint tan = GetAttributeLocation("vertex_tangent");
+	GLint test3 = GetAttributeLocation("vertex_bitangent");
+	glEnableVertexAttribArray(tan);
+
+	GLint bit = GetAttributeLocation("vertex_bitangent");
+	glEnableVertexAttribArray(bit);
+}
+
+void BatchRenderer::_RenderTriangle(float* triangle, int numvertices = 3)
+{
+	float* vertices;
+	vertices = &triangle[0];
+
+	glUseProgram(m_shaderprogram);
+	glBindVertexArray(m_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+
+	glBufferData(GL_ARRAY_BUFFER, 6 * numvertices * sizeof(float), vertices, GL_STATIC_DRAW);
+
+	glm::mat4 imat = glm::mat4(1);
+	glUniformMatrix4fv(2, 1, GL_FALSE, &imat[0][0]);
+
+	glDrawArrays(GL_TRIANGLES, 0, numvertices);
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void BatchRenderer::_RenderTriangles()
 {
 	int numvertices;
@@ -1611,6 +1714,17 @@ void BatchRenderer::_RenderLineStrips()
 
 void BatchRenderer::_RenderMeshes()
 {
+
+	//planeEqn[0] = rand() % 100 / 100.0f;
+	/*planeEqn[1] = rand() % 100 / 100.0f;
+	planeEqn[2] = rand() % 100 / 100.0f;
+	planeEqn[3] = rand() % 100 / 100.0f;*/
+
+	/*glClipPlane(GL_CLIP_PLANE0, planeEqn);  // Define the plane equation
+	glEnable(GL_CLIP_PLANE0);    // Enable clipping
+	glDisable(GL_CLIP_PLANE0);    // Disable clipping*/
+
+
 	for each (auto mo in m_meshes)
 	{
 		GLuint err = glGetError();
@@ -1653,7 +1767,7 @@ void BatchRenderer::_RenderPortals()
 		glEnable(GL_STENCIL_TEST);
 
 		// Draw window
-		glStencilFunc(GL_ALWAYS, 2, 0xFF); // Set any stencil to 2
+		glStencilFunc(GL_ALWAYS, 1, 0xFF); // Set any stencil to 1
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 		glStencilMask(0xFF); // Write to stencil buffer
 		glDepthMask(GL_FALSE); // Don't write to depth buffer
@@ -1674,14 +1788,37 @@ void BatchRenderer::_RenderPortals()
 		//glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
 
 		//Draw objects inside window
-		glStencilFunc(GL_EQUAL, 2, 0xFF); // Pass test if stencil value is 2
+		glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass test if stencil value is 1
 		glStencilMask(0x00); // Don't write anything to stencil buffer
 		glDepthMask(GL_TRUE); // Write to depth buffer
 
-		glm::mat4 portal_view = m_view * std::get<1>(po)/std::get<2>(po);
+
+		/*GLdouble planeEqn[4] = { 0.0, 0.0, 1.0, 0.0 };
+
+		glEnable(GL_CLIP_PLANE0);    // Enable clipping
+		glClipPlane(GL_CLIP_PLANE0, planeEqn);  // Define the plane equation
+		glDisable(GL_CLIP_PLANE0);    // Disable clipping*/
+
+		glDepthFunc(GL_ALWAYS);
+		//glDisable(GL_DEPTH_TEST); 
+		//glDepthMask(GL_FALSE);
+		_ClearScreen();
+		//glDepthMask(GL_TRUE);
+		//glEnable(GL_DEPTH_TEST)
+		glDepthFunc(GL_LEQUAL);
+
+		glm::vec4 planeEqn = { 0.0f, 0.0f, -1.0f, 0.0f };
+		//glm::mat4 transform = glm::translate(glm::vec3(0, 0, 0));
+		//planeEqn = glm::transpose(glm::inverse(transform))*planeEqn;
+
+		planeEqn = glm::transpose(glm::inverse( m_model ))*planeEqn; //TODO: Figure out where to move the clipping plane
+
+		glUniform4fv(GetUniformLocation("clip_plane"), 1, &planeEqn[0]);
+		//glEnable(GL_CLIP_DISTANCE0);//TODO:Fix
+
+		glm::mat4 portal_view = m_view * std::get<1>(po) / std::get<2>(po);
 		glUniformMatrix4fv(12, 1, GL_FALSE, &portal_view[0][0]);
 		SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
-
 		for each (auto mo in m_meshes)
 		{
 			GLuint err = glGetError();
@@ -1719,8 +1856,10 @@ void BatchRenderer::_RenderPortals()
 				m_loaded_meshes[std::get<0>(mo)]->Render();
 			}
 		}
+		glDisable(GL_CLIP_DISTANCE0);
 		glDisable(GL_STENCIL_TEST);
 		SetVec3(GetUniformLocation("gPortalOffset"), glm::vec3(0,0,0));
 	}
 
 }
+

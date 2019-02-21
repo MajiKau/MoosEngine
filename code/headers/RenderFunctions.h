@@ -166,6 +166,9 @@ public:
 
 private:
 
+	void _ClearScreen();
+
+	void _RenderTriangle(float* triangle, int numvertices);
 
 	void _RenderTriangles();
 

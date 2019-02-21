@@ -7,6 +7,7 @@ layout(location = 4) in vec3 vertex_tangent;
 layout(location = 5) in vec3 vertex_bitangent;
 layout(location = 11) uniform mat4 M;
 layout(location = 12) uniform mat4 V;
+uniform vec4 clip_plane=vec4(1.0,1.0,0.0,0.85);
 out vec3 Normal0;
 out vec3 Tangent0;
 out vec3 Bitangent0;
@@ -22,4 +23,6 @@ void main()
   Tangent0 = (M * vec4(vertex_tangent, 0.0)).xyz;
   Bitangent0 = (M * vec4(vertex_bitangent, 0.0)).xyz;
   WorldPos0 = (M * vec4(vertex_position, 1.0)).xyz;
+  vec4 pos = vec4(WorldPos0, 1.0);
+  gl_ClipDistance[0] = dot(pos,clip_plane);
 }
