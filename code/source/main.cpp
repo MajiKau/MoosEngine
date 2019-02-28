@@ -584,7 +584,7 @@ void GameInit()
 {
 	renderer = new BatchRenderer(zoom, screenRatio);
 
-    renderer->Camera.Position = { 0,40,0 };
+    renderer->Camera.Position = { 0,1,0 };
     renderer->Camera.Rotation = { 0,0,0 };
 
     PointLight light;
@@ -696,7 +696,7 @@ void GameInit()
 	tank_top_entity->AddMesh("tank_top");
 	tank_top_entity->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), -10.1f, { 0,1,0 }));
 
-	Entity* door = MainScene.SpawnEntity("Door");
+	/*Entity* door = MainScene.SpawnEntity("Door");
 	door->AddMesh("DoorFrame");
 	Entity* tunnel = door->SpawnChild("Tunnel");
 	tunnel->AddMesh("DoorFrame");
@@ -766,7 +766,7 @@ void GameInit()
 	portal_bot_in_forward->SetOtherPortal(portal_top_out_forward);
 
 	portal_top_in_backward->SetOtherPortal(portal_bot_out_backward);
-	portal_bot_in_backward->SetOtherPortal(portal_top_out_backward);
+	portal_bot_in_backward->SetOtherPortal(portal_top_out_backward);*/
 
 	//portal_top_out_forward->SetOtherPortal(portal_bot_in_forward);
 	//portal_bot_out_forward->SetOtherPortal(portal_top_in_forward);
@@ -793,6 +793,7 @@ void GameInit()
 
 
 	Entity* PortalFrameBot1 = MainScene.SpawnEntity("PortalRoomBot");
+	PortalFrameBot1->AddRenderLayer(1);
 	PortalB1 = PortalFrameBot1->SpawnChild("Portal1");
 	PortalB1->AddMesh("PortalFrame");
 	Portal* Portal_B1F = new Portal();
@@ -818,13 +819,17 @@ void GameInit()
 	RoomB->AddMesh("Room1");
 
 	Portal_T1F->SetOtherPortal(Portal_B1F);
+	Portal_T1F->SetPortalRenderLayer(1);
 	//Portal_T1B->SetOtherPortal(Portal_B1B);
 	//Portal_T2F->SetOtherPortal(Portal_B2F);
 	Portal_T2B->SetOtherPortal(Portal_B2B);
+	Portal_T2B->SetPortalRenderLayer(1);
 
 	//Portal_B1F->SetOtherPortal(Portal_T1F);
 	Portal_B1B->SetOtherPortal(Portal_T1B);
+	Portal_B1B->SetPortalRenderLayer(0);
 	Portal_B2F->SetOtherPortal(Portal_T2F);
+	Portal_B2F->SetPortalRenderLayer(0);
 	//Portal_B2B->SetOtherPortal(Portal_T2B);
 
 
@@ -1216,12 +1221,14 @@ void game()
 			if (cameraPosition.z < pt1.z && cameraPosition.z > pt1.z - 1.0f)
 			{
 				renderer->Camera.Position += TopToBot1;
+				renderer->Camera.RenderLayer = 1;
 			}
 
 			//TopToBot2
 			if (cameraPosition.z > pt2.z && cameraPosition.z < pt2.z + 1.0f)
 			{
 				renderer->Camera.Position += TopToBot2;
+				renderer->Camera.RenderLayer = 1;
 			}
 		}
 
@@ -1231,12 +1238,14 @@ void game()
 			if (cameraPosition.z > pb1.z && cameraPosition.z < pb1.z + 1.0f && cameraPosition.y > 10)
 			{
 				renderer->Camera.Position -= TopToBot1;
+				renderer->Camera.RenderLayer = 0;
 			}
 
 			//BotToTop2
 			if (cameraPosition.z < pb2.z && cameraPosition.z > pb2.z - 1.0f && cameraPosition.y > 10)
 			{
 				renderer->Camera.Position -= TopToBot2;
+				renderer->Camera.RenderLayer = 0;
 			}
 		}
 	}

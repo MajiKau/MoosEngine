@@ -3,6 +3,7 @@
 Scene::Scene()
 {
 	m_root = new Entity("Root");
+	m_root->AddRenderLayer(0);
 }
 
 void Scene::Update(float deltaTime)

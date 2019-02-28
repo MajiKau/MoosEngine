@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <set>
 
 #include "Geometry.h"
 #include "Vector.h"
@@ -108,9 +109,9 @@ public:
 
 	void RenderExtrudedShape(std::vector<glm::vec3> points, float height, Color3f color);
 
-	void RenderMesh(std::string mesh, glm::mat4 model_mat, Material material);
+	void RenderMesh(std::string mesh, glm::mat4 model_mat, Material material, std::set<int> render_layers);
 
-	void RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat);
+	void RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat, std::set<int> render_layers, int portal_render_layer);
 
     //Works
 	GLchar* LoadShader(const char* filename);
@@ -156,7 +157,7 @@ public:
         glm::vec3 Forward;
         glm::vec3 Right;
         glm::vec3 Up;
-
+		int RenderLayer = 0;
     }Camera;
 
     DirectionalLight m_directional_light;
@@ -178,9 +179,10 @@ private:
 
 	void _RenderLineStrips();
 
-	void _RenderMeshes();
+	void _RenderMeshes(int render_layer);
 
-	void _RenderPortals();
+	void _RenderPortals(int render_layer);
+	void _RenderPortalsInPortals(int render_layer, int stencil_depth, int portal_depth, glm::mat4 view);
 
     //Not textured
 	GLuint m_vbo;
@@ -215,8 +217,8 @@ private:
 	std::vector<std::vector<float>> m_linestrips;
 
     std::map<std::string, Mesh*> m_loaded_meshes;
-    std::vector<std::tuple<std::string, glm::mat4, Material>> m_meshes;
-	std::vector<std::tuple<std::string, glm::mat4, glm::mat4>> m_portals;
+    std::vector<std::tuple<std::string, glm::mat4, Material, std::set<int>>> m_meshes;
+	std::vector<std::tuple<std::string, glm::mat4, glm::mat4, std::set<int>, int>> m_portals;
 
 	Material m_default_material;
 };

@@ -43,6 +43,10 @@ public:
 	glm::mat4 GetWorldModelMatrix();
 
 	void AddMesh(std::string mesh);
+	void AddRenderLayer(int layer);
+	std::set<int> GetRenderLayers();
+	std::set<int> GetCustomRenderLayers();
+
 	void AddAnimation(Animation animation);
 	void PlayAnimation(std::string name);
 	AnimationController* GetAnimationController();
@@ -79,6 +83,7 @@ protected:
 	std::vector<std::string> m_meshes;
 	AnimationController* m_animations;
 	Rigidbody* m_rigidbody;
+	std::set<int> m_render_layers;
 
 	Entity* m_parent;
 

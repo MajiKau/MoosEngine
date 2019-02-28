@@ -62,7 +62,14 @@ void Entity::Render(BatchRenderer * renderer)
 	}
 	for each (auto mesh in m_meshes)
 	{
-		renderer->RenderMesh(mesh, GetWorldModelMatrix(), Material());
+		if (m_render_layers.size() == 0)
+		{
+			renderer->RenderMesh(mesh, GetWorldModelMatrix(), Material(), m_parent->GetRenderLayers());
+		}
+		else
+		{
+			renderer->RenderMesh(mesh, GetWorldModelMatrix(), Material(), m_render_layers);
+		}
 	}
 }
 
@@ -179,6 +186,25 @@ glm::mat4 Entity::GetWorldModelMatrix()
 void Entity::AddMesh(std::string mesh)
 {
 	m_meshes.emplace_back(mesh);
+}
+
+void Entity::AddRenderLayer(int layer)
+{
+	m_render_layers.insert(layer);
+}
+
+std::set<int> Entity::GetRenderLayers()
+{
+	if (m_render_layers.size() == 0)
+	{
+		return m_parent->GetRenderLayers();
+	}
+	return m_render_layers;
+}
+
+std::set<int> Entity::GetCustomRenderLayers()
+{
+	return m_render_layers;
 }
 
 void Entity::AddAnimation(Animation animation)

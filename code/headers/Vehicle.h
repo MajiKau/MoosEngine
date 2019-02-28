@@ -68,9 +68,9 @@ public:
 		/*glm::mat4 modelmat = glm::translate(m_position)*glm::rotate(m_rotation, glm::vec3(0, 1, 0));
 		renderer->RenderMesh("fulltank", modelmat, mat);*/
 		glm::mat4 modelmat = glm::translate(m_position)*glm::rotate(m_rotation, glm::vec3(0, 1, 0));
-		renderer->RenderMesh("tank_bottom", modelmat, mat);
+		//renderer->RenderMesh("tank_bottom", modelmat, mat);//TODO:Add render_layers
 		modelmat = glm::translate(m_position)*glm::rotate(m_rotation+m_turretrotation, glm::vec3(0, 1, 0));
-		renderer->RenderMesh("tank_top", modelmat, mat);
+		//renderer->RenderMesh("tank_top", modelmat, mat);//TODO:Add render_layers
 	}
 
 	glm::vec3 GetPosition() 

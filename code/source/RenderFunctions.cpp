@@ -756,14 +756,14 @@ void BatchRenderer::RenderExtrudedShape(std::vector<glm::vec3> points, float hei
 	delete[] vertices;
 }
 
-void BatchRenderer::RenderMesh(std::string mesh, glm::mat4 model_mat, Material material)
+void BatchRenderer::RenderMesh(std::string mesh, glm::mat4 model_mat, Material material, std::set<int> render_layer)
 {
-	m_meshes.push_back({ mesh, model_mat, material });
+	m_meshes.push_back({ mesh, model_mat, material, render_layer });
 }
 
-void BatchRenderer::RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat)
+void BatchRenderer::RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat, std::set<int> render_layers, int portal_render_layer)
 {
-	m_portals.push_back({mesh,model_mat,other_model_mat});
+	m_portals.push_back({ mesh, model_mat, other_model_mat, render_layers, portal_render_layer });
 }
 
 BatchRenderer::BatchRenderer(float Zoom, float Ratio)
@@ -1181,8 +1181,8 @@ void BatchRenderer::Render()
 	}*/
 
 
-	_RenderMeshes();
-	_RenderPortals();
+	_RenderMeshes(Camera.RenderLayer);
+	_RenderPortals(Camera.RenderLayer);
 
 
 
@@ -1260,159 +1260,7 @@ void BatchRenderer::Render()
 		glDisable(GL_STENCIL_TEST);
 	}*/
 	
-	//Portal2
-	/*{
-		//Stencil
-		glEnable(GL_STENCIL_TEST);
-
-		// Draw window
-		glStencilFunc(GL_ALWAYS, 2, 0xFF); // Set any stencil to 2
-		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-		glStencilMask(0xFF); // Write to stencil buffer
-		glDepthMask(GL_FALSE); // Don't write to depth buffer
-		glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
-
-		m_model = glm::translate(glm::vec3(0, -99, -109.6f));// *glm::rotate(PI / 2.0f, glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(20, 20, 20));
-		m_mvp_new = m_projection * m_view * m_model;
-		glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-		glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
-
-		glUseProgram(m_shaderprogram_mvp_textured);
-		glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		m_loaded_meshes["Door"]->Render();
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-		//glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
-
-		//Draw objects inside window
-		glStencilFunc(GL_EQUAL, 2, 0xFF); // Pass test if stencil value is 2
-		glStencilMask(0x00); // Don't write anything to stencil buffer
-		glDepthMask(GL_TRUE); // Write to depth buffer
-
-		glm::mat4 portal_view = glm::translate(m_view, glm::vec3(0, -100, -7.6f));
-		glUniformMatrix4fv(12, 1, GL_FALSE, &portal_view[0][0]);
-
-		for each (auto mo in m_meshes)
-		{
-			GLuint err = glGetError();
-			if (GLEW_OK != err)
-			{
-				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-			}
-			m_model = std::get<1>(mo);
-			m_mvp_new = m_projection * portal_view * m_model;
-			glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-			glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
-			if (m_loaded_meshes[std::get<0>(mo)])
-			{
-				if (std::get<0>(mo) == "Skybox")
-				{
-					glUseProgram(m_shaderprogram_mvp_textured_unlit);
-					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-					SetMaterial(std::get<2>(mo));
-				}
-				else if (std::get<0>(mo) == "DoorFrame")
-				{
-					glUseProgram(m_shaderprogram_mvp_textured_unlit);
-					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-				}
-				else
-				{
-					glUseProgram(m_shaderprogram_mvp_textured);
-					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-					SetMaterial(std::get<2>(mo));
-				}
-				m_loaded_meshes[std::get<0>(mo)]->Render();
-			}
-		}
-		//glDisable(GL_STENCIL_TEST);
-
-		//MirrorInPortal2
-		{
-			//Stencil
-			//glEnable(GL_STENCIL_TEST);
-
-			// Draw floor
-			glStencilFunc(GL_EQUAL, 2, 0xFF); // Set any stencil to 3
-			glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-			glStencilMask(0xFF); // Write to stencil buffer
-			glDepthMask(GL_FALSE); // Don't write to depth buffer
-			//glClear(GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
-			
-			m_model = glm::scale(glm::vec3(200, 200, 200));
-			m_mvp_new = m_projection * portal_view * m_model;
-			glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-			glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
-
-			glUseProgram(m_shaderprogram_mvp_textured);
-			glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-
-			//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-			m_loaded_meshes["flatplane"]->Render();
-			//glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-			//glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
-
-			// Draw reflections
-			glStencilFunc(GL_EQUAL, 3, 0xFF); // Pass test if stencil value is 3
-			glStencilMask(0x00); // Don't write anything to stencil buffer
-			glDepthMask(GL_TRUE); // Write to depth buffer
-
-								  //Render mirrored models
-			glCullFace(GL_FRONT); // culls front faces
-								  //m_projection = glm::scale(m_projection, glm::vec3(1, -1, 1));
-			for each (auto mo in m_meshes)
-			{
-				GLuint err = glGetError();
-				if (GLEW_OK != err)
-				{
-					printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
-				}
-				m_model = std::get<1>(mo);// glm::scale(glm::translate(std::get<1>(mo), glm::vec3(0, 0, 0)), glm::vec3(-10, -10, -10));
-				glm::mat4 reflection =
-				{
-					1,0,0,0,
-					0,-1,0,0,
-					0,0,1,0,
-					0,0,0,1
-				}; 
-				//m_model = glm::translate(m_model, glm::vec3(0, 100, 0));
-				m_model = reflection * m_model;
-				//m_model = glm::translate(m_model, glm::vec3(0, -100, 0));
-				//m_model = reflection * m_model;
-				//m_model = glm::scale(std::get<1>(mo), glm::vec3(1, -1, 1));
-				m_mvp_new = m_projection * portal_view * m_model;
-				glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-				glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
-				if (m_loaded_meshes[std::get<0>(mo)])
-				{
-					if (std::get<0>(mo) == "Skybox")
-					{
-						glUseProgram(m_shaderprogram_mvp_textured_unlit);
-						glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-						SetMaterial(std::get<2>(mo));
-					}
-					else if (std::get<0>(mo) == "DoorFrame")
-					{
-						glUseProgram(m_shaderprogram_mvp_textured_unlit);
-						glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-					}
-					else
-					{
-						glUseProgram(m_shaderprogram_mvp_textured);
-						glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
-						SetMaterial(std::get<2>(mo));
-					}
-					m_loaded_meshes[std::get<0>(mo)]->Render();
-				}
-			}
-			glDisable(GL_STENCIL_TEST);
-			glCullFace(GL_BACK); // culls back faces
-		}
-		glDisable(GL_STENCIL_TEST);
-	}*/
+	
 
 	//Mirror
 	/*{
@@ -1712,7 +1560,7 @@ void BatchRenderer::_RenderLineStrips()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void BatchRenderer::_RenderMeshes()
+void BatchRenderer::_RenderMeshes(int render_layer)
 {
 
 	//planeEqn[0] = rand() % 100 / 100.0f;
@@ -1727,6 +1575,10 @@ void BatchRenderer::_RenderMeshes()
 
 	for each (auto mo in m_meshes)
 	{
+		if (std::get<3>(mo).count(render_layer) == 0)
+		{
+			continue;
+		}
 		GLuint err = glGetError();
 		if (GLEW_OK != err)
 		{
@@ -1759,10 +1611,14 @@ void BatchRenderer::_RenderMeshes()
 	}
 }
 
-void BatchRenderer::_RenderPortals()
+void BatchRenderer::_RenderPortals(int render_layer)
 {
 	for each(auto po in m_portals)
 	{
+		if (std::get<3>(po).count(render_layer) == 0)
+		{
+			continue;
+		}
 		//Stencil
 		glEnable(GL_STENCIL_TEST);
 
@@ -1821,6 +1677,10 @@ void BatchRenderer::_RenderPortals()
 		SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
 		for each (auto mo in m_meshes)
 		{
+			if (std::get<3>(mo).count(std::get<4>(po)) == 0)
+			{
+				continue;
+			}
 			GLuint err = glGetError();
 			if (GLEW_OK != err)
 			{
@@ -1856,9 +1716,131 @@ void BatchRenderer::_RenderPortals()
 				m_loaded_meshes[std::get<0>(mo)]->Render();
 			}
 		}
+		//_RenderPortalsInPortals(std::get<4>(po), 1, 1, portal_view);//TODO: Skip current portal
+
 		glDisable(GL_CLIP_DISTANCE0);
 		glDisable(GL_STENCIL_TEST);
 		SetVec3(GetUniformLocation("gPortalOffset"), glm::vec3(0,0,0));
+	}
+
+}
+
+void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth, int portal_depth, glm::mat4 view)
+{
+	if (portal_depth <= 0)
+	{
+		return;
+	}
+	for each(auto po in m_portals)
+	{
+		if (std::get<3>(po).count(render_layer) == 0)
+		{
+			continue;
+		}
+		// Draw window
+		glStencilFunc(GL_GEQUAL, stencil_depth, 0xFF); // Pass test if stencil value is 1 or higher
+		glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);//Increment stencil by 1
+		glStencilMask(0xFF); // Write to stencil buffer
+		glDepthMask(GL_FALSE); // Don't write to depth buffer
+
+		m_model = std::get<1>(po);
+		m_mvp_new = m_projection * view * m_model;
+		glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+		glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
+
+		glUseProgram(m_shaderprogram_mvp_textured);
+		glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		m_loaded_meshes[std::get<0>(po)]->Render();
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		//glClear(GL_COLOR_BUFFER_BIT);
+		//glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
+
+		//Draw objects inside window
+		glStencilFunc(GL_EQUAL, stencil_depth+1, 0xFF); // Pass test if stencil value is 1
+		glStencilMask(0x00); // Don't write anything to stencil buffer
+		glDepthMask(GL_TRUE); // Write to depth buffer
+
+		/*GLdouble planeEqn[4] = { 0.0, 0.0, 1.0, 0.0 };
+
+		glEnable(GL_CLIP_PLANE0);    // Enable clipping
+		glClipPlane(GL_CLIP_PLANE0, planeEqn);  // Define the plane equation
+		glDisable(GL_CLIP_PLANE0);    // Disable clipping*/
+
+		glDepthFunc(GL_ALWAYS);
+		//glDisable(GL_DEPTH_TEST); 
+		//glDepthMask(GL_FALSE);
+		_ClearScreen();
+		//glDepthMask(GL_TRUE);
+		//glEnable(GL_DEPTH_TEST)
+		glDepthFunc(GL_LEQUAL);
+
+		glm::vec4 planeEqn = { 0.0f, 0.0f, -1.0f, 0.0f };
+		//glm::mat4 transform = glm::translate(glm::vec3(0, 0, 0));
+		//planeEqn = glm::transpose(glm::inverse(transform))*planeEqn;
+
+		planeEqn = glm::transpose(glm::inverse(m_model))*planeEqn; //TODO: Figure out where to move the clipping plane
+
+		glUniform4fv(GetUniformLocation("clip_plane"), 1, &planeEqn[0]);
+		glEnable(GL_CLIP_DISTANCE0);//TODO:Fix
+
+		glm::mat4 portal_view = view * std::get<1>(po) / std::get<2>(po);
+		glUniformMatrix4fv(12, 1, GL_FALSE, &portal_view[0][0]);
+		SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
+		for each (auto mo in m_meshes)
+		{
+			if (std::get<3>(mo).count(std::get<4>(po)) == 0)
+			{
+				continue;
+			}
+			GLuint err = glGetError();
+			if (GLEW_OK != err)
+			{
+				printf("i:%d 0x%X %s\n", err, err, glewGetErrorString(err));
+			}
+			m_model = std::get<1>(mo);
+			m_mvp_new = m_projection * portal_view * m_model;
+
+			glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+			glUniformMatrix4fv(11, 1, GL_FALSE, &m_model[0][0]);
+			if (m_loaded_meshes[std::get<0>(mo)])
+			{
+				if (std::get<0>(mo) == "Skybox")
+				{
+					glUseProgram(m_shaderprogram_mvp_textured_unlit);
+					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+					SetMaterial(std::get<2>(mo));
+				}
+				else if (std::get<0>(mo) == "DoorFrame")
+				{
+					//SetVec3(GetUniformLocation("gPortalOffset"), glm::vec3(0, 0, 0));
+					//glUseProgram(m_shaderprogram_mvp_textured_unlit);
+					glUseProgram(m_shaderprogram_mvp_textured);
+					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+				}
+				else
+				{
+					//SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
+					glUseProgram(m_shaderprogram_mvp_textured);
+					glUniformMatrix4fv(3, 1, GL_FALSE, &m_mvp_new[0][0]);
+					SetMaterial(std::get<2>(mo));
+				}
+				m_loaded_meshes[std::get<0>(mo)]->Render();
+			}
+		}
+
+		_RenderPortalsInPortals(std::get<4>(po), stencil_depth+1, portal_depth-1, portal_view);
+
+		glStencilFunc(GL_GEQUAL, stencil_depth, 0xFF);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // 'Clear' stencil buffer
+		glStencilMask(0xFF); // Write to stencil buffer
+		glDepthMask(GL_FALSE);
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		_ClearScreen();
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+
 	}
 
 }
