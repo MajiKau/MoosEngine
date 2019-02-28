@@ -1208,29 +1208,37 @@ void game()
 	glm::vec3 TopToBot1 = pb1 - pt1;
 	glm::vec3 TopToBot2 = pb2 - pt2;
 
-
-	//TopToBot1
-	if (cameraPosition.z < pt1.z && cameraPosition.z > pt1.z - 1.0f && cameraPosition.y < 10)
+	if (cameraPosition.x < pt1.x + 2.0f && cameraPosition.x > pt1.x - 2.0f)
 	{
-		renderer->Camera.Position += TopToBot1;
-	}
+		if (cameraPosition.y < pt1.y + 6.0f && cameraPosition.y > pt1.y)
+		{
+			//TopToBot1
+			if (cameraPosition.z < pt1.z && cameraPosition.z > pt1.z - 1.0f)
+			{
+				renderer->Camera.Position += TopToBot1;
+			}
 
-	//TopToBot2
-	if (cameraPosition.z > pt2.z && cameraPosition.z < pt2.z + 1.0f && cameraPosition.y < 10)
-	{
-		renderer->Camera.Position += TopToBot2;
-	}
+			//TopToBot2
+			if (cameraPosition.z > pt2.z && cameraPosition.z < pt2.z + 1.0f)
+			{
+				renderer->Camera.Position += TopToBot2;
+			}
+		}
 
-	//BotToTop1
-	if (cameraPosition.z > pb1.z && cameraPosition.z < pb1.z + 1.0f && cameraPosition.y > 10)
-	{
-		renderer->Camera.Position -= TopToBot1;
-	}
+		if (cameraPosition.y < pb1.y + 6.0f && cameraPosition.y > pb1.y)
+		{
+			//BotToTop1
+			if (cameraPosition.z > pb1.z && cameraPosition.z < pb1.z + 1.0f && cameraPosition.y > 10)
+			{
+				renderer->Camera.Position -= TopToBot1;
+			}
 
-	//BotToTop2
-	if (cameraPosition.z < pb2.z && cameraPosition.z > pb2.z - 1.0f && cameraPosition.y > 10)
-	{
-		renderer->Camera.Position -= TopToBot2;
+			//BotToTop2
+			if (cameraPosition.z < pb2.z && cameraPosition.z > pb2.z - 1.0f && cameraPosition.y > 10)
+			{
+				renderer->Camera.Position -= TopToBot2;
+			}
+		}
 	}
 
 /*	if (previousCameraPosition.x > -2.0f &&  previousCameraPosition.x < 2.0f)
