@@ -26,7 +26,9 @@ public:
 	void Translate(glm::vec3 translation);
 
 	void SetLocalRotation(glm::quat rotation);
+	void SetLocalRotation(glm::vec3 rotation);
 	glm::quat GetLocalRotation();
+	glm::quat GetWorldRotation();
 	void Rotate(glm::quat rotation);
 
 	void SetLocalPose(glm::mat4 pose);

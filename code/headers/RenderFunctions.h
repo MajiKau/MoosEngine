@@ -111,7 +111,7 @@ public:
 
 	void RenderMesh(std::string mesh, glm::mat4 model_mat, Material material, std::set<int> render_layers);
 
-	void RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat, std::set<int> render_layers, int portal_render_layer);
+	void RenderPortal(std::string mesh, glm::mat4 model_mat, glm::mat4 other_model_mat, std::set<int> render_layers, int portal_render_layer, bool m_flip_clip_plane);
 
     //Works
 	GLchar* LoadShader(const char* filename);
@@ -182,7 +182,7 @@ private:
 	void _RenderMeshes(int render_layer);
 
 	void _RenderPortals(int render_layer);
-	void _RenderPortalsInPortals(int render_layer, int stencil_depth, int portal_depth, glm::mat4 view);
+	void _RenderPortalsInPortals(int render_layer, int stencil_depth, int portal_depth, glm::mat4 view, int iterator, glm::mat4 portal_start, glm::mat4 portal_end );
 
     //Not textured
 	GLuint m_vbo;
@@ -218,7 +218,7 @@ private:
 
     std::map<std::string, Mesh*> m_loaded_meshes;
     std::vector<std::tuple<std::string, glm::mat4, Material, std::set<int>>> m_meshes;
-	std::vector<std::tuple<std::string, glm::mat4, glm::mat4, std::set<int>, int>> m_portals;
+	std::vector<std::tuple<std::string, glm::mat4, glm::mat4, std::set<int>, int, bool>> m_portals;
 
 	Material m_default_material;
 };

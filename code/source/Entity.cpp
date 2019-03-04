@@ -108,9 +108,27 @@ void Entity::SetLocalRotation(glm::quat rotation)
 	m_rotation = rotation;
 }
 
+void Entity::SetLocalRotation(glm::vec3 rotation)
+{
+	m_rotation = glm::quat(rotation);
+}
+
 glm::quat Entity::GetLocalRotation()
 {
 	return m_rotation;
+}
+
+glm::quat Entity::GetWorldRotation()
+{
+	if (m_parent)
+	{
+		//TODO: Might be wrong? Test?
+		return m_parent->GetWorldRotation() * m_rotation;
+	}
+	else
+	{
+		return m_rotation;
+	}
 }
 
 void Entity::Rotate(glm::quat rotation)
@@ -157,7 +175,8 @@ glm::vec3 Entity::GetWorldPosition()
 {
 	if (m_parent)
 	{
-		return m_parent->GetWorldPosition() + m_position;
+		//TODO: Might not work, test
+		return GetWorldModelMatrix()[3];//m_parent->GetWorldPosition() + m_position;
 	}
 	else
 	{
