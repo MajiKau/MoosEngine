@@ -1371,7 +1371,7 @@ void BatchRenderer::Render()
 	m_trianglefans.clear();
 	m_linestrips.clear();
 
-	RenderSkybox();
+	//RenderSkybox();
 }
 
 void BatchRenderer::_ClearScreen()
@@ -1620,6 +1620,21 @@ void BatchRenderer::_RenderPortals(int render_layer)
 		{
 			continue;
 		}
+
+		/*float distance = glm::dot(Camera.Forward, glm::vec3(std::get<1>(po)[3]) - Camera.Position );
+		if (distance < 0.0f)
+		{
+			continue;
+		}*/
+		glm::quat rotation;
+		glm::decompose(m_view, glm::vec3(), rotation, glm::vec3(), glm::vec3(), glm::vec4());
+		glm::vec3 forward = glm::vec3(0, 0, -1)*rotation;
+
+		float distance = glm::dot(forward, glm::vec3(std::get<1>(po)[3]) - Camera.Position);
+		if (distance < 0.0f)
+		{
+			continue;
+		}
 		//Stencil
 		glEnable(GL_STENCIL_TEST);
 
@@ -1730,7 +1745,7 @@ void BatchRenderer::_RenderPortals(int render_layer)
 				m_loaded_meshes[std::get<0>(mo)]->Render();
 			}
 		}
-		_RenderPortalsInPortals(std::get<4>(po), 1, 1, portal_view, portal_it, std::get<1>(po), std::get<2>(po));//TODO: Skip current portal
+		_RenderPortalsInPortals(std::get<4>(po), 1, 3, portal_view, portal_it, std::get<1>(po), std::get<2>(po));//TODO: Skip current portal
 
 		glDisable(GL_CLIP_DISTANCE0);
 		glDisable(GL_STENCIL_TEST);
@@ -1754,6 +1769,16 @@ void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth,
 			continue;
 		}
 		if (std::get<3>(po).count(render_layer) == 0)
+		{
+			continue;
+		}
+
+		glm::quat rotation;
+		glm::decompose(view, glm::vec3(), rotation, glm::vec3(), glm::vec3(), glm::vec4());
+		glm::vec3 forward = glm::vec3(0,0,-1)*rotation;
+
+		float distance = glm::dot(forward, glm::vec3(std::get<1>(po)[3]) - glm::vec3(portal_end[3]));
+		if (distance < 0.0f)
 		{
 			continue;
 		}
@@ -1870,7 +1895,7 @@ void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth,
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // 'Clear' stencil buffer
 		glStencilMask(0xFF); // Write to stencil buffer
 		//glDepthMask(GL_FALSE);
-		//glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		_ClearScreen();
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glDepthMask(GL_TRUE);

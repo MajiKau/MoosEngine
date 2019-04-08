@@ -839,11 +839,11 @@ void GameInit()
 	Portal_T1F->SetOtherPortal(Portal_B1F);
 	Portal_T1F->SetPortalRenderLayer(1);
 
-	Portal_T2B->SetOtherPortal(Portal_B2B);
+	//Portal_T2B->SetOtherPortal(Portal_B2B);
 	Portal_T2B->SetPortalRenderLayer(1);
 	Portal_T2B->SetFlipClipPlane(true);
 
-	Portal_B1B->SetOtherPortal(Portal_T1B);
+	//Portal_B1B->SetOtherPortal(Portal_T1B);
 	Portal_B1B->SetPortalRenderLayer(0);
 	Portal_B1B->SetFlipClipPlane(true);
 
@@ -988,6 +988,8 @@ void renderScene(void)
 
 
 
+float speed = 10.0f;
+
 void game()
 {
 	//UPDATES
@@ -1118,11 +1120,14 @@ void game()
     //glm::vec3 Forward = glm::normalize(renderer->Camera.Forward);
     glm::vec3 Right = glm::normalize(glm::cross(glm::vec3(renderer->Camera.Forward.x, 0, renderer->Camera.Forward.z), glm::vec3(0, 1, 0)));
 
-    float speed = 100.0f;
-    if (inputManager->IsMouseDown(GLUT_RIGHT_BUTTON))
+    if (inputManager->IsMousePressed(GLUT_RIGHT_BUTTON))
     {
-        speed = 10.0f;
+        speed *= 5.0f;
     }
+	if (inputManager->IsMouseReleased(GLUT_RIGHT_BUTTON))
+	{
+		speed /= 5.0f;
+	}
 	if (window_focus)
 	{
 		if (GetAsyncKeyState(0x57))//W
@@ -1258,6 +1263,7 @@ void game()
 		up = glm::mat4(PortalT2->GetWorldRotation())*glm::vec4(up, 1.0f);
 		if (glm::dot(v, up) > 0.0f)
 		{
+			speed *= TopToBot2m[0][0];
 			renderer->Camera.Position = TopToBot2m * glm::vec4(renderer->Camera.Position, 1.0f);
 			renderer->Camera.RenderLayer = 1;
 			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT2->GetWorldRotation()) * PortalB2->GetWorldRotation());
@@ -1284,6 +1290,7 @@ void game()
 		up = glm::mat4(PortalB2->GetWorldRotation())*glm::vec4(up, 1.0f);
 		if (glm::dot(v, up) > 0.0f)
 		{
+			speed *= glm::inverse(TopToBot2m)[0][0];
 			renderer->Camera.Position = glm::inverse(TopToBot2m) * glm::vec4(renderer->Camera.Position, 1.0f);
 			renderer->Camera.RenderLayer = 0;
 			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB2->GetWorldRotation()) * PortalT2->GetWorldRotation());
