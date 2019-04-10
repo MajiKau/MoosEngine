@@ -1374,7 +1374,7 @@ void BatchRenderer::Render()
 	//RenderSkybox();
 }
 
-void BatchRenderer::_ClearScreen()
+void BatchRenderer::_ClearScreen(Color3f color = RED)
 {
 	/*float vertices[] = {
 		-1.0f,-1.0f,0.0f,1.0f,0.0f,0.0f,
@@ -1386,13 +1386,13 @@ void BatchRenderer::_ClearScreen()
 		-1.0f,-1.0f,0.0f,1.0f,0.0f,0.0f,
 	}; */
 	float vertices[] = {
-		-1.0f,-1.0f,1.0f,1.0f,0.0f,0.0f,
-		 1.0f,-1.0f,1.0f,1.0f,0.0f,0.0f,
-		 1.0f, 1.0f,1.0f,1.0f,0.0f,0.0f,
-					
-		 1.0f, 1.0f,1.0f,1.0f,0.0f,0.0f,
-		-1.0f, 1.0f,1.0f,1.0f,0.0f,0.0f,
-		-1.0f,-1.0f,1.0f,1.0f,0.0f,0.0f,
+		-1.0f,-1.0f,1.0f,color.r,color.g,color.b,
+		 1.0f,-1.0f,1.0f,color.r,color.g,color.b,
+		 1.0f, 1.0f,1.0f,color.r,color.g,color.b,
+
+		 1.0f, 1.0f,1.0f,color.r,color.g,color.b,
+		-1.0f, 1.0f,1.0f,color.r,color.g,color.b,
+		-1.0f,-1.0f,1.0f,color.r,color.g,color.b,
 	};
 
 	_RenderTriangle(vertices, 6); 	
@@ -1628,8 +1628,15 @@ void BatchRenderer::_RenderPortals(int render_layer)
 		}*/
 		glm::quat rotation;
 		glm::decompose(m_view, glm::vec3(), rotation, glm::vec3(), glm::vec3(), glm::vec4());
-		glm::vec3 forward = glm::vec3(0, 0, -1)*rotation;
-
+		glm::vec3 forward;
+		if (std::get<5>(po))
+		{
+			forward = glm::vec3(0, 0, -1)*rotation;
+		}
+		else
+		{
+			forward = glm::vec3(0, 0, -1)*rotation;
+		}
 		float distance = glm::dot(forward, glm::vec3(std::get<1>(po)[3]) - Camera.Position);
 		if (distance < 0.0f)
 		{
@@ -1674,7 +1681,7 @@ void BatchRenderer::_RenderPortals(int render_layer)
 		glDepthFunc(GL_ALWAYS);
 		//glDisable(GL_DEPTH_TEST); 
 		//glDepthMask(GL_FALSE);
-		_ClearScreen();
+		_ClearScreen(BLACK);
 		//glDepthMask(GL_TRUE);
 		//glEnable(GL_DEPTH_TEST)
 		glDepthFunc(GL_LEQUAL);
@@ -1699,7 +1706,7 @@ void BatchRenderer::_RenderPortals(int render_layer)
 		glUniform4fv(GetUniformLocation("clip_plane"), 1, &planeEqn[0]);
 		glEnable(GL_CLIP_DISTANCE0);
 
-		glm::mat4 portal_view = m_view * std::get<1>(po) / std::get<2>(po);
+		glm::mat4 portal_view = m_view * (std::get<1>(po) / std::get<2>(po));
 		glUniformMatrix4fv(12, 1, GL_FALSE, &portal_view[0][0]);
 		SetVec3(GetUniformLocation("gPortalOffset"), (std::get<1>(po) / std::get<2>(po))[3]);
 		int portal_it = 0;
@@ -1745,7 +1752,7 @@ void BatchRenderer::_RenderPortals(int render_layer)
 				m_loaded_meshes[std::get<0>(mo)]->Render();
 			}
 		}
-		_RenderPortalsInPortals(std::get<4>(po), 1, 3, portal_view, portal_it, std::get<1>(po), std::get<2>(po));//TODO: Skip current portal
+		_RenderPortalsInPortals(std::get<4>(po), 1, 1, portal_view, portal_it, std::get<1>(po), std::get<2>(po));
 
 		glDisable(GL_CLIP_DISTANCE0);
 		glDisable(GL_STENCIL_TEST);
@@ -1775,15 +1782,22 @@ void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth,
 
 		glm::quat rotation;
 		glm::decompose(view, glm::vec3(), rotation, glm::vec3(), glm::vec3(), glm::vec4());
-		glm::vec3 forward = glm::vec3(0,0,-1)*rotation;
-
+		glm::vec3 forward;
+		if (std::get<5>(po))
+		{
+			forward = glm::vec3(0, 0, -1)*rotation;
+		}
+		else
+		{
+			forward = glm::vec3(0, 0, -1)*rotation;
+		}
 		float distance = glm::dot(forward, glm::vec3(std::get<1>(po)[3]) - glm::vec3(portal_end[3]));
 		if (distance < 0.0f)
 		{
 			continue;
 		}
 		// Draw window
-		glStencilFunc(GL_GEQUAL, stencil_depth, 0xFF); // Pass test if stencil value is 1 or higher
+		glStencilFunc(GL_EQUAL, stencil_depth, 0xFF); // Pass test if stencil value is stencil_depth
 		glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);//Increment stencil by 1
 		glStencilMask(0xFF); // Write to stencil buffer
 		glDepthMask(GL_FALSE); // Don't write to depth buffer
@@ -1803,20 +1817,14 @@ void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth,
 		//glClear(GL_DEPTH_BUFFER_BIT); //Clear depth buffer to avoid flickering
 
 		//Draw objects inside window
-		glStencilFunc(GL_EQUAL, stencil_depth+1, 0xFF); // Pass test if stencil value is 1
+		glStencilFunc(GL_EQUAL, stencil_depth+1, 0xFF); // Pass test if stencil value is stencil_depth + 1
 		glStencilMask(0x00); // Don't write anything to stencil buffer
 		glDepthMask(GL_TRUE); // Write to depth buffer
-
-		/*GLdouble planeEqn[4] = { 0.0, 0.0, 1.0, 0.0 };
-
-		glEnable(GL_CLIP_PLANE0);    // Enable clipping
-		glClipPlane(GL_CLIP_PLANE0, planeEqn);  // Define the plane equation
-		glDisable(GL_CLIP_PLANE0);    // Disable clipping*/
 
 		glDepthFunc(GL_ALWAYS);
 		//glDisable(GL_DEPTH_TEST); 
 		//glDepthMask(GL_FALSE);
-		_ClearScreen();
+		_ClearScreen(BLACK);
 		//glDepthMask(GL_TRUE);
 		//glEnable(GL_DEPTH_TEST)
 		glDepthFunc(GL_LEQUAL);
@@ -1830,20 +1838,14 @@ void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth,
 		{
 			planeEqn = { 0.0f, 0.0f, -1.0f, 0.0f };
 		}
-		//glm::mat4 transform = glm::translate(glm::vec3(0, 0, 0));
-		//planeEqn = glm::transpose(glm::inverse(transform))*planeEqn;
+
 		glm::mat4 clip_plane_mat;
-		/*glm::vec3 off;
-		glm::quat rot;
-		glm::decompose(portal_offset, glm::vec3(), rot, off, glm::vec3(), glm::vec4());
-		mat = glm::mat4(glm::inverse(rot)) * std::get<2>(po);
-		mat = glm::translate(-off) * mat;*/
 		clip_plane_mat =  std::get<2>(po);
 		planeEqn = glm::transpose(glm::inverse(clip_plane_mat))*planeEqn; //TODO: Figure out where to move the clipping plane
 
 		glUniform4fv(GetUniformLocation("clip_plane"), 1, &planeEqn[0]);
 		glEnable(GL_CLIP_DISTANCE0);//TODO:Fix
-		//glDisable(GL_CLIP_DISTANCE0);//TODO:Remove
+		glDisable(GL_CLIP_DISTANCE0);//TODO:Remove
 		glm::mat4 portal_view = view * (std::get<1>(po) / std::get<2>(po));
 		glUniformMatrix4fv(12, 1, GL_FALSE, &portal_view[0][0]);
 		SetVec3(GetUniformLocation("gPortalOffset"), ((portal_start/portal_end) * (std::get<1>(po) / std::get<2>(po)))[3]);
@@ -1891,12 +1893,21 @@ void BatchRenderer::_RenderPortalsInPortals(int render_layer, int stencil_depth,
 
 		_RenderPortalsInPortals(std::get<4>(po), stencil_depth+1, portal_depth-1, portal_view, portal_it,  std::get<1>(po), std::get<2>(po) );
 
-		glStencilFunc(GL_GEQUAL, stencil_depth-1, 0xFF);
+		glStencilFunc(GL_LEQUAL, stencil_depth + 1, 0xFF);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE); // 'Clear' stencil buffer
 		glStencilMask(0xFF); // Write to stencil buffer
-		//glDepthMask(GL_FALSE);
+		glDepthMask(GL_FALSE);
+		//glDepthFunc(GL_ALWAYS);
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		_ClearScreen();
+		if(stencil_depth == 1)
+			_ClearScreen(GREEN);
+		else if (stencil_depth == 2)
+			_ClearScreen(BLUE);
+		else if (stencil_depth == 3)
+			_ClearScreen(WHITE);
+		else if (stencil_depth == 0)
+			_ClearScreen(YELLOW);
+		//glDepthFunc(GL_LEQUAL);
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 		glDepthMask(GL_TRUE);
 

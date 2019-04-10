@@ -167,7 +167,7 @@ public:
 
 private:
 
-	void _ClearScreen();
+	void _ClearScreen(Color3f color);
 
 	void _RenderTriangle(float* triangle, int numvertices);
 

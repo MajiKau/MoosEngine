@@ -797,7 +797,7 @@ void GameInit()
 	Portal* Portal_T1B = new Portal();
 	Portal_T1B->AddMesh("PortalB");
 	PortalT1->AddChild(Portal_T1B);
-	PortalT1->SetLocalRotation({ 0,PI/3.0f,0 });
+	//PortalT1->SetLocalRotation({ 0,PI/3.0f,0 });
 
 	PortalT2 = PortalRoomTop->SpawnChild("Portal2");
 	PortalT2->AddMesh("PortalFrame");
@@ -807,7 +807,8 @@ void GameInit()
 	Portal* Portal_T2B = new Portal();
 	Portal_T2B->AddMesh("PortalB");
 	PortalT2->AddChild(Portal_T2B);
-	PortalT2->SetLocalPosition({ 0,0,-5 });
+	//PortalT2->SetLocalPosition({ 0,0,-20 });
+	//PortalT1->SetLocalRotation({ 0,-PI / 5.0f,0 });
 
 	Entity* PortalFrameBot1 = MainScene.SpawnEntity("PortalRoomBot");
 	PortalFrameBot1->AddRenderLayer(1);
@@ -839,11 +840,11 @@ void GameInit()
 	Portal_T1F->SetOtherPortal(Portal_B1F);
 	Portal_T1F->SetPortalRenderLayer(1);
 
-	//Portal_T2B->SetOtherPortal(Portal_B2B);
+	Portal_T2B->SetOtherPortal(Portal_B2B);
 	Portal_T2B->SetPortalRenderLayer(1);
 	Portal_T2B->SetFlipClipPlane(true);
 
-	//Portal_B1B->SetOtherPortal(Portal_T1B);
+	Portal_B1B->SetOtherPortal(Portal_T1B);
 	Portal_B1B->SetPortalRenderLayer(0);
 	Portal_B1B->SetFlipClipPlane(true);
 
