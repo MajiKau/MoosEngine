@@ -1371,7 +1371,7 @@ void BatchRenderer::Render()
 	m_trianglefans.clear();
 	m_linestrips.clear();
 
-	//RenderSkybox();
+	RenderSkybox();
 }
 
 void BatchRenderer::_ClearScreen(Color3f color = RED)
@@ -1752,7 +1752,7 @@ void BatchRenderer::_RenderPortals(int render_layer)
 				m_loaded_meshes[std::get<0>(mo)]->Render();
 			}
 		}
-		_RenderPortalsInPortals(std::get<4>(po), 1, 1, portal_view, portal_it, std::get<1>(po), std::get<2>(po));
+		_RenderPortalsInPortals(std::get<4>(po), 1, 0, portal_view, portal_it, std::get<1>(po), std::get<2>(po));
 
 		glDisable(GL_CLIP_DISTANCE0);
 		glDisable(GL_STENCIL_TEST);

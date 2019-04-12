@@ -807,7 +807,7 @@ void GameInit()
 	Portal* Portal_T2B = new Portal();
 	Portal_T2B->AddMesh("PortalB");
 	PortalT2->AddChild(Portal_T2B);
-	//PortalT2->SetLocalPosition({ 0,0,-20 });
+	PortalT2->SetLocalPosition({ 0,0,-5 });
 	//PortalT1->SetLocalRotation({ 0,-PI / 5.0f,0 });
 
 	Entity* PortalFrameBot1 = MainScene.SpawnEntity("PortalRoomBot");
