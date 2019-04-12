@@ -10,28 +10,18 @@
 #include <gtx/euler_angles.hpp>
 #include <gtx/intersect.hpp>
 
-//#include <include/imgui/include/imgui.h>//GUI
 #include <imgui_impl_glut.h>
 
 #include "code/headers/Geometry.h"
-#include "code/headers/RenderFunctions.h"
 #include "code/headers/InputManager.h"
 
-#include "code/headers/Vehicle.h"
-#include "code/headers/Scene.h"
-
-#include "code/headers/Portal.h"
+#include "code/headers/Renderer2D.h"
 
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
 const char* window_name = "GLUT Window";
 bool window_focus = false;
-
-Vector3f ToVec3(Point2 p)
-{
-    return{ p.x,0,p.y };
-}
 
 float totalTime = 0;
 
@@ -56,21 +46,9 @@ int selectedNode = 0;
 
 float zoom = 100.0f;
 
-BatchRenderer* renderer;
-glm::vec3 previousCameraPosition;
-
-
 glm::mat4 Projection;
 glm::mat4 View;
-glm::vec3 PlaneRot;
 
-Material CustomMaterial;
-
-
-float score = 500.0f;
-
-glm::vec3 cursor;
-bool showTurret = false;
 //
 
 bool warped = false;
@@ -84,9 +62,9 @@ bool renderPlane = false;
 
 bool showdebug = false;
 
-Vehicle tank;
+//Scene MainScene;
 
-Scene MainScene;
+Renderer2D* renderer;
 
 bool IsKeySpecial(unsigned char key)
 {
@@ -230,7 +208,7 @@ void init()
 }
 
 int selected_tree_node = 0;
-void EntityToTreeNode(Entity* entity)
+/*void EntityToTreeNode(Entity* entity)
 {
 	std::vector<Entity*> children = entity->GetChildren();
 	if (children.size() == 0)
@@ -270,7 +248,7 @@ void EntitiesToTreeNode(std::vector<Entity*> entities)
 	{
 		EntityToTreeNode(entity);
 	}
-}
+}*/
 
 void drawGUI()
 {
@@ -280,66 +258,13 @@ void drawGUI()
 
     // Show a simple window
 	{
-		ImGui::Value("Money:", score);
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		if (ImGui::Button("Debug"))
 			showdebug ^= 1;
-		if (showdebug)
-		{
-			static float f = 0.0f;
-			ImGui::Text("Hello, world!");
-			ImGui::Value("MouseX:", inputManager->GetMousePosition()[0]);
-			ImGui::Value("MouseY:", inputManager->GetMousePosition()[1]);
-
-			ImGui::InputInt("PointLight", &pLightID, 1);
-
-			ImGui::SliderFloat("Light.R", &(renderer->m_point_light[pLightID].Color.r), 0, 1);
-			ImGui::SliderFloat("Light.G", &(renderer->m_point_light[pLightID].Color.g), 0, 1);
-			ImGui::SliderFloat("Light.B", &(renderer->m_point_light[pLightID].Color.b), 0, 1);
-
-			ImGui::SliderFloat("Light.Ambient", &(renderer->m_point_light[pLightID].AmbientIntensity), 0, 1);
-			ImGui::SliderFloat("Light.Diffuse", &(renderer->m_point_light[pLightID].DiffuseIntensity), 0, 1);
-
-			ImGui::SliderFloat("Light.X", &(renderer->m_point_light[pLightID].Position.x), -200, 200);
-			ImGui::SliderFloat("Light.Y", &(renderer->m_point_light[pLightID].Position.y), -200, 200);
-			ImGui::SliderFloat("Light.Z", &(renderer->m_point_light[pLightID].Position.z), -200, 200);
-
-			ImGui::SliderFloat("LightD.R", &(renderer->m_directional_light.Color.r), 0, 1);
-			ImGui::SliderFloat("LightD.G", &(renderer->m_directional_light.Color.g), 0, 1);
-			ImGui::SliderFloat("LightD.B", &(renderer->m_directional_light.Color.b), 0, 1);
-
-			ImGui::SliderFloat("LightD.Ambient", &(renderer->m_directional_light.AmbientIntensity), 0, 1);
-			ImGui::SliderFloat("LightD.Diffuse", &(renderer->m_directional_light.DiffuseIntensity), 0, 1);
-
-			ImGui::SliderFloat("LightD.X", &(renderer->m_directional_light.Direction.x), -1, 1);
-			ImGui::SliderFloat("LightD.Y", &(renderer->m_directional_light.Direction.y), -1, 1);
-			ImGui::SliderFloat("LightD.Z", &(renderer->m_directional_light.Direction.z), -1, 1);
-
-			ImGui::SliderFloat("Shininess", &(CustomMaterial.shininess), 0, 1024);
-
-			ImGui::Checkbox("Rotate Light", &rotateLight);
-			ImGui::SliderFloat("Distance", &lightDistance, 0, 200);
-
-			if (renderer->Blinn)
-			{
-				if (ImGui::Button("Blinn-Phong"))
-				{
-					renderer->Blinn = false;
-				}
-			}
-			else
-			{
-				if (ImGui::Button("Phong"))
-				{
-					renderer->Blinn = true;
-				}
-			}
-
-		}
 	}
 
 		//Entity browser!
-	{
+	/*{
 		ImGui::Begin("Browser");
 		ImGui::BeginChild("EntityTree", { 0,200 }, true);
 		EntitiesToTreeNode(MainScene.GetChildren());
@@ -371,9 +296,9 @@ void drawGUI()
 			}
 			if (ImGui::Button("SpawnParent"))
 			{
-				/*if (name[0] != '\0')
-					selected_entity->SpawnChild(name);
-				else*/
+				//if (name[0] != '\0')
+				//	selected_entity->SpawnChild(name);
+				//else
 					selected_entity->SpawnParent();
 			}
 			static char mesh_name[20];
@@ -388,8 +313,8 @@ void drawGUI()
 			selected_entity->SetLocalScale(scale);
 		}
 		ImGui::End();
-	}
-	{
+	}*/
+	/*{
 		ImGui::Begin("Animation"); 
 		KeyFrame frame(0, {});
 		if (selected_entity != NULL)
@@ -534,7 +459,7 @@ void drawGUI()
 		//Keyframe editing
 		ImGui::Begin("KeyFrame");
 		ImGui::End();
-	}
+	}*/
 
 
 	ImGui::Render();
@@ -561,348 +486,14 @@ void changeSize(int w, int h)
 	printf("W:%d,H:%d,Ration:%.2f\n", screenWidth, screenHeight, ratio);
 }
 
-
-Entity* fish_entity;
-Entity* frame_entity;
-Entity* platform_entity;
-Entity* left_entity;
-Entity* right_entity;
-
-Entity* tank_entity;
-Entity* tank_rb_entity;
-Entity* tank_bot_entity;
-Entity* tank_top_entity;
-
-Entity* wave_entity;
-
-Entity* PortalT1;
-Entity* PortalT2;
-Entity* PortalB1;
-Entity* PortalB2;
-
 void GameInit()
 {
-	renderer = new BatchRenderer(zoom, screenRatio);
+	renderer = new Renderer2D(zoom, screenRatio);
 
-    renderer->Camera.Position = { 0,1,0 };
-    renderer->Camera.Rotation = { 0,0,0 };
-
-    PointLight light;
-    light.AmbientIntensity = 0.05f;
-    light.Color = { 1,1,0 };
-    light.DiffuseIntensity = 0.25f;
-    light.Position = { 200,100,200 };
-    
-    CustomMaterial.shininess = 256.0f;
-
-    renderer->m_point_light.push_back(light);
-   
-
-	for (int x = -5; x < 5; x++)
-	{
-		for (int y = -5; y < 5; y++)
-		{
-			for (int z = -5; z < 5; z++)
-			{
-				//test_objects.push_back({ x * 100.0f - rand() % 10,y * 100.0f - rand() % 10,z * 100.0f - rand() % 10,3,6,4 });
-			}
-		}
-	}
-	Animation anim1("anim1");
-	anim1.AddKeyFrame(0.0f, Pose(glm::vec3(-30, 20, 0), glm::quat()));
-	anim1.AddKeyFrame(8.0f, Pose(glm::vec3(0.0f, 20.0f, 0.0f), glm::quat()));
-	anim1.AddKeyFrame(1.6f, Pose(glm::vec3(30, 20, 0), glm::quat()));
-	anim1.AddKeyFrame(26.0f, Pose(glm::vec3(40.0f, 40.0f, 40.0f), glm::quat()));
-	anim1.AddKeyFrame(4.3f, Pose(glm::vec3(-30, 25, 0), glm::quat()));
-	anim1.AddKeyFrame(15.1f, Pose(glm::vec3(-30, 10, 0), glm::quat()));
-	anim1.SetLooping(true);
-
-	Animation platform("platform");
-	platform.AddKeyFrame(0.0f, Pose(glm::vec3(4, -20, 0), glm::quat()));
-	platform.AddKeyFrame(1.5f, Pose(glm::vec3(4, -20, 0), glm::quat()));
-	platform.AddKeyFrame(2.0f, Pose(glm::vec3(0, -20, 0), glm::quat()));
-	platform.AddKeyFrame(3.0f, Pose(glm::vec3(0, -20, 0), glm::quat()));
-	platform.AddKeyFrame(5.0f, Pose(glm::vec3(0, 0, 0), glm::quat())); 
-	//platform.SaveAnimation("plat.txt");
-
-	//Animation platformtest("");
-	//platformtest.LoadAnimation("plat.txt");
-
-	//platform.SetLooping(true);
-
-	Animation left("left");
-	left.AddKeyFrame(0.0f, Pose(glm::vec3(0, 0, 0), glm::quat()));
-	left.AddKeyFrame(3.0f, Pose(glm::vec3(0, 0, 0), glm::quat()));
-	left.AddKeyFrame(5.0f, Pose(glm::vec3(-5, 0, 0), glm::quat()));
-	//left.SetLooping(true);
-
-	Animation right("right");
-	right.AddKeyFrame(0.0f, Pose(glm::vec3(0, 0, 0), glm::quat()));
-	right.AddKeyFrame(3.0f, Pose(glm::vec3(0, 0, 0), glm::quat()));
-	right.AddKeyFrame(5.0f, Pose(glm::vec3(5, 0, 0), glm::quat()));
-	//right.SetLooping(true);
-
-	Animation tank("tank");
-	tank.AddKeyFrame(0.0f, Pose(glm::vec3(0, 1, 0), glm::quat()));
-	tank.AddKeyFrame(6.0f, Pose(glm::vec3(0, 1, 0), glm::quat()));
-	tank.AddKeyFrame(9.0f, Pose(glm::vec3(0, 1, 20), glm::quat()));
-
-	Entity* ground = MainScene.SpawnEntity("Ground");
-	ground->AddMesh("testcube");
-	ground->SetLocalPosition({ 50,10,0 });
-	ground->SetLocalScale({ 20,1,20 });
-
-	Entity* basiccube = MainScene.SpawnEntity("BasicCube");
-	basiccube->AddMesh("BasicCube");
-	basiccube->SetLocalPosition({ -50,10,0 });
-	basiccube->SetLocalScale({ 10,10,10 });
-
-
-	Entity* cube = MainScene.SpawnEntity("Cube");
-	cube->AddMesh("Cube");
-	cube->SetLocalPosition({ -20,20,-130 });
-	cube->SetLocalScale({ 10,10,10 });
-
-	fish_entity = MainScene.SpawnEntity("Platform_Root");
-	fish_entity->SetLocalPosition({ 0,30,0 });
-
-	frame_entity = fish_entity->SpawnChild("Platform_Frame");
-	frame_entity->AddMesh("v_platform_frame");
-	frame_entity->SetLocalPosition({ 0,0.5f,0 });
-
-	platform_entity = fish_entity->SpawnChild("Platform_Full");
-	platform_entity->AddMesh("v_platform_left");
-	platform_entity->AddMesh("v_platform_right");
-	platform_entity->AddAnimation(anim1);
-	platform_entity->AddAnimation(platform);
-
-	left_entity = fish_entity->SpawnChild("Platform_Left");
-	left_entity->AddMesh("v_platform_left");
-	left_entity->AddAnimation(left);
-
-	right_entity = fish_entity->SpawnChild("Platform_Right");
-	right_entity->AddMesh("v_platform_right");
-	right_entity->AddAnimation(right);
-	//e2->SetLocalPose(glm::translate(glm::vec3(0.0f, 20.0f, 0.0f))*glm::rotate(PI / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)));
-
-	tank_rb_entity = platform_entity->SpawnChild("Tank");
-	tank_entity = tank_rb_entity->SpawnChild("Tank_Mesh_Root");
-	//tank_entity->AddMesh("fulltank");
-	tank_entity->AddAnimation(tank);
-	tank_entity->SetLocalPosition({ 0,1,0 });
-	tank_bot_entity = tank_entity->SpawnChild("Tank_Bottom");
-	tank_bot_entity->AddMesh("tank_bottom");
-	tank_top_entity = tank_bot_entity->SpawnChild("Tank_Top");
-	tank_top_entity->AddMesh("tank_top");
-	tank_top_entity->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), -10.1f, { 0,1,0 }));
-
-	/*Entity* door = MainScene.SpawnEntity("Door");
-	door->AddMesh("DoorFrame");
-	Entity* tunnel = door->SpawnChild("Tunnel");
-	tunnel->AddMesh("DoorFrame");
-	tunnel->SetLocalScale({ 1,1,4 });
-	tunnel->SetLocalPosition({ 0,0,-1.9f });
-	door->SetLocalPosition({ 0,1,-100 });
-
-	Portal* portal_top_in_forward = new Portal();
-	door->AddChild(portal_top_in_forward);
-	portal_top_in_forward->AddMesh("Door");
-
-	Portal* portal_top_out_forward = new Portal();
-	door->AddChild(portal_top_out_forward);
-	portal_top_out_forward->SetLocalPosition({ 0,0,-2.0f });
-	portal_top_out_forward->AddMesh("Door");
-
-	Portal* portal_top_out_backward = new Portal();
-	door->AddChild(portal_top_out_backward);
-	portal_top_out_backward->AddMesh("Door");
-	portal_top_out_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
-
-	Portal* portal_top_in_backward = new Portal();
-	door->AddChild(portal_top_in_backward);
-	portal_top_in_backward->SetLocalPosition({ 0,0,-1.5f });
-	portal_top_in_backward->AddMesh("Door");
-	portal_top_in_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
-
-
-	//portal2_t->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0),PI,glm::vec3(0,1,0)));
-
-	Entity* door2 = MainScene.SpawnEntity("Door2");
-	door2->AddMesh("DoorFrame");
-	Entity* tunnel2 = door2->SpawnChild("Tunnel2");
-	tunnel2->AddMesh("DoorFrame");
-	tunnel2->SetLocalScale({ 1,1,20 });
-	tunnel2->SetLocalPosition({ 0,0,-9.6f });
-	Entity* door2c = door2->SpawnChild("Door2c");
-	//door2c->AddMesh("DoorFrame");
-	door2c->SetLocalPosition({ 0,0,-20.0f });
-	door2->SetLocalPosition({ 0,-99,-100 });
-
-	Portal* portal_bot_out_forward = new Portal();
-	door2->AddChild(portal_bot_out_forward);
-	portal_bot_out_forward->SetLocalPosition({ 0,0,0 });
-	portal_bot_out_forward->AddMesh("Door");
-
-	Portal* portal_bot_in_forward = new Portal();
-	door2->AddChild(portal_bot_in_forward);
-	portal_bot_in_forward->SetLocalPosition({ 0,0,-9.6f });
-	portal_bot_in_forward->AddMesh("Door");
-
-	Portal* portal_bot_out_backward = new Portal();
-	door2->AddChild(portal_bot_out_backward);
-	portal_bot_out_backward->SetLocalPosition({ 0,0,-9.6f });
-	portal_bot_out_backward->AddMesh("Door");
-	portal_bot_out_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
-
-
-	Portal* portal_bot_in_backward = new Portal();
-	door2->AddChild(portal_bot_in_backward);
-	portal_bot_in_backward->SetLocalPosition({ 0,0,0.0f });
-	portal_bot_in_backward->AddMesh("Door");
-	portal_bot_in_backward->SetLocalRotation(glm::rotate(glm::quat(1, 0, 0, 0), PI, glm::vec3(0, 1, 0)));
-
-
-	portal_top_in_forward->SetOtherPortal(portal_bot_out_forward);
-	portal_bot_in_forward->SetOtherPortal(portal_top_out_forward);
-
-	portal_top_in_backward->SetOtherPortal(portal_bot_out_backward);
-	portal_bot_in_backward->SetOtherPortal(portal_top_out_backward);*/
-
-	//portal_top_out_forward->SetOtherPortal(portal_bot_in_forward);
-	//portal_bot_out_forward->SetOtherPortal(portal_top_in_forward);
-
-
-	Entity* box = MainScene.SpawnEntity();
+	/*Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
-	box->SetLocalPosition({ 5,0,0 });
+	box->SetLocalPosition({ 5,0,0 });*/
 
-	box = MainScene.SpawnEntity();
-	box->AddMesh("testcube");
-	box->SetLocalPosition({ 0,0,5 });
-
-	box = MainScene.SpawnEntity();
-	box->AddMesh("testcube");
-	box->SetLocalPosition({ 0,0,-20 });
-
-	box = MainScene.SpawnEntity();
-	box->AddMesh("testcube");
-	box->SetLocalPosition({ 0,0,-2.75f });
-
-	Entity* PortalRoomTop = MainScene.SpawnEntity("PortalRoomTop");
-	PortalT1 = PortalRoomTop->SpawnChild("Portal1");
-	PortalT1->AddMesh("PortalFrame");
-	Portal* Portal_T1F = new Portal();
-	Portal_T1F->AddMesh("PortalF");
-	PortalT1->AddChild(Portal_T1F);
-	Portal* Portal_T1B = new Portal();
-	Portal_T1B->AddMesh("PortalB");
-	PortalT1->AddChild(Portal_T1B);
-	//PortalT1->SetLocalRotation({ 0,PI/3.0f,0 });
-
-	PortalT2 = PortalRoomTop->SpawnChild("Portal2");
-	PortalT2->AddMesh("PortalFrame");
-	Portal* Portal_T2F = new Portal();
-	Portal_T2F->AddMesh("PortalF");
-	PortalT2->AddChild(Portal_T2F);
-	Portal* Portal_T2B = new Portal();
-	Portal_T2B->AddMesh("PortalB");
-	PortalT2->AddChild(Portal_T2B);
-	PortalT2->SetLocalPosition({ 0,0,-5 });
-	//PortalT1->SetLocalRotation({ 0,-PI / 5.0f,0 });
-
-	Entity* PortalFrameBot1 = MainScene.SpawnEntity("PortalRoomBot");
-	PortalFrameBot1->AddRenderLayer(1);
-	PortalB1 = PortalFrameBot1->SpawnChild("Portal1");
-	PortalB1->AddMesh("PortalFrame");
-	Portal* Portal_B1F = new Portal();
-	Portal_B1F->AddMesh("PortalF");
-	PortalB1->AddChild(Portal_B1F);
-	Portal* Portal_B1B = new Portal();
-	Portal_B1B->AddMesh("PortalB");
-	PortalB1->AddChild(Portal_B1B);
-
-	PortalB2 = PortalFrameBot1->SpawnChild("Portal2");
-	PortalB2->AddMesh("PortalFrame");
-	Portal* Portal_B2F = new Portal();
-	Portal_B2F->AddMesh("PortalF");
-	PortalB2->AddChild(Portal_B2F);
-	Portal* Portal_B2B = new Portal();
-	Portal_B2B->AddMesh("PortalB");
-	PortalB2->AddChild(Portal_B2B);
-	PortalB2->SetLocalPosition({ 0,0,-15 });
-
-	PortalFrameBot1->SetLocalPosition({ 0, 100, 0 });
-	//PortalFrameBot1->SetLocalRotation({ 0.0f, PI / 4.0f, 0.0f });//Transitions between rooms don't work well with rotations
-
-	Entity* RoomB = PortalFrameBot1->SpawnChild("Room");
-	RoomB->AddMesh("Room1");
-
-	Portal_T1F->SetOtherPortal(Portal_B1F);
-	Portal_T1F->SetPortalRenderLayer(1);
-
-	Portal_T2B->SetOtherPortal(Portal_B2B);
-	Portal_T2B->SetPortalRenderLayer(1);
-	Portal_T2B->SetFlipClipPlane(true);
-
-	Portal_B1B->SetOtherPortal(Portal_T1B);
-	Portal_B1B->SetPortalRenderLayer(0);
-	Portal_B1B->SetFlipClipPlane(true);
-
-	Portal_B2F->SetOtherPortal(Portal_T2F);
-	Portal_B2F->SetPortalRenderLayer(0);
-
-
-
-	{
-		Animation wave_animation("Wave");
-		wave_animation.SetLooping(true);
-
-		wave_animation.AddKeyFrame(0.0f, Pose({ 10.0f,10.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), -0.1f, glm::vec3(0, 1, 0)), { 1,1,1 }), {});//PARENT
-		wave_animation.AddKeyFrame(1.0f, Pose({ 10.0f,10.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), 0.1f, glm::vec3(0, 1, 0)), { 0.5f,5.0f,3.0f }), {});//PARENT
-		wave_animation.AddKeyFrame(2.0f, Pose({ 10.0f,10.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), -0.1f, glm::vec3(0, 1, 0)), { 1,1,1 }), {});//PARENT
-
-		wave_animation.AddKeyFrame(0.0f, Pose({ 1.0f,4.0f,0.0f }, { 1,0,0,0 }, { 2,2,2 }), { 0 });//HEAD
-		wave_animation.AddKeyFrame(1.0f, Pose({ -1.0f,4.0f,0.0f }, { 1,0,0,0 }, { 2,2,2 }), { 0 });//HEAD
-		wave_animation.AddKeyFrame(2.0f, Pose({ 1.0f,4.0f,0.0f }, { 1,0,0,0 }, { 2,2,2 }), { 0 });//HEAD
-
-		wave_animation.AddKeyFrame(0.0f, Pose({ 0.0f,0.0f,0.0f }, { 1,0,0,0 }, { 4,6,1 }), { 1 });//BODY
-
-		wave_animation.AddKeyFrame(0.0f, Pose({ 2.0f,2.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), 0.0f, glm::vec3(0, 0, 1)), { 1,1,1 }), { 2 });//HAND_JOINT
-		wave_animation.AddKeyFrame(1.0f, Pose({ 2.0f,2.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), PI / 3.0f, glm::vec3(0, 0, 1)), { 1,1,1 }), { 2 });//HAND_JOINT
-		wave_animation.AddKeyFrame(2.0f, Pose({ 2.0f,2.0f,0.0f }, glm::rotate(glm::quat(1, 0, 0, 0), 0.0f, glm::vec3(0, 0, 1)), { 1,1,1 }), { 2 });//HAND_JOINT
-
-		wave_animation.AddKeyFrame(0.0f, Pose({ 1.5f,0.0f,0.0f }, { 1,0,0,0 }, { 3,1,1 }), { 2,0 });//HAND
-
-		wave_animation.SaveAnimation("SimpleWaveTest.txt");
-
-		wave_animation.LoadAnimation("Content/Animations/Wave.txt");
-
-		Animation LoadTestAnimation;
-		LoadTestAnimation.LoadAnimation("SimpleWaveTest.txt");
-		LoadTestAnimation.SaveAnimation("LoadTest.txt");
-
-
-		wave_entity = MainScene.SpawnEntity("Person");
-		wave_entity->AddAnimation(wave_animation);
-		Entity* head = wave_entity->SpawnChild("Head");
-		head->AddMesh("Cube");
-		Entity* body = wave_entity->SpawnChild("Body");
-		body->AddMesh("Cube");
-		Entity* hand_joint = wave_entity->SpawnChild("Elbow");
-		Entity* hand = hand_joint->SpawnChild("Arm");
-		hand->AddMesh("Cube");
-
-
-		wave_entity->SetLocalPosition({ 10,100,10 });
-		wave_entity->PlayAnimation("Wave");
-
-		Entity* person_root = wave_entity->SpawnParent("Person_Root");
-		person_root->SetLocalPosition({ 20,-20,-120 });
-		person_root->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), 2*PI/3,glm::vec3(0,1,0)));
-
-		//wave_animation.LoadAnimation("Content/Animations/Wave.txt");
-		//wave_entity->GetAnimationController()->SetAnimations({ wave_animation });
-	}
 }
 
 
@@ -912,19 +503,6 @@ void renderScene(void)
     glm::vec4 front(0, 0, -1, 1);
     glm::vec4 right(1, 0, 0, 1);
     glm::vec4 up(0, 1, 0, 1);
-    
-    glm::mat4 rotation = glm::eulerAngleY(renderer->Camera.Rotation.x)*glm::eulerAngleX(renderer->Camera.Rotation.y);
-    front = rotation * front;
-    right = rotation * right;
-    up = rotation * up;
-
-    renderer->Camera.Forward = front;
-    renderer->Camera.Right = right;
-    renderer->Camera.Up = up;
-
-    View = glm::lookAt(glm::vec3{ renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z }, glm::vec3{ renderer->Camera.Position.x + front.x, renderer->Camera.Position.y + front.y, renderer->Camera.Position.z + front.z }, glm::vec3{ 0.0f,1.0f,0.0f });
-    renderer->m_projection = Projection;
-    renderer->m_view = View;
 
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -933,21 +511,7 @@ void renderScene(void)
 
 	//Rendering
 
-	MainScene.Render(renderer);
-
-	for each (auto light in renderer->m_point_light)
-	{
-		renderer->RenderRegularTetrahedron(light.Position, 3, Color3f(light.Color.x, light.Color.y, light.Color.z));
-	}
-    
-
-    Material DefaultMaterial;
-    DefaultMaterial.ambient = { 1.0f,1.0f,1.0f };//Currently does nothing
-    DefaultMaterial.diffuse = { 0.5f,0.5f,0.5f };//Currently does nothing
-    DefaultMaterial.specular = { 1.0f,1.0f,1.0f };//Currently does nothing
-    DefaultMaterial.shininess = 32.0f;
-
-    Material material = DefaultMaterial;
+	//MainScene.Render(renderer);    
 
     GLenum err = glGetError();
     if (GLEW_OK != err)
@@ -955,7 +519,7 @@ void renderScene(void)
         printf("%s\n", glewGetErrorString(err));
     }
 
-	renderer->Render();
+	//renderer->Render();
     err = glGetError();
     if (GLEW_OK != err)
     {
@@ -1003,79 +567,26 @@ void game()
 	
 	window_focus = CheckWindowFocus(window_name);
 
-	MainScene.Update(deltaTime);
-
-	tank.Update(deltaTime);
+	//MainScene.Update(deltaTime);
 
 	totalTime = (float)glutGet(GLUT_ELAPSED_TIME);
 
-	if (rotateLight)
-	{
-		renderer->m_point_light[0].Position.x = lightDistance * sinf(totalTime / 500.0f);
-		renderer->m_point_light[0].Position.z = lightDistance * cosf(totalTime / 500.0f);
 
-		renderer->m_point_light[1].Position.x = lightDistance * sinf(PI + totalTime / 500.0f);
-		renderer->m_point_light[1].Position.z = lightDistance * cosf(PI + totalTime / 500.0f);
-	}
 
 	
 
 	//INPUTS
 	if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock && window_focus)
 	{
-		renderer->Camera.Rotation.x += mouseDelta.x*0.001f;
-		renderer->Camera.Rotation.y += mouseDelta.y*0.001f;
-	}
-
-	float dist = 1;;
-	if (glm::intersectRayPlane(renderer->Camera.Position, renderer->Camera.Forward, glm::vec3(0, 4.5f, 0), glm::vec3(0, 1, 0), dist))
-	{
-		cursor = renderer->Camera.Position + renderer->Camera.Forward * dist;
-	}
-	else
-	{
-		cursor = renderer->Camera.Position;
-		cursor.y = 4.5f;
+		//renderer->Camera.Rotation.x += mouseDelta.x*0.001f;
+		//renderer->Camera.Rotation.y += mouseDelta.y*0.001f;
 	}
 
 	//Escape -> Exit
 	if (inputManager->IsKeyDown(27))
 		glutExit();
 
-	//if (inputManager->IsKeyPressed('r'))
 
-	//TODO:
-	if (inputManager->IsKeyPressed('m'))
-	{
-		left_entity->PlayAnimation("left");
-		right_entity->PlayAnimation("right");
-		platform_entity->PlayAnimation("platform");
-		tank_entity->PlayAnimation("tank");
-	}
-
-
-	if (inputManager->IsKeyPressed('n'))
-	{
-		platform_entity->PlayAnimation("anim1");
-		wave_entity->SetLocalPosition(cursor);
-	}
-
-	if (inputManager->IsKeyPressed('b'))
-	{
-		right_entity->PlayAnimation("");
-		left_entity->PlayAnimation("");
-		platform_entity->PlayAnimation("");
-		tank_entity->PlayAnimation("");
-	}
-	if (inputManager->IsKeyPressed('i'))
-	{
-		tank_rb_entity->EnableRigidbody();
-	}
-	if (inputManager->IsKeyPressed('o'))
-	{
-		tank_rb_entity->DisableRigidbody();
-		tank_rb_entity->SetLocalPosition({ 0,0,0 });
-	}
 
 	glm::vec3 dir(0.0f, 0.0f, 0.0f);
 	if (inputManager->IsSpecialDown(GLUT_KEY_UP))
@@ -1098,16 +609,6 @@ void game()
 	{
 		dir = glm::normalize(dir);
 	}
-	if (inputManager->IsKeyDown('q'))
-	{
-		tank_top_entity->Rotate(glm::rotate(glm::quat(1, 0, 0, 0), 2.0f*deltaTime, { 0,1,0 }));
-	}
-	else if (inputManager->IsKeyDown('e'))
-	{
-		tank_top_entity->Rotate(glm::rotate(glm::quat(1, 0, 0, 0), -2.0f*deltaTime, { 0,1,0 }));
-	}
-	dir *= 10.0f;
-	tank_rb_entity->GetRidigbody()->SetVelocity({ dir.x, tank_rb_entity->GetRidigbody()->GetVelocity().y, dir.z });
 
 	if (inputManager->IsKeyPressed('t'))
 	{
@@ -1117,9 +618,6 @@ void game()
 	}
 
     //Movement
-    glm::vec3 Forward = glm::normalize(glm::vec3(renderer->Camera.Forward.x, 0, renderer->Camera.Forward.z));
-    //glm::vec3 Forward = glm::normalize(renderer->Camera.Forward);
-    glm::vec3 Right = glm::normalize(glm::cross(glm::vec3(renderer->Camera.Forward.x, 0, renderer->Camera.Forward.z), glm::vec3(0, 1, 0)));
 
     if (inputManager->IsMousePressed(GLUT_RIGHT_BUTTON))
     {
@@ -1133,57 +631,19 @@ void game()
 	{
 		if (GetAsyncKeyState(0x57))//W
 		{
-			renderer->Camera.Position += Forward * speed * (float)deltaTime;
+			//renderer->Camera.Position += Forward * speed * (float)deltaTime;
 		}
 		if (GetAsyncKeyState(0x53))//S
 		{
-			renderer->Camera.Position -= Forward * speed * (float)deltaTime;
+			//renderer->Camera.Position -= Forward * speed * (float)deltaTime;
 		}
 		if (GetAsyncKeyState(0x41))//A
 		{
-			renderer->Camera.Position -= Right * speed * (float)deltaTime;
+			//renderer->Camera.Position -= Right * speed * (float)deltaTime;
 		}
 		if (GetAsyncKeyState(0x44))//D
 		{
-			renderer->Camera.Position += Right * speed * (float)deltaTime;
-		}
-	
-	
-		if (GetAsyncKeyState(0x57))//W
-		{
-			tank.Move(0);
-		}
-		else if (GetAsyncKeyState(0x53))//S
-		{
-			tank.Move(1);
-		}
-		else
-		{
-			tank.Move(2);
-		}
-		if (GetAsyncKeyState(0x41))//A
-		{
-			tank.Move(3);
-		}
-		else if (GetAsyncKeyState(0x44))//D
-		{
-			tank.Move(4);
-		}
-		else
-		{
-			tank.Move(5);
-		}
-		if (GetAsyncKeyState(0x51))//Q
-		{
-			tank.Move(6);
-		}
-		else if (GetAsyncKeyState(0x45))//E
-		{
-			tank.Move(7);
-		}
-		else
-		{
-			tank.Move(8);
+			//renderer->Camera.Position += Right * speed * (float)deltaTime;
 		}
 
 		if (GetAsyncKeyState(0x48))//H
@@ -1202,193 +662,15 @@ void game()
 
     if (inputManager->IsMousePressed(3))//Scroll up
     {
-        renderer->Camera.Position.y += 1.0f;
+        //renderer->Camera.Position.y += 1.0f;
         zoom -= 5.0f;
     }
     if (inputManager->IsMousePressed(4))//Scroll down
     {
-        renderer->Camera.Position.y -= 1.0f;
+        //renderer->Camera.Position.y -= 1.0f;
         zoom += 5.0f;
     }
     
-    //Camera rotation for numpad
-    if (inputManager->IsKeyDown('5'))
-        renderer->Camera.Rotation.y += 0.02f;
-    if (inputManager->IsKeyDown('2'))
-        renderer->Camera.Rotation.y -= 0.02f;
-    if (inputManager->IsKeyDown('3'))
-        renderer->Camera.Rotation.x -= 0.02f;
-    if (inputManager->IsKeyDown('1'))
-        renderer->Camera.Rotation.x += 0.02f;
-
-    if (renderer->Camera.Rotation.y > PI / 2.0f - 0.1f)
-        renderer->Camera.Rotation.y = PI / 2.0f - 0.1f;
-    if (renderer->Camera.Rotation.y < -PI / 2.0f + 0.1f)
-        renderer->Camera.Rotation.y = -PI / 2.0f + 0.1f;
-
-	glm::vec3 cameraPosition = renderer->Camera.Position;
-
-	glm::vec3 pt1 = PortalT1->GetWorldPosition();
-	glm::vec3 pt2 = PortalT2->GetWorldPosition();
-	glm::vec3 pb1 = PortalB1->GetWorldPosition();
-	glm::vec3 pb2 = PortalB2->GetWorldPosition();
-
-
-	glm::mat4 pt1m = PortalT1->GetWorldModelMatrix();
-	glm::mat4 pt2m = PortalT2->GetWorldModelMatrix();
-	glm::mat4 pb1m = PortalB1->GetWorldModelMatrix();
-	glm::mat4 pb2m = PortalB2->GetWorldModelMatrix();
-	glm::mat4 TopToBot1m = pb1m / pt1m;
-	glm::mat4 TopToBot2m = pb2m / pt2m;
-
-	glm::vec3 TopToBot1 = pb1 - pt1;
-	glm::vec3 TopToBot2 = pb2 - pt2;
-
-	if (glm::distance(pt1 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
-	{
-		glm::vec3 v = cameraPosition - pt1;
-		glm::vec3 up = { 0,0,-1 };
-		up = glm::mat4(PortalT1->GetWorldRotation())*glm::vec4(up,1.0f);
-		if (glm::dot(v, up) > 0.0f)
-		{
-			renderer->Camera.Position = TopToBot1m * glm::vec4(renderer->Camera.Position, 1.0f);
-			renderer->Camera.RenderLayer = 1;
-			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT1->GetWorldRotation()) * PortalB1->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-		}
-	}
-	else if (glm::distance(pt2 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
-	{
-		glm::vec3 v = cameraPosition - pt2;
-		glm::vec3 up = { 0,0,1 };
-		up = glm::mat4(PortalT2->GetWorldRotation())*glm::vec4(up, 1.0f);
-		if (glm::dot(v, up) > 0.0f)
-		{
-			speed *= TopToBot2m[0][0];
-			renderer->Camera.Position = TopToBot2m * glm::vec4(renderer->Camera.Position, 1.0f);
-			renderer->Camera.RenderLayer = 1;
-			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT2->GetWorldRotation()) * PortalB2->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-		}
-	}
-	else if (glm::distance(pb1 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
-	{
-		glm::vec3 v = cameraPosition - pb1;
-		glm::vec3 up = { 0,0,1 };
-		up = glm::mat4(PortalB1->GetWorldRotation())*glm::vec4(up, 1.0f);
-		if (glm::dot(v, up) > 0.0f)
-		{
-			renderer->Camera.Position = glm::inverse(TopToBot1m) * glm::vec4(renderer->Camera.Position, 1.0f);
-			renderer->Camera.RenderLayer = 0;
-			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB1->GetWorldRotation()) * PortalT1->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-		}
-	}
-	else if (glm::distance(pb2 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
-	{
-		glm::vec3 v = cameraPosition - pb2;
-		glm::vec3 up = { 0,0,-1 };
-		up = glm::mat4(PortalB2->GetWorldRotation())*glm::vec4(up, 1.0f);
-		if (glm::dot(v, up) > 0.0f)
-		{
-			speed *= glm::inverse(TopToBot2m)[0][0];
-			renderer->Camera.Position = glm::inverse(TopToBot2m) * glm::vec4(renderer->Camera.Position, 1.0f);
-			renderer->Camera.RenderLayer = 0;
-			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB2->GetWorldRotation()) * PortalT2->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-		}
-	}
-
-	/*if (cameraPosition.x < pt1.x + 2.0f && cameraPosition.x > pt1.x - 2.0f) //TODO: Transition locations don't work when portals are rotated
-	{
-		if (cameraPosition.y < pt1.y + 6.0f && cameraPosition.y > pt1.y)
-		{
-			//TopToBot1
-			if (cameraPosition.z < pt1.z && cameraPosition.z > pt1.z - 1.0f)
-			{
-				renderer->Camera.Position = TopToBot1m * glm::vec4(renderer->Camera.Position , 1.0f);
-				renderer->Camera.RenderLayer = 1;
-				glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT1->GetWorldRotation()) * PortalB1->GetWorldRotation());
-				renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-			}
-
-			//TopToBot2
-			if (cameraPosition.z > pt2.z && cameraPosition.z < pt2.z + 1.0f)
-			{
-				renderer->Camera.Position = TopToBot2m * glm::vec4(renderer->Camera.Position, 1.0f);
-				renderer->Camera.RenderLayer = 1;
-
-				glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT2->GetWorldRotation()) * PortalB2->GetWorldRotation());
-				renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-			}
-		}
-
-		if (cameraPosition.y < pb1.y + 6.0f && cameraPosition.y > pb1.y)
-		{
-			//BotToTop1
-			if (cameraPosition.z > pb1.z && cameraPosition.z < pb1.z + 1.0f && cameraPosition.y > 10)
-			{
-				renderer->Camera.Position = glm::inverse(TopToBot1m) * glm::vec4(renderer->Camera.Position, 1.0f);
-				renderer->Camera.RenderLayer = 0;
-
-				glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB1->GetWorldRotation()) * PortalT1->GetWorldRotation());
-				renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-			}
-
-			//BotToTop2
-			if (cameraPosition.z < pb2.z && cameraPosition.z > pb2.z - 1.0f && cameraPosition.y > 10)
-			{
-				renderer->Camera.Position = glm::inverse(TopToBot2m) * glm::vec4(renderer->Camera.Position, 1.0f);
-				renderer->Camera.RenderLayer = 0;
-
-				glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB2->GetWorldRotation()) * PortalT2->GetWorldRotation());
-				renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
-			}
-		}
-	}*/
-
-/*	if (previousCameraPosition.x > -2.0f &&  previousCameraPosition.x < 2.0f)
-	{
-		if (renderer->Camera.Position.y > 0)
-		{
-
-			if (renderer->Camera.Position.z < -99.0f && previousCameraPosition.z >= -99.0f)//Forward
-			{
-				renderer->Camera.Position.y -= 100.0f;
-				glm::vec3 res;
-				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
-				if (hit) printf("Hit!\n");
-			}
-			else if (renderer->Camera.Position.z > -102.0f && previousCameraPosition.z <= -102.0f)//Backward
-			{
-				renderer->Camera.Position.y -= 100.0f;
-				renderer->Camera.Position.z -= 7.7f;
-				glm::vec3 res;
-				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
-				if (hit) printf("Hit!\n");
-			}
-		}
-		else
-		{
-			if (renderer->Camera.Position.z > -101.0f && previousCameraPosition.z <= -101.0f)//Backward
-			{
-				renderer->Camera.Position.y += 100.0f;
-				glm::vec3 res;
-				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
-				if (hit) printf("Hit!\n");
-			}
-			else if (renderer->Camera.Position.z < -109.0f && previousCameraPosition.z >= -109.0f)//Forward
-			{
-				renderer->Camera.Position.z += 7.7f;
-				renderer->Camera.Position.y += 100.0f;
-				glm::vec3 res;
-				bool hit = glm::intersectLineTriangle(previousCameraPosition, renderer->Camera.Position - previousCameraPosition, { -0.45, 1.0, -100 }, { 0.45, 1.0, -100 }, { 0.45, 3.1, -100 }, res);
-				if (hit) printf("Hit!\n");
-			}
-		}
-	}*/
-
-	previousCameraPosition = renderer->Camera.Position;
 
 	//printf("X:%.2f,Y:%.2f,Z:%.2f\n", renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z);
     
@@ -1412,7 +694,7 @@ void game()
 
 	if (inputManager->IsSpecialReleased(GLUT_KEY_F5))
 	{
-		renderer->CompileShaders();
+		//renderer->CompileShaders();
 	}
 
     mouseDelta = { 0,0 }; //TODO remove
