@@ -252,16 +252,16 @@ void EntitiesToTreeNode(std::vector<Entity*> entities)
 
 void drawGUI()
 {
-	ImGui_ImplGLUT_NewFrame(screenWidth, screenHeight);
+	//ImGui_ImplGLUT_NewFrame(screenWidth, screenHeight);
 
 	
 
     // Show a simple window
-	{
+	/*{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		if (ImGui::Button("Debug"))
 			showdebug ^= 1;
-	}
+	}*/
 
 		//Entity browser!
 	/*{
@@ -462,7 +462,7 @@ void drawGUI()
 	}*/
 
 
-	ImGui::Render();
+	//ImGui::Render();
 }
 
 void changeSize(int w, int h) 
@@ -493,17 +493,17 @@ void GameInit()
 	/*Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
 	box->SetLocalPosition({ 5,0,0 });*/
-
 }
 
 
 void renderScene(void)
 {
-    Projection = glm::perspective(45.0f, (float)screenWidth / screenHeight, 0.1f, 1000.f);
+    Projection = glm::ortho(-(float)screenWidth / 2.0f, (float)screenWidth/2.0f, -(float)screenHeight / 2.0f, (float)screenHeight/2.0f, -10.0f, 100.f);
     glm::vec4 front(0, 0, -1, 1);
     glm::vec4 right(1, 0, 0, 1);
     glm::vec4 up(0, 1, 0, 1);
 
+	renderer->m_projection = Projection;
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glUseProgram(0);
@@ -511,7 +511,11 @@ void renderScene(void)
 
 	//Rendering
 
+
+
 	//MainScene.Render(renderer);    
+
+
 
     GLenum err = glGetError();
     if (GLEW_OK != err)
@@ -519,7 +523,7 @@ void renderScene(void)
         printf("%s\n", glewGetErrorString(err));
     }
 
-	//renderer->Render();
+	renderer->Render();
     err = glGetError();
     if (GLEW_OK != err)
     {
@@ -724,12 +728,19 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
 
+	//glEnable(GL_ALPHA_TEST); // enable alpha-testing (maybe deprecated?)
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
+	//glDisable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL); 
 	//glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 	//glEnable(GL_STENCIL_TEST); // Enable stencil testing
 
 	glEnable(GL_CULL_FACE); // enable face culling
+	//glDisable(GL_CULL_FACE);
 	//glCullFace(GL_FRONT); // culls front faces
 	glCullFace(GL_BACK); // culls back faces
 

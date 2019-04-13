@@ -1,17 +1,20 @@
 #pragma once
 #include <GL/glew.h>
-#include <GL/freeglut.h>
+//#include <GL/freeglut.h>
 #include <glm.hpp>
 #include <ext.hpp>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <gtx/rotate_vector.hpp>
+//#define GLM_ENABLE_EXPERIMENTAL
+//#include <gtx/rotate_vector.hpp>
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <iostream>
-#include <set>
+//#include <set>
 #include <map>
 #include <vector>
+
+#include <FreeImage.h>
+#include <fstream>
 
 extern const float PI;
 
@@ -55,11 +58,14 @@ public:
 
 	void Bind(GLenum TextureUnit);
 
+	glm::vec2 GetSize();
+
 private:
 
 	std::string m_fileName;
 	GLenum m_textureTarget;
 	GLuint m_textureObj;
+	glm::vec2 m_size;
 };
 
 class Renderer2D
@@ -71,21 +77,19 @@ public:
 
 	GLchar* LoadShader(const char* filename);
 
-	GLuint LoadTexture(const char * filename);
+	GLuint LoadTexture(const char * filename, const char * texturename);;
 
-	GLint compileShader(const char* filename, GLenum type);
-
-	GLint compileShaderProgramDefault(const char* vSharerSrc, const char* fSharerSrc);
+	GLint CompileShaderProgram(const char* vSharerSrc, const char* fSharerSrc);
 
 	void CompileShaders();
 
 	GLint GetUniformLocation(GLchar* uniform_name);
 	GLint GetAttributeLocation(GLchar* attribute_name);
 
-	void SetInt(int location, int value);
-	void SetFloat(int location, float value);
-	void SetVec3(int location, glm::vec3 value);
-	void SetMat4(int location, glm::mat4 value);
+	void SetInt(GLchar* uniform_name, int value);
+	void SetFloat(GLchar* uniform_name, float value);
+	void SetVec3(GLchar* uniform_name, glm::vec3 value);
+	void SetMat4(GLchar* uniform_name, glm::mat4 value);
 	void SetPointLight(int num, const PointLight& Light);
 	void SetDirectionalLight(int num, const DirectionalLight& Light);
 
@@ -102,5 +106,5 @@ private:
 	GLuint m_shaderprogram;
 
 	std::map<std::string, Texture2D*> m_loaded_textures;
-	std::vector<std::tuple<std::string, glm::vec3>> m_sprites;
+	std::vector<std::tuple<std::string, glm::mat4>> m_sprites;
 };
