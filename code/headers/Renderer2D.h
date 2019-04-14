@@ -58,14 +58,22 @@ public:
 
 	void Bind(GLenum TextureUnit);
 
-	glm::vec2 GetSize();
+	glm::ivec2 GetSize();
 
 private:
 
 	std::string m_fileName;
 	GLenum m_textureTarget;
 	GLuint m_textureObj;
-	glm::vec2 m_size;
+	glm::ivec2 m_size;
+};
+
+class Sprite
+{
+public:
+	Sprite(std::string texture_name);
+
+private:
 };
 
 class Renderer2D
@@ -77,7 +85,7 @@ public:
 
 	GLchar* LoadShader(const char* filename);
 
-	GLuint LoadTexture(const char * filename, const char * texturename);;
+	void LoadTexture(const char * filename, const char * texturename);;
 
 	GLint CompileShaderProgram(const char* vSharerSrc, const char* fSharerSrc);
 
@@ -93,6 +101,8 @@ public:
 	void SetPointLight(int num, const PointLight& Light);
 	void SetDirectionalLight(int num, const DirectionalLight& Light);
 
+	void RenderSprite(std::string texture_name, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f }, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
+
 
 	glm::mat4 m_model;
 	glm::mat4 m_projection;
@@ -101,10 +111,13 @@ private:
 
 	void _ClearScreen(Color3f color);
 
-	GLuint m_vbo;
+	void _RenderSprites();
+
 	GLuint m_vao;
+	GLuint m_vbo;
+	GLuint m_ebo;
 	GLuint m_shaderprogram;
 
-	std::map<std::string, Texture2D*> m_loaded_textures;
-	std::vector<std::tuple<std::string, glm::mat4>> m_sprites;
+	std::vector<std::pair<std::string, Texture2D*>> m_loaded_textures;
+	std::vector<std::pair<Texture2D*, std::pair<std::vector<GLfloat>, std::vector<GLuint>>>> m_sprites;
 };

@@ -490,32 +490,36 @@ void GameInit()
 {
 	renderer = new Renderer2D(zoom, screenRatio);
 
+	renderer->LoadTexture("Content/Images/Sprites/dvd-logo.png", "dvd-logo");
+
 	/*Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
 	box->SetLocalPosition({ 5,0,0 });*/
 }
 
+int dvds = 0;
 
 void renderScene(void)
 {
+	//Rendering 
     Projection = glm::ortho(-(float)screenWidth / 2.0f, (float)screenWidth/2.0f, -(float)screenHeight / 2.0f, (float)screenHeight/2.0f, -10.0f, 100.f);
-    glm::vec4 front(0, 0, -1, 1);
-    glm::vec4 right(1, 0, 0, 1);
-    glm::vec4 up(0, 1, 0, 1);
 
 	renderer->m_projection = Projection;
 
+	//renderer->RenderSprite("dvd-logo", { sin(time(NULL)), 0, 0 });
+	renderer->RenderSprite("dvd-logo", { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME)/1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 1 }, { 0.2f, 0.2f });
+	//printf("%f\n", sin(time(NULL)));
+	//MainScene.Render(renderer);  
+
+	srand(0);
+	for (int i = 0; i < dvds; i++)
+	{
+		renderer->RenderSprite("dvd-logo", { rand() % 800 - 400 + 50.0f*sin(rand()%50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand()%50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), 0 }, { 0.1f, 0.1f }, {}, {}, { rand() % 256 / 256.0f, rand() % 256 / 256.0f,  rand() % 256 / 256.0f,  rand() % 256 / 256.0f });
+	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glUseProgram(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	//Rendering
-
-
-
-	//MainScene.Render(renderer);    
-
-
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     GLenum err = glGetError();
     if (GLEW_OK != err)
@@ -524,6 +528,7 @@ void renderScene(void)
     }
 
 	renderer->Render();
+
     err = glGetError();
     if (GLEW_OK != err)
     {
@@ -559,6 +564,9 @@ void renderScene(void)
 
 float speed = 10.0f;
 
+float timer = 0.0f;
+float timer2 = 0.0f;
+
 void game()
 {
 	//UPDATES
@@ -576,8 +584,19 @@ void game()
 	totalTime = (float)glutGet(GLUT_ELAPSED_TIME);
 
 
+	timer += deltaTime;
+	if (timer >= 0.1f)
+	{
+		timer -= 0.1f;
+		dvds += 10;
+	}
 
-	
+	timer2 += deltaTime;
+	if (timer2 >= 1.0f)
+	{
+		timer2 -= 1.0f;
+		printf("%d\n", dvds);
+	}
 
 	//INPUTS
 	if ((mouseDelta.x != 0.0f || mouseDelta.y != 0.0f) && mouselock && window_focus)
@@ -728,21 +747,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
 
-	//glEnable(GL_ALPHA_TEST); // enable alpha-testing (maybe deprecated?)
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glEnable(GL_DEPTH_TEST); // enable depth-testing
-	//glDisable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL); 
-	//glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
-	//glEnable(GL_STENCIL_TEST); // Enable stencil testing
-
-	glEnable(GL_CULL_FACE); // enable face culling
-	//glDisable(GL_CULL_FACE);
-	//glCullFace(GL_FRONT); // culls front faces
-	glCullFace(GL_BACK); // culls back faces
+	
 
 	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 	fprintf(stdout, "Status: Using GLU %s\n", gluGetString(GLU_VERSION));
