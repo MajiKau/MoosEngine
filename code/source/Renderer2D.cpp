@@ -11,17 +11,18 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glDisable(GL_BLEND);
 
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
-							 //glDisable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
+	glDepthFunc(GL_GREATER);
+	//glDisable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 	//glEnable(GL_STENCIL_TEST); // Enable stencil testing
 
 	glEnable(GL_CULL_FACE); // enable face culling
-							//glDisable(GL_CULL_FACE);
-							//glCullFace(GL_FRONT); // culls front faces
 	glCullFace(GL_BACK); // culls back faces
+	//glCullFace(GL_FRONT); // culls front faces
+	//glDisable(GL_CULL_FACE);
 
 	glEnable(GL_PRIMITIVE_RESTART);
 	glPrimitiveRestartIndex(0xFFFFFFFF);
@@ -93,39 +94,6 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 
 void Renderer2D::Render()
 {
-	/*GLfloat vertices[] =
-	{
-		0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f,1.0f,
-		1.0f,0.0f,0.0f,1.0f,0.0f,1.0f,1.0f,1.0f,1.0f,
-		0.0f,1.0f,0.0f,0.0f,1.0f,1.0f,1.0f,1.0f,1.0f,
-		1.0f,1.0f,0.0f,1.0f,1.0f,1.0f,1.0f,1.0f,1.0f
-
-
-	};
-
-	int numvertices;
-	numvertices = 4;
-
-	glUseProgram(m_shaderprogram);
-	glBindVertexArray(m_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	
-	glUniformMatrix4fv(GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
-
-	m_loaded_textures.at("dvd-logo")->Bind(GL_TEXTURE0);
-	glm::vec2 size = 8*m_loaded_textures.at("test")->GetSize(); 
-	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(size.x,size.y,1.0f));
-	glUniformMatrix4fv(GetUniformLocation("model"), 1, GL_FALSE, &model[0][0]);
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, numvertices);
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);*/
-	//TODO
-
 	_RenderSprites();
 }
 
@@ -156,7 +124,12 @@ void Renderer2D::LoadTexture(const char * filename, const char * texturename)
 	Texture2D* texture = new Texture2D(GL_TEXTURE_2D, filename);
 	texture->Load();
 
-	m_loaded_textures.push_back({ texturename, texture });
+	m_loaded_textures[texturename] = texture ;
+}
+
+Texture2D * Renderer2D::GetTexture(const char * texturename)
+{
+	return m_loaded_textures.at(texturename);
 }
 
 GLint Renderer2D::CompileShaderProgram(const char * vSharerSrc, const char * fSharerSrc)
@@ -246,20 +219,11 @@ void Renderer2D::SetInt(GLchar* uniform_name, int value)
 	glUniform1i(GetUniformLocation(uniform_name), value);
 }
 
-void Renderer2D::RenderSprite(std::string texture_name, glm::vec3 position, glm::vec2 scale, glm::ivec2 sprite_offset, glm::ivec2 sprite_size, glm::vec4 color)
+void Renderer2D::RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 scale, glm::ivec2 sprite_offset, glm::ivec2 sprite_size, glm::vec4 color)
 {
-	Texture2D* texture = NULL;
-	for (auto& texture_pair : m_loaded_textures)
-	{
-		if (texture_pair.first == texture_name)
-		{
-			texture = texture_pair.second;
-			break;
-		}
-	}
 	if (!texture)
 	{
-		printf("RenderSprite: Texture is missing (%s)\n", texture_name);
+		printf("RenderSprite: Texture is missing\n");
 		return;
 	}
 	glm::vec2 texture_size = texture->GetSize();
@@ -301,6 +265,13 @@ void Renderer2D::RenderSprite(std::string texture_name, glm::vec3 position, glm:
 
 	pair->first.insert(pair->first.end(), vertices, vertices+4*9);
 	pair->second.insert(pair->second.end(), indices, indices+5);
+
+	m_push = true;
+}
+
+void Renderer2D::RenderSprite(Sprite * sprite, glm::vec3 position, glm::vec2 scale)
+{
+	RenderSprite(sprite->GetTexture(), position, scale, sprite->GetSpriteOffset(), sprite->GetSpriteSize(), sprite->GetColor());
 }
 
 void Renderer2D::_RenderSprites()
@@ -315,8 +286,14 @@ void Renderer2D::_RenderSprites()
 	{
 		pair.first->Bind(GL_TEXTURE0);
 
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, pair.second.second.size() * sizeof(unsigned int), &pair.second.second[0], GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, pair.second.first.size()*sizeof(GLfloat), &(pair.second.first[0]), GL_STATIC_DRAW);
+		//if (m_push)
+		{
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, pair.second.second.size() * sizeof(unsigned int), &pair.second.second[0], GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, pair.second.first.size() * sizeof(GLfloat), &(pair.second.first[0]), GL_STATIC_DRAW);
+			m_push = false;
+		}
+
+		//printf("PUSH!\n");
 
 		glDrawElements(GL_TRIANGLE_STRIP, pair.second.second.size(), GL_UNSIGNED_INT, (void*)0);
 		//glDrawArrays(GL_TRIANGLE_STRIP, 0, pair.second.first.size() / 9);
@@ -385,3 +362,32 @@ glm::ivec2 Texture2D::GetSize()
 {
 	return m_size;
 }
+
+Sprite::Sprite(Texture2D * texture, glm::ivec2 sprite_offset, glm::ivec2 sprite_size, glm::vec4 color)
+{
+	m_texture = texture;
+	m_sprite_offset = sprite_offset;
+	m_sprite_size = sprite_size;
+	m_color = color;
+}
+
+Texture2D * Sprite::GetTexture()
+{
+	return m_texture;
+}
+
+glm::vec4 Sprite::GetColor()
+{
+	return m_color;
+}
+
+glm::ivec2 Sprite::GetSpriteOffset()
+{
+	return m_sprite_offset;
+}
+
+glm::ivec2 Sprite::GetSpriteSize()
+{
+	return m_sprite_size;
+}
+

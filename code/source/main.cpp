@@ -196,6 +196,7 @@ void MouseWheel(int wheel, int direction, int x, int y)//Not used!
 void init()
 {
     glClearColor(0.447f, 0.565f, 0.604f, 1.0f);
+	glClearDepth(-10.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Setup ImGui binding
@@ -486,54 +487,76 @@ void changeSize(int w, int h)
 	printf("W:%d,H:%d,Ration:%.2f\n", screenWidth, screenHeight, ratio);
 }
 
+Texture2D* texture = NULL;
+Texture2D* spritesheet = NULL;
+Sprite* redwall;
+Sprite* bluewall;
+Sprite* grass;
+Sprite* glass;
+
 void GameInit()
 {
 	renderer = new Renderer2D(zoom, screenRatio);
 
 	renderer->LoadTexture("Content/Images/Sprites/dvd-logo.png", "dvd-logo");
+	renderer->LoadTexture("Content/Images/Sprites/spritesheet.png", "spritesheet");
+
+	texture = renderer->GetTexture("dvd-logo");
+	spritesheet = renderer->GetTexture("spritesheet");
+
+	redwall = new Sprite(spritesheet, {}, { 32,32 });
+	bluewall = new Sprite(spritesheet, {32,0}, { 32,32 });
+	grass = new Sprite(spritesheet, {2*32,0}, { 32,32 });
+	glass = new Sprite(spritesheet, { 3 * 32,0 }, { 32,32 });
 
 	/*Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
 	box->SetLocalPosition({ 5,0,0 });*/
 }
 
-int dvds = 0;
+int dvds = 100000;
 
 void renderScene(void)
 {
 	//Rendering 
-    Projection = glm::ortho(-(float)screenWidth / 2.0f, (float)screenWidth/2.0f, -(float)screenHeight / 2.0f, (float)screenHeight/2.0f, -10.0f, 100.f);
+    Projection = glm::ortho(-(float)screenWidth / 2.0f, (float)screenWidth/2.0f, -(float)screenHeight / 2.0f, (float)screenHeight/2.0f, -10.0f, 10.f);
 
 	renderer->m_projection = Projection;
 
 	//renderer->RenderSprite("dvd-logo", { sin(time(NULL)), 0, 0 });
-	renderer->RenderSprite("dvd-logo", { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME)/1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 1 }, { 0.2f, 0.2f });
 	//printf("%f\n", sin(time(NULL)));
 	//MainScene.Render(renderer);  
 
-	srand(0);
-	for (int i = 0; i < dvds; i++)
+	for (int i = 0; i < 22; i++)
 	{
-		renderer->RenderSprite("dvd-logo", { rand() % 800 - 400 + 50.0f*sin(rand()%50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand()%50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), 0 }, { 0.1f, 0.1f }, {}, {}, { rand() % 256 / 256.0f, rand() % 256 / 256.0f,  rand() % 256 / 256.0f,  rand() % 256 / 256.0f });
+		renderer->RenderSprite(redwall, { -640,i * 32 - 360 , 0});
+		renderer->RenderSprite(grass, { -640 + 1 * 32,i * 32 - 360 , 0 });
+		renderer->RenderSprite(grass, { -640 + 2 * 32,i * 32 - 360 , 0 });
+		renderer->RenderSprite(grass, { -640 + 3 * 32,i * 32 - 360 , 0 });
+		renderer->RenderSprite(grass, { -640 + 4 * 32,i * 32 - 360 , 0 });
+		renderer->RenderSprite(bluewall, { -640+5*32,i * 32 - 360 , 0 });
+
+		renderer->RenderSprite(glass, { -640 + 4 * 32,i * 32 - 360 , -1 });
+	}
+
+	if (texture)
+	{
+		srand(0);
+		for (int i = 0; i < dvds; i++)
+		{
+			renderer->RenderSprite(texture, { rand() % 800 - 400 + 50.0f*sin(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), (float)i/(float)dvds }, { 0.1f, 0.1f }, {}, {}, { rand() % 256 / 256.0f, rand() % 256 / 256.0f,  rand() % 256 / 256.0f,  rand() % 256 / 256.0f });
+		}
+		renderer->RenderSprite(texture, { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, -10.0f }, { 0.2f, 0.2f }, {}, {}, {0.2f, 0.2f, 1.0f, 0.5f});
+		//dvds = 0;
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glUseProgram(0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    GLenum err = glGetError();
-    if (GLEW_OK != err)
-    {
-        printf("%s\n", glewGetErrorString(err));
-    }
 
 	renderer->Render();
 
-    err = glGetError();
-    if (GLEW_OK != err)
-    {
-        printf("%s\n", glewGetErrorString(err));
-    }
 
 	glPushMatrix();
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -543,11 +566,6 @@ void renderScene(void)
     glutSwapBuffers(); 
 	glutPostRedisplay();
 
-	err = glGetError();
-	if (GLEW_OK != err)
-	{
-		printf("%s\n", glewGetErrorString(err));
-	}
 
     /*GLint nTotalMemoryInKB = 0;
     glGetIntegerv(GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX,
@@ -588,12 +606,15 @@ void game()
 	if (timer >= 0.1f)
 	{
 		timer -= 0.1f;
-		dvds += 10;
+		//dvds += 10;
 	}
 
 	timer2 += deltaTime;
 	if (timer2 >= 1.0f)
 	{
+
+		printf("FPS:%f.2\n", (1.0f/deltaTime));
+
 		timer2 -= 1.0f;
 		printf("%d\n", dvds);
 	}

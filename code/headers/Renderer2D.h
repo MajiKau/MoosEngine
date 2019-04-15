@@ -71,9 +71,17 @@ private:
 class Sprite
 {
 public:
-	Sprite(std::string texture_name);
+	Sprite(Texture2D * texture, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	Texture2D* GetTexture();
+	glm::vec4 GetColor();
+	glm::ivec2 GetSpriteOffset();
+	glm::ivec2 GetSpriteSize();
 
 private:
+	Texture2D * m_texture;
+	glm::vec4 m_color;
+	glm::ivec2 m_sprite_offset;
+	glm::ivec2 m_sprite_size;
 };
 
 class Renderer2D
@@ -85,7 +93,8 @@ public:
 
 	GLchar* LoadShader(const char* filename);
 
-	void LoadTexture(const char * filename, const char * texturename);;
+	void LoadTexture(const char * filename, const char * texturename);
+	Texture2D* GetTexture(const char * texturename);
 
 	GLint CompileShaderProgram(const char* vSharerSrc, const char* fSharerSrc);
 
@@ -101,8 +110,8 @@ public:
 	void SetPointLight(int num, const PointLight& Light);
 	void SetDirectionalLight(int num, const DirectionalLight& Light);
 
-	void RenderSprite(std::string texture_name, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f }, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
-
+	void RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f }, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	void RenderSprite(Sprite* sprite, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f });
 
 	glm::mat4 m_model;
 	glm::mat4 m_projection;
@@ -118,6 +127,7 @@ private:
 	GLuint m_ebo;
 	GLuint m_shaderprogram;
 
-	std::vector<std::pair<std::string, Texture2D*>> m_loaded_textures;
+	std::map<std::string, Texture2D*> m_loaded_textures;
 	std::vector<std::pair<Texture2D*, std::pair<std::vector<GLfloat>, std::vector<GLuint>>>> m_sprites;
+	bool m_push;
 };
