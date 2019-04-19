@@ -16,6 +16,8 @@
 #include <FreeImage.h>
 #include <fstream>
 
+#include <algorithm>
+
 extern const float PI;
 
 typedef unsigned int uint;
@@ -26,29 +28,6 @@ struct Color3f
 	Color3f(float red, float green, float blue) :r(red), g(green), b(blue) {};
 	float r, g, b;
 };
-
-extern const Color3f RED;
-extern const Color3f GREEN;
-extern const Color3f BLUE;
-extern const Color3f WHITE;
-extern const Color3f BLACK;
-extern const Color3f YELLOW;
-
-struct PointLight
-{
-	glm::vec3 Color;
-	float AmbientIntensity;
-	float DiffuseIntensity;
-	glm::vec3 Position;
-};
-struct DirectionalLight
-{
-	glm::vec3 Color;
-	float AmbientIntensity;
-	float DiffuseIntensity;
-	glm::vec3 Direction;
-};
-
 class Texture2D
 {
 public:
@@ -68,10 +47,59 @@ private:
 	glm::ivec2 m_size;
 };
 
+struct Material
+{
+	Texture2D* texture;
+	glm::vec4 color;
+};
+
+struct VertexIndexArrays
+{
+	std::vector<GLfloat> vertices;
+	std::vector<GLint> indices;
+};
+
+struct SpriteRenderData
+{
+	Material material;
+	VertexIndexArrays data;
+};
+
+extern const Color3f RED;
+extern const Color3f GREEN;
+extern const Color3f BLUE;
+extern const Color3f WHITE;
+extern const Color3f BLACK;
+extern const Color3f YELLOW;
+
+struct PointLight
+{
+	glm::vec3 Color;
+	float AmbientIntensity;
+	float DiffuseIntensity;
+	glm::vec3 Position;
+};
+
+struct DirectionalLight
+{
+	glm::vec3 Color;
+	float AmbientIntensity;
+	float DiffuseIntensity;
+	glm::vec3 Direction;
+};
+
+
 class Sprite
 {
 public:
+	Sprite();
 	Sprite(Texture2D * texture, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
+	
+	void SetTexture(Texture2D* texture);
+	void SetColor(glm::vec4 color); 
+	void SetSpriteOffset();
+	void SetSpriteSize();
+	
 	Texture2D* GetTexture();
 	glm::vec4 GetColor();
 	glm::ivec2 GetSpriteOffset();
@@ -127,7 +155,9 @@ private:
 	GLuint m_ebo;
 	GLuint m_shaderprogram;
 
+	std::vector<std::tuple<Sprite*, glm::vec3, glm::vec2>> m_sprites;
+
 	std::map<std::string, Texture2D*> m_loaded_textures;
-	std::vector<std::pair<Texture2D*, std::pair<std::vector<GLfloat>, std::vector<GLuint>>>> m_sprites;
+	std::vector<SpriteRenderData> m_sprite_data;
 	bool m_push;
 };

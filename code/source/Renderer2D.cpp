@@ -49,9 +49,11 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 		printf("%s\n", glewGetErrorString(err));
 	}
 
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2); 
+	GLint vertexAttr = GetAttributeLocation("vertex_position");
+	GLint texcoordAttr = GetAttributeLocation("texture_coordinate");
+	glEnableVertexAttribArray(vertexAttr);
+	glEnableVertexAttribArray(texcoordAttr);
+	//glEnableVertexAttribArray(2); 
 
 	err = glGetError();
 	if (GLEW_OK != err)
@@ -59,9 +61,9 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 		printf("%s\n", glewGetErrorString(err));
 	}
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), NULL);//Vertex: 3 floats
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 3));//Texcoord: 2 floats, offset is 3
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 5));//Color: 4 floats, offset is 5
+	glVertexAttribPointer(vertexAttr, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);//Vertex: 3 floats
+	glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 3));//Texcoord: 2 floats, offset is 3
+	//glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 5));//Color: 4 floats, offset is 5
 
 	err = glGetError();
 	if (GLEW_OK != err)
@@ -214,6 +216,11 @@ GLint Renderer2D::GetUniformLocation(GLchar * uniform_name)
 	return glGetUniformLocation(m_shaderprogram, uniform_name);
 }
 
+GLint Renderer2D::GetAttributeLocation(GLchar * attribute_name)
+{
+	return glGetAttribLocation(m_shaderprogram, attribute_name);
+}
+
 void Renderer2D::SetInt(GLchar* uniform_name, int value)
 {
 	glUniform1i(GetUniformLocation(uniform_name), value);
@@ -232,70 +239,100 @@ void Renderer2D::RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 
 		sprite_size = texture_size;
 	}
 
-	GLfloat vertices[4*9] =
+	GLfloat vertices[4*5] =
 	{
-		position.x								, position.y							, position.z, sprite_offset.x / texture_size.x					, sprite_offset.y / texture_size.y					, color.r, color.g, color.b, color.a,
-		position.x + scale.x * sprite_size.x	, position.y							, position.z, (sprite_offset.x + sprite_size.x) / texture_size.x, sprite_offset.y / texture_size.y					, color.r, color.g, color.b, color.a,
-		position.x								, position.y + scale.y * sprite_size.y	, position.z, sprite_offset.x / texture_size.x					, (sprite_offset.y + sprite_size.y) / texture_size.y, color.r, color.g, color.b, color.a,
-		position.x + scale.x * sprite_size.x	, position.y + scale.y * sprite_size.y	, position.z, (sprite_offset.x + sprite_size.x) / texture_size.x, (sprite_offset.y + sprite_size.y) / texture_size.y, color.r, color.g, color.b, color.a
+		position.x								, position.y							, position.z, sprite_offset.x / texture_size.x					, sprite_offset.y / texture_size.y					,
+		position.x + scale.x * sprite_size.x	, position.y							, position.z, (sprite_offset.x + sprite_size.x) / texture_size.x, sprite_offset.y / texture_size.y					,
+		position.x								, position.y + scale.y * sprite_size.y	, position.z, sprite_offset.x / texture_size.x					, (sprite_offset.y + sprite_size.y) / texture_size.y,
+		position.x + scale.x * sprite_size.x	, position.y + scale.y * sprite_size.y	, position.z, (sprite_offset.x + sprite_size.x) / texture_size.x, (sprite_offset.y + sprite_size.y) / texture_size.y
 	};
 
 	
 
-	std::pair<std::vector<GLfloat>, std::vector<GLuint>>* pair = NULL;
-	for (auto& sprite : m_sprites)
+	VertexIndexArrays* data = NULL;
+	for (auto& sprite : m_sprite_data)
 	{
-		if (sprite.first == texture)
+		if (sprite.material.texture == texture && sprite.material.color == color)
 		{
-			pair = &sprite.second;
+			data = &sprite.data;
 			break;
 		}
 	}
-	if (!pair)
+	if (!data)
 	{
-		m_sprites.push_back({ texture,{{},{}} });
-		pair = &m_sprites.back().second;
+		m_sprite_data.push_back({ { texture, color }, { {}, {} } });
+		data = &m_sprite_data.back().data;
 	}
 
-	GLuint indices_size = pair->second.size() / 5 * 4;
+	GLuint indices_size = data->indices.size() / 5 * 4;
 	GLuint indices[5] =
 	{
 		indices_size, indices_size + 1, indices_size + 2, indices_size + 3, 0xFFFFFFFF
 	};
 
-	pair->first.insert(pair->first.end(), vertices, vertices+4*9);
-	pair->second.insert(pair->second.end(), indices, indices+5);
+	data->vertices.insert(data->vertices.end(), vertices, vertices+4*5);
+	data->indices.insert(data->indices.end(), indices, indices+5);
 
 	m_push = true;
 }
 
 void Renderer2D::RenderSprite(Sprite * sprite, glm::vec3 position, glm::vec2 scale)
 {
-	RenderSprite(sprite->GetTexture(), position, scale, sprite->GetSpriteOffset(), sprite->GetSpriteSize(), sprite->GetColor());
+	m_sprites.push_back({ sprite, position, scale });
+}
+
+bool CompareSpriteDepths(const std::tuple<Sprite*, glm::vec3, glm::vec2>& a, const std::tuple<Sprite*, glm::vec3, glm::vec2>& b)
+{
+	if (std::get<0>(a)->GetColor().a == 1.0f)
+	{
+		if (std::get<0>(b)->GetColor().a == 1.0f)
+		{
+			return std::get<1>(a).z < std::get<1>(b).z;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else if (std::get<0>(b)->GetColor().a != 1.0f)
+	{
+		return std::get<1>(a).z > std::get<1>(b).z;
+	}
+	return false;
 }
 
 void Renderer2D::_RenderSprites()
 {
+	std::sort(m_sprites.begin(), m_sprites.end(), CompareSpriteDepths);
+	for (auto& sprite_data : m_sprites)
+	{
+		Sprite* sprite = std::get<0>(sprite_data);
+		RenderSprite(sprite->GetTexture(), std::get<1>(sprite_data), std::get<2>(sprite_data), sprite->GetSpriteOffset(), sprite->GetSpriteSize(), sprite->GetColor());
+	}
+	m_sprites.clear();
+
+
 	glUseProgram(m_shaderprogram);
 	glBindVertexArray(m_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
 	glUniformMatrix4fv(GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
 
-	for (auto pair : m_sprites)
+	for (auto sprite_data : m_sprite_data)
 	{
-		pair.first->Bind(GL_TEXTURE0);
+		sprite_data.material.texture->Bind(GL_TEXTURE0);
+		glUniform4fv(GetUniformLocation("colour"), 1, &sprite_data.material.color[0]);
 
 		//if (m_push)
 		{
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, pair.second.second.size() * sizeof(unsigned int), &pair.second.second[0], GL_STATIC_DRAW);
-			glBufferData(GL_ARRAY_BUFFER, pair.second.first.size() * sizeof(GLfloat), &(pair.second.first[0]), GL_STATIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sprite_data.data.indices.size() * sizeof(unsigned int), &sprite_data.data.indices[0], GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, sprite_data.data.vertices.size() * sizeof(GLfloat), &(sprite_data.data.vertices[0]), GL_STATIC_DRAW);
 			m_push = false;
 		}
 
 		//printf("PUSH!\n");
 
-		glDrawElements(GL_TRIANGLE_STRIP, pair.second.second.size(), GL_UNSIGNED_INT, (void*)0);
+		glDrawElements(GL_TRIANGLE_STRIP, sprite_data.data.indices.size(), GL_UNSIGNED_INT, (void*)0);
 		//glDrawArrays(GL_TRIANGLE_STRIP, 0, pair.second.first.size() / 9);
 	}
 
@@ -303,7 +340,7 @@ void Renderer2D::_RenderSprites()
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	m_sprites.clear();
+	m_sprite_data.clear();
 }
 
 Texture2D::Texture2D(GLenum TextureTarget, const std::string& FileName)
@@ -363,11 +400,29 @@ glm::ivec2 Texture2D::GetSize()
 	return m_size;
 }
 
+Sprite::Sprite()
+{
+	m_texture = NULL;
+	m_sprite_offset = {};
+	m_sprite_size = {};
+	m_color = { 1.0f,1.0f,1.0f,1.0f };
+}
+
 Sprite::Sprite(Texture2D * texture, glm::ivec2 sprite_offset, glm::ivec2 sprite_size, glm::vec4 color)
 {
 	m_texture = texture;
 	m_sprite_offset = sprite_offset;
 	m_sprite_size = sprite_size;
+	m_color = color;
+}
+
+void Sprite::SetTexture(Texture2D * texture)
+{
+	m_texture = texture;
+}
+
+void Sprite::SetColor(glm::vec4 color)
+{
 	m_color = color;
 }
 

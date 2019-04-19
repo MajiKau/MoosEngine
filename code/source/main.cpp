@@ -494,6 +494,12 @@ Sprite* bluewall;
 Sprite* grass;
 Sprite* glass;
 
+int dvds = 10000;
+Sprite dvd_sprites[20];
+
+Sprite dvd_opaque; 
+Sprite dvd_transparent;
+
 void GameInit()
 {
 	renderer = new Renderer2D(zoom, screenRatio);
@@ -507,14 +513,23 @@ void GameInit()
 	redwall = new Sprite(spritesheet, {}, { 32,32 });
 	bluewall = new Sprite(spritesheet, {32,0}, { 32,32 });
 	grass = new Sprite(spritesheet, {2*32,0}, { 32,32 });
-	glass = new Sprite(spritesheet, { 3 * 32,0 }, { 32,32 });
+	glass = new Sprite(spritesheet, { 3 * 32,0 }, { 32,32 }, { 1.0f, 1.0f, 1.0f, 0.9f });
+
+	dvd_opaque = Sprite(texture, {}, {}, { 1.0f,0.5f,0.5f,1.0f });
+	dvd_transparent = Sprite(texture, {}, {}, { 0.5f,1.0f,0.5f,0.01f });
+
+	for (int i = 0; i < 20; i++)
+	{
+		dvd_sprites[i].SetTexture(texture);
+		dvd_sprites[i].SetColor({ rand() % 4 / 3.0f, rand() % 4 / 3.0f, rand() % 4 / 3.0f, rand() % 2 / 2.0f + 0.5f });
+
+	}
 
 	/*Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
 	box->SetLocalPosition({ 5,0,0 });*/
 }
 
-int dvds = 100000;
 
 void renderScene(void)
 {
@@ -527,7 +542,7 @@ void renderScene(void)
 	//printf("%f\n", sin(time(NULL)));
 	//MainScene.Render(renderer);  
 
-	for (int i = 0; i < 22; i++)
+	for (int i = 0; i < 23; i++)
 	{
 		renderer->RenderSprite(redwall, { -640,i * 32 - 360 , 0});
 		renderer->RenderSprite(grass, { -640 + 1 * 32,i * 32 - 360 , 0 });
@@ -544,9 +559,17 @@ void renderScene(void)
 		srand(0);
 		for (int i = 0; i < dvds; i++)
 		{
-			renderer->RenderSprite(texture, { rand() % 800 - 400 + 50.0f*sin(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), (float)i/(float)dvds }, { 0.1f, 0.1f }, {}, {}, { rand() % 256 / 256.0f, rand() % 256 / 256.0f,  rand() % 256 / 256.0f,  rand() % 256 / 256.0f });
+			//renderer->RenderSprite(&dvd_opaque, {-100,-100,rand() % 10000 / 10000.0f + 1 }, {0.3f,0.3f});
+			//renderer->RenderSprite(&dvd_transparent, {0,0,rand() % 10000 / 10000.0f }, { 0.2f,0.2f });
+			renderer->RenderSprite(&dvd_sprites[i % 20], { rand() % 800 - 400 + 50.0f*sin(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand()%10000 / 10000.0f }, { 0.1f, 0.1f });
+			//renderer->RenderSprite(texture, { rand() % 800 - 400 + 50.0f*sin(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), (float)i / (float)dvds }, { 0.1f, 0.1f }, {}, {}, { rand() % 4 / 3.0f, rand() % 4 / 3.0f,  rand() % 4 / 3.0f,  1.0f });
 		}
-		renderer->RenderSprite(texture, { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, -10.0f }, { 0.2f, 0.2f }, {}, {}, {0.2f, 0.2f, 1.0f, 0.5f});
+		for (int i = 0; i < dvds/100; i++)
+		{
+			//renderer->RenderSprite(texture, { rand() % 800 - 400 + 50.0f*sin(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), -(float)i / (float)dvds }, { 0.1f, 0.1f }, {}, {}, { rand() % 4 / 3.0f, rand() % 4 / 3.0f,  rand() % 4 / 3.0f, 0.5f });
+		}
+		renderer->RenderSprite(&dvd_sprites[1], { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, -10.0f }, { 0.2f, 0.2f });
+		//renderer->RenderSprite(texture, { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, -10.0f }, { 0.2f, 0.2f }, {}, {}, {0.2f, 0.2f, 1.0f, 0.5f});
 		//dvds = 0;
 	}
 
@@ -557,6 +580,12 @@ void renderScene(void)
 
 	renderer->Render();
 
+	GLenum err = glewInit();
+	if (GLEW_OK != err)
+	{
+		/* Problem: glewInit failed, something is seriously wrong. */
+		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	}
 
 	glPushMatrix();
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
