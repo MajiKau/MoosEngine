@@ -72,22 +72,6 @@ extern const Color3f WHITE;
 extern const Color3f BLACK;
 extern const Color3f YELLOW;
 
-struct PointLight
-{
-	glm::vec3 Color;
-	float AmbientIntensity;
-	float DiffuseIntensity;
-	glm::vec3 Position;
-};
-
-struct DirectionalLight
-{
-	glm::vec3 Color;
-	float AmbientIntensity;
-	float DiffuseIntensity;
-	glm::vec3 Direction;
-};
-
 
 class Sprite
 {
@@ -112,6 +96,31 @@ private:
 	glm::ivec2 m_sprite_size;
 };
 
+class Shader
+{
+public:
+	Shader(const char* vertex, const char* fragment);
+	Shader();
+
+	GLchar* LoadShader(const char* filename);
+	GLint CompileShaderProgram(const char* vSharerSrc, const char* fSharerSrc);
+
+	GLint GetUniformLocation(GLchar* uniform_name);
+	GLint GetAttributeLocation(GLchar* attribute_name);
+
+	void UseShader();
+
+	void SetInt(GLchar* uniform_name, int value);
+	void SetFloat(GLchar* uniform_name, float value);
+	void SetVec3(GLchar* uniform_name, glm::vec3 value);
+	void SetMat4(GLchar* uniform_name, glm::mat4 value);
+
+	GLuint m_vao;
+	GLuint m_vbo;
+	GLuint m_ebo;
+	GLuint m_shaderprogram;
+};
+
 class Renderer2D
 {
 public:
@@ -119,27 +128,13 @@ public:
 
 	void Render();
 
-	GLchar* LoadShader(const char* filename);
 
 	void LoadTexture(const char * filename, const char * texturename);
 	Texture2D* GetTexture(const char * texturename);
 
-	GLint CompileShaderProgram(const char* vSharerSrc, const char* fSharerSrc);
-
-	void CompileShaders();
-
-	GLint GetUniformLocation(GLchar* uniform_name);
-	GLint GetAttributeLocation(GLchar* attribute_name);
-
-	void SetInt(GLchar* uniform_name, int value);
-	void SetFloat(GLchar* uniform_name, float value);
-	void SetVec3(GLchar* uniform_name, glm::vec3 value);
-	void SetMat4(GLchar* uniform_name, glm::mat4 value);
-	void SetPointLight(int num, const PointLight& Light);
-	void SetDirectionalLight(int num, const DirectionalLight& Light);
-
-	void RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f }, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
 	void RenderSprite(Sprite* sprite, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f });
+
+	void RenderStencil(std::vector<GLfloat> vertices);
 
 	glm::mat4 m_model;
 	glm::mat4 m_projection;
@@ -148,16 +143,19 @@ private:
 
 	void _ClearScreen(Color3f color);
 
+	void _RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f }, glm::ivec2 sprite_offset = { 0, 0 }, glm::ivec2 sprite_size = { 0, 0 }, glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f });
 	void _RenderSprites();
+	void _SortSprites();
 
-	GLuint m_vao;
-	GLuint m_vbo;
-	GLuint m_ebo;
-	GLuint m_shaderprogram;
+	void _RenderStencil();
+
+	Shader m_shader_default;
+	Shader m_shader_stencil;
+
 
 	std::vector<std::tuple<Sprite*, glm::vec3, glm::vec2>> m_sprites;
-
 	std::map<std::string, Texture2D*> m_loaded_textures;
 	std::vector<SpriteRenderData> m_sprite_data;
-	bool m_push;
+
+	VertexIndexArrays m_stencil;
 };

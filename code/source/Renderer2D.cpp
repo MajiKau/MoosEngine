@@ -27,62 +27,65 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 	glEnable(GL_PRIMITIVE_RESTART);
 	glPrimitiveRestartIndex(0xFFFFFFFF);
 
-	GLchar* vertex = LoadShader("Content/Shaders/Textured2D/shader.vertex");
-	GLchar* fragment = LoadShader("Content/Shaders/Textured2D/shader.fragment");
-	m_shaderprogram = CompileShaderProgram(vertex, fragment);
+	//Shaders
 
-	glUseProgram(m_shaderprogram);
+	//Default
+	{
+		m_shader_default = Shader("Content/Shaders/Textured2D/shader.vertex", "Content/Shaders/Textured2D/shader.fragment");
 
-	glGenVertexArrays(1, &m_vao);
-	glBindVertexArray(m_vao);
+		glUseProgram(m_shader_default.m_shaderprogram);
 
-	glGenBuffers(1, &m_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+		glGenVertexArrays(1, &m_shader_default.m_vao);
+		glBindVertexArray(m_shader_default.m_vao);
+
+		glGenBuffers(1, &m_shader_default.m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m_shader_default.m_vbo);
 
 
-	glGenBuffers(1, &m_ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+		glGenBuffers(1, &m_shader_default.m_ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_shader_default.m_ebo);
+
+		GLint vertexAttr = m_shader_default.GetAttributeLocation("vertex_position");
+		GLint texcoordAttr = m_shader_default.GetAttributeLocation("texture_coordinate");
+		glEnableVertexAttribArray(vertexAttr);
+		glEnableVertexAttribArray(texcoordAttr);
+
+		glVertexAttribPointer(vertexAttr, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);//Vertex: 3 floats
+		glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 3));//Texcoord: 2 floats, offset is 3
+
+		m_shader_default.SetInt("texture", 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	//Stencil
 	
-	err = glGetError();
-	if (GLEW_OK != err)
 	{
-		printf("%s\n", glewGetErrorString(err));
+		m_shader_stencil = Shader("Content/Shaders/Stencil2D/shader.vertex", "Content/Shaders/Stencil2D/shader.fragment");
+
+		glUseProgram(m_shader_stencil.m_shaderprogram);
+
+		glGenVertexArrays(1, &m_shader_stencil.m_vao);
+		glBindVertexArray(m_shader_stencil.m_vao);
+
+		glGenBuffers(1, &m_shader_stencil.m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m_shader_stencil.m_vbo);
+
+
+		glGenBuffers(1, &m_shader_stencil.m_ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_shader_stencil.m_ebo);
+
+		GLint vertexAttr = m_shader_stencil.GetAttributeLocation("vertex_position");
+		glEnableVertexAttribArray(vertexAttr);
+
+		glVertexAttribPointer(vertexAttr, 2, GL_FLOAT, GL_FALSE, NULL, NULL);//Vertex: 2 floats
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
 	}
-
-	GLint vertexAttr = GetAttributeLocation("vertex_position");
-	GLint texcoordAttr = GetAttributeLocation("texture_coordinate");
-	glEnableVertexAttribArray(vertexAttr);
-	glEnableVertexAttribArray(texcoordAttr);
-	//glEnableVertexAttribArray(2); 
-
-	err = glGetError();
-	if (GLEW_OK != err)
-	{
-		printf("%s\n", glewGetErrorString(err));
-	}
-
-	glVertexAttribPointer(vertexAttr, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);//Vertex: 3 floats
-	glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 3));//Texcoord: 2 floats, offset is 3
-	//glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 5));//Color: 4 floats, offset is 5
-
-	err = glGetError();
-	if (GLEW_OK != err)
-	{
-		printf("%s\n", glewGetErrorString(err));
-	}
-
-	SetInt("texture", 0);
-
-	err = glGetError();
-	if (GLEW_OK != err)
-	{
-		printf("%s\n", glewGetErrorString(err));
-	}
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
 
 	err = glGetError();
 	if (GLEW_OK != err)
@@ -96,10 +99,36 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 
 void Renderer2D::Render()
 {
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	_SortSprites();
+	for (auto& sprite_data : m_sprites)
+	{
+		Sprite* sprite = std::get<0>(sprite_data);
+		_RenderSprite(sprite->GetTexture(), std::get<1>(sprite_data), std::get<2>(sprite_data), sprite->GetSpriteOffset(), sprite->GetSpriteSize(), sprite->GetColor());
+	}
+	m_sprites.clear();
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	
+	_RenderStencil();
+	m_stencil.vertices.clear();
+	m_stencil.indices.clear();
+
+
+	glEnable(GL_STENCIL_TEST);
 	_RenderSprites();
+	m_sprite_data.clear();
+	glDisable(GL_STENCIL_TEST);
+
+	//_RenderSprites();
 }
 
-GLchar * Renderer2D::LoadShader(const char * filename)
+GLchar * Shader::LoadShader(const char * filename)
 {
 	std::ifstream file(filename, std::ios::in | std::ios::binary);
 	file.seekg(0, file.end);
@@ -134,7 +163,7 @@ Texture2D * Renderer2D::GetTexture(const char * texturename)
 	return m_loaded_textures.at(texturename);
 }
 
-GLint Renderer2D::CompileShaderProgram(const char * vSharerSrc, const char * fSharerSrc)
+GLint Shader::CompileShaderProgram(const char * vSharerSrc, const char * fSharerSrc)
 {
 	//Vertex Shader
 	const GLint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -211,22 +240,42 @@ GLint Renderer2D::CompileShaderProgram(const char * vSharerSrc, const char * fSh
 	return program;
 }
 
-GLint Renderer2D::GetUniformLocation(GLchar * uniform_name)
+Shader::Shader(const char* vertex, const char * fragment)
+{
+	GLchar* gl_vertex = LoadShader(vertex);
+	GLchar* gl_fragment = LoadShader(fragment);
+
+	m_shaderprogram = CompileShaderProgram(gl_vertex, gl_fragment);
+}
+
+Shader::Shader()
+{
+}
+
+GLint Shader::GetUniformLocation(GLchar * uniform_name)
 {
 	return glGetUniformLocation(m_shaderprogram, uniform_name);
 }
 
-GLint Renderer2D::GetAttributeLocation(GLchar * attribute_name)
+GLint Shader::GetAttributeLocation(GLchar * attribute_name)
 {
 	return glGetAttribLocation(m_shaderprogram, attribute_name);
 }
 
-void Renderer2D::SetInt(GLchar* uniform_name, int value)
+void Shader::UseShader()
+{
+	glUseProgram(m_shaderprogram);
+	glBindVertexArray(m_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+}
+
+void Shader::SetInt(GLchar* uniform_name, int value)
 {
 	glUniform1i(GetUniformLocation(uniform_name), value);
 }
 
-void Renderer2D::RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 scale, glm::ivec2 sprite_offset, glm::ivec2 sprite_size, glm::vec4 color)
+void Renderer2D::_RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 scale, glm::ivec2 sprite_offset, glm::ivec2 sprite_size, glm::vec4 color)
 {
 	if (!texture)
 	{
@@ -272,13 +321,25 @@ void Renderer2D::RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2 
 
 	data->vertices.insert(data->vertices.end(), vertices, vertices+4*5);
 	data->indices.insert(data->indices.end(), indices, indices+5);
-
-	m_push = true;
 }
 
 void Renderer2D::RenderSprite(Sprite * sprite, glm::vec3 position, glm::vec2 scale)
 {
 	m_sprites.push_back({ sprite, position, scale });
+}
+
+void Renderer2D::RenderStencil(std::vector<GLfloat> vertices)
+{
+	GLuint num_vertices = vertices.size() / 2;
+	GLuint indices_size = m_stencil.vertices.size() / 2;
+
+	for (int i = 0; i < num_vertices; i++)
+	{
+		m_stencil.indices.emplace_back(indices_size + i);
+	}
+	m_stencil.indices.emplace_back(0xFFFFFFFF);
+
+	m_stencil.vertices.insert(m_stencil.vertices.end(), vertices.begin(), vertices.end());
 }
 
 bool CompareSpriteDepths(const std::tuple<Sprite*, glm::vec3, glm::vec2>& a, const std::tuple<Sprite*, glm::vec3, glm::vec2>& b)
@@ -303,34 +364,19 @@ bool CompareSpriteDepths(const std::tuple<Sprite*, glm::vec3, glm::vec2>& a, con
 
 void Renderer2D::_RenderSprites()
 {
-	std::sort(m_sprites.begin(), m_sprites.end(), CompareSpriteDepths);
-	for (auto& sprite_data : m_sprites)
-	{
-		Sprite* sprite = std::get<0>(sprite_data);
-		RenderSprite(sprite->GetTexture(), std::get<1>(sprite_data), std::get<2>(sprite_data), sprite->GetSpriteOffset(), sprite->GetSpriteSize(), sprite->GetColor());
-	}
-	m_sprites.clear();
 
+	
 
-	glUseProgram(m_shaderprogram);
-	glBindVertexArray(m_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-	glUniformMatrix4fv(GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
+	m_shader_default.UseShader();
+	glUniformMatrix4fv(m_shader_default.GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
 
 	for (auto sprite_data : m_sprite_data)
 	{
 		sprite_data.material.texture->Bind(GL_TEXTURE0);
-		glUniform4fv(GetUniformLocation("colour"), 1, &sprite_data.material.color[0]);
+		glUniform4fv(m_shader_default.GetUniformLocation("colour"), 1, &sprite_data.material.color[0]);
 
-		//if (m_push)
-		{
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sprite_data.data.indices.size() * sizeof(unsigned int), &sprite_data.data.indices[0], GL_STATIC_DRAW);
-			glBufferData(GL_ARRAY_BUFFER, sprite_data.data.vertices.size() * sizeof(GLfloat), &(sprite_data.data.vertices[0]), GL_STATIC_DRAW);
-			m_push = false;
-		}
-
-		//printf("PUSH!\n");
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sprite_data.data.indices.size() * sizeof(unsigned int), &sprite_data.data.indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sprite_data.data.vertices.size() * sizeof(GLfloat), &(sprite_data.data.vertices[0]), GL_STATIC_DRAW);
 
 		glDrawElements(GL_TRIANGLE_STRIP, sprite_data.data.indices.size(), GL_UNSIGNED_INT, (void*)0);
 		//glDrawArrays(GL_TRIANGLE_STRIP, 0, pair.second.first.size() / 9);
@@ -340,7 +386,44 @@ void Renderer2D::_RenderSprites()
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	m_sprite_data.clear();
+}
+
+void Renderer2D::_SortSprites()
+{
+	std::sort(m_sprites.begin(), m_sprites.end(), CompareSpriteDepths);
+}
+
+void Renderer2D::_RenderStencil()
+{
+	if (m_stencil.indices.size() == 0)
+		return;
+
+	m_shader_stencil.UseShader();
+	glUniformMatrix4fv(m_shader_stencil.GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_stencil.indices.size() * sizeof(unsigned int), &m_stencil.indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, m_stencil.vertices.size() * sizeof(GLfloat), &(m_stencil.vertices[0]), GL_STATIC_DRAW);
+
+	//Drawing to stencil buffer
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF); // Set any stencil to 1
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glStencilMask(0xFF); // Write to stencil buffer
+	glDepthMask(GL_FALSE); // Don't write to depth buffer
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glClear(GL_STENCIL_BUFFER_BIT);
+	glDrawElements(GL_TRIANGLE_FAN, m_stencil.indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass test if stencil value is 1
+	glStencilMask(0x00); // Don't write anything to stencil buffer
+	glDepthMask(GL_TRUE); // Write to depth buffer
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDisable(GL_STENCIL_TEST);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 Texture2D::Texture2D(GLenum TextureTarget, const std::string& FileName)

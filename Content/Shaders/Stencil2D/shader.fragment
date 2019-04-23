@@ -1,0 +1,7 @@
+#version 430
+out vec4 frag_colour;
+layout(early_fragment_tests) in;
+void main() 
+{
+	frag_colour = vec4(1,1,1,1);
+};

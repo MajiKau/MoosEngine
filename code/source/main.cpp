@@ -44,7 +44,7 @@ InputManager* inputManager;
 
 int selectedNode = 0;
 
-float zoom = 100.0f;
+float zoom = 1.0f;
 
 glm::mat4 Projection;
 glm::mat4 View;
@@ -568,14 +568,27 @@ void renderScene(void)
 		{
 			//renderer->RenderSprite(texture, { rand() % 800 - 400 + 50.0f*sin(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), rand() % 600 - 400 + 50.0f*cos(rand() % 50 * glutGet(GLUT_ELAPSED_TIME) / 20000.0f + rand()), -(float)i / (float)dvds }, { 0.1f, 0.1f }, {}, {}, { rand() % 4 / 3.0f, rand() % 4 / 3.0f,  rand() % 4 / 3.0f, 0.5f });
 		}
+
+		//renderer->RenderSprite(&dvd_sprites[1], { - 150, - 150, -10.0f }, { 0.2f, 0.2f });
 		renderer->RenderSprite(&dvd_sprites[1], { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, -10.0f }, { 0.2f, 0.2f });
 		//renderer->RenderSprite(texture, { 400.0f*sin(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, 200.0f*cos(glutGet(GLUT_ELAPSED_TIME) / 1000.0f) - 150, -10.0f }, { 0.2f, 0.2f }, {}, {}, {0.2f, 0.2f, 1.0f, 0.5f});
 		//dvds = 0;
 	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glUseProgram(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	std::vector<GLfloat> verts;
+	verts.emplace_back(0.0f);
+	verts.emplace_back(0.0f);
+	for (int i = 0; i < zoom+1; i++)
+	{
+		verts.emplace_back(500*cosf(i*PI / 10));
+		verts.emplace_back(500*sinf(i*PI / 10));
+	}
+	renderer->RenderStencil(verts);
+
+
+	/*float w = 400 / 3;
+	float h = 400 / 3;
+	renderer->RenderStencil({ -w,-h,w,-h,-w,h,w,h });*/
 
 
 	renderer->Render();
@@ -583,7 +596,7 @@ void renderScene(void)
 	GLenum err = glewInit();
 	if (GLEW_OK != err)
 	{
-		/* Problem: glewInit failed, something is seriously wrong. */
+		/* Problem: something is wrong. */
 		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 	}
 
@@ -736,12 +749,12 @@ void game()
     if (inputManager->IsMousePressed(3))//Scroll up
     {
         //renderer->Camera.Position.y += 1.0f;
-        zoom -= 5.0f;
+        zoom -= 1.0f;
     }
     if (inputManager->IsMousePressed(4))//Scroll down
     {
         //renderer->Camera.Position.y -= 1.0f;
-        zoom += 5.0f;
+        zoom += 1.0f;
     }
     
 
@@ -785,8 +798,12 @@ int main(int argc, char **argv)
 
 
     // init GLUT and create window
+	glutInitContextVersion (4, 6);
+	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
+	glutInitContextProfile(GLUT_CORE_PROFILE);
+
     glutInit(&argc, argv); 
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+    glutInitDisplayMode(GLUT_DEPTH | GLUT_STENCIL | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(300, 100);
     glutInitWindowSize(screenWidth, screenHeight);
     glutCreateWindow(window_name);

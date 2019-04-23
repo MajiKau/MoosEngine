@@ -3,7 +3,7 @@ in vec2 tex_coord;
 uniform sampler2D texture;
 uniform vec4 colour;
 out vec4 frag_colour;
-
+//layout(early_fragment_tests) in;
 void main() 
 {
 	frag_colour = colour*texture2D(texture, tex_coord);
