@@ -62,6 +62,8 @@ set (MOOSE_CORE_API
         ${CMAKE_CURRENT_LIST_DIR}/headers/Scene.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Animation.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Entity.h
+        ${CMAKE_CURRENT_LIST_DIR}/headers/Entity2D.h
+        ${CMAKE_CURRENT_LIST_DIR}/headers/Player2D.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Rigidbody.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Portal.h
         ${CMAKE_CURRENT_LIST_DIR}/headers/Renderer2D.h
@@ -82,6 +84,8 @@ set (MOOSE_CORE_INTERNAL
         ${CMAKE_CURRENT_LIST_DIR}/source/Scene.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Animation.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Entity.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/source/Entity2D.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/source/Player2D.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Rigidbody.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Portal.cpp
         ${CMAKE_CURRENT_LIST_DIR}/source/Renderer2D.cpp

@@ -17,6 +17,8 @@
 
 #include "code/headers/Renderer2D.h"
 
+#include "code/headers/Player2D.h"
+
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
@@ -500,6 +502,8 @@ Sprite dvd_sprites[20];
 Sprite dvd_opaque; 
 Sprite dvd_transparent;
 
+Player2D* player;
+
 void GameInit()
 {
 	renderer = new Renderer2D(zoom, screenRatio);
@@ -525,6 +529,7 @@ void GameInit()
 
 	}
 
+	player = new Player2D();
 	/*Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
 	box->SetLocalPosition({ 5,0,0 });*/
@@ -585,6 +590,7 @@ void renderScene(void)
 	}
 	renderer->RenderStencil(verts);
 
+	player->Render(renderer);
 
 	/*float w = 400 / 3;
 	float h = 400 / 3;
