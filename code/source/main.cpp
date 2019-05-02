@@ -19,6 +19,8 @@
 
 #include "code/headers/Player2D.h"
 
+#include "code/headers/Quadtree.h"
+
 #define GL_GPU_MEM_INFO_TOTAL_AVAILABLE_MEM_NVX 0x9048
 #define GL_GPU_MEM_INFO_CURRENT_AVAILABLE_MEM_NVX 0x9049
 
@@ -496,13 +498,15 @@ Sprite* bluewall;
 Sprite* grass;
 Sprite* glass;
 
-int dvds = 10000;
+int dvds = 100;
 Sprite dvd_sprites[20];
 
 Sprite dvd_opaque; 
 Sprite dvd_transparent;
 
 Player2D* player;
+
+Quadtree<Entity2D> quadtree(0, Rectangle2D(-screenWidth/2.0f, -screenHeight / 2.0f, screenWidth, screenHeight));
 
 void GameInit()
 {
@@ -527,6 +531,12 @@ void GameInit()
 		dvd_sprites[i].SetTexture(texture);
 		dvd_sprites[i].SetColor({ rand() % 4 / 3.0f, rand() % 4 / 3.0f, rand() % 4 / 3.0f, rand() % 2 / 2.0f + 0.5f });
 
+	}
+	for (int i = 0; i < 500; i++)
+	{
+		Entity2D* entity = new Entity2D();
+		entity->SetLocalPosition({ rand() % screenWidth - screenWidth / 2.0f, rand() % screenHeight - screenHeight / 2.0f, 0 });
+		quadtree.insert(entity);
 	}
 
 	player = new Player2D();
@@ -591,6 +601,14 @@ void renderScene(void)
 	renderer->RenderStencil(verts);
 
 	player->Render(renderer);
+
+	std::vector<GLfloat> vertices = { 0,0,-10, 200,200,-10, -400,0,-10 };
+	renderer->RenderLines(vertices, { 1.0f,0.0f,0.0f });
+
+	vertices = { -50,-50,-10, 50,-50,-10, -400,200,-10 };
+	renderer->RenderLines(vertices, { 1.0f,1.0f,1.0f });
+
+	quadtree.Render(renderer);
 
 	/*float w = 400 / 3;
 	float h = 400 / 3;

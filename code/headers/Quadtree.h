@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <vector>
 #include "Geometry.h"
-#include "RenderFunctions.h"
 
+#include "Renderer2D.h"
 
 
 //Generic Quadtree that uses rectangles for objects. Objects need a Rect() function.
@@ -22,7 +22,7 @@ public:
 		nodes = std::vector<Quadtree*>(4);
 	}
 
-	void Render(BatchRenderer* renderer)
+	/*void Render(BatchRenderer* renderer)
 	{
 		//printf("Quadtree Render(%.1f,%.1f,%.1f,%.1f)\n", bounds.x, bounds.y, bounds.w, bounds.h);
 		for (int i = 0; i < nodes.size(); i++) 
@@ -63,6 +63,29 @@ public:
 				};
 				renderer->RenderLines(lines2, 4);
 				//renderer->RenderRegularTriangle({ rect.x + rect.w / 2.0f,rect.y + rect.h / 2.0f }, 0.1f, 0, YELLOW);
+			}
+		}
+	}*/
+
+	void Render(Renderer2D* renderer)
+	{
+		//printf("Quadtree Render(%.1f,%.1f,%.1f,%.1f)\n", bounds.x, bounds.y, bounds.w, bounds.h);
+		for (int i = 0; i < nodes.size(); i++)
+		{
+			if (nodes[i] != NULL)
+			{
+				nodes[i]->Render(renderer);
+			}
+		}
+
+		renderer->RenderRectangle(bounds, { 0,0,1 });
+
+		for (int i = 0; i < objects.size(); i++)
+		{
+			if (objects[i] != NULL)
+			{
+				Rectangle2D rect = objects[i]->Rect();
+				renderer->RenderRectangle(rect, { 1,1,0 });
 			}
 		}
 	}

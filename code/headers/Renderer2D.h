@@ -1,15 +1,12 @@
 #pragma once
 #include <GL/glew.h>
-//#include <GL/freeglut.h>
 #include <glm.hpp>
 #include <ext.hpp>
 
 //#define GLM_ENABLE_EXPERIMENTAL
 //#include <gtx/rotate_vector.hpp>
 
-//#include <stdio.h>
 #include <iostream>
-//#include <set>
 #include <map>
 #include <vector>
 
@@ -17,6 +14,8 @@
 #include <fstream>
 
 #include <algorithm>
+
+#include "code/headers/Geometry.h"
 
 extern const float PI;
 
@@ -65,13 +64,11 @@ struct SpriteRenderData
 	VertexIndexArrays data;
 };
 
-extern const Color3f RED;
-extern const Color3f GREEN;
-extern const Color3f BLUE;
-extern const Color3f WHITE;
-extern const Color3f BLACK;
-extern const Color3f YELLOW;
-
+struct LineRenderData
+{
+	glm::vec3 color;
+	VertexIndexArrays data;
+};
 
 class Sprite
 {
@@ -132,10 +129,15 @@ public:
 	void LoadTexture(const char * filename, const char * texturename);
 	Texture2D* GetTexture(const char * texturename);
 
+
 	void RenderSprite(Sprite* sprite, glm::vec3 position, glm::vec2 scale = { 1.0f, 1.0f });
 
 	void RenderStencil(std::vector<GLfloat> vertices);
 
+	void RenderRectangle(Rectangle2D rect, glm::vec3 color = { 1.0f, 1.0f, 1.0f });
+
+	void RenderLines(std::vector<GLfloat> vertices, glm::vec3 color = { 1.0f, 1.0f, 1.0f });
+	void RenderLines(GLfloat* vertices, int num_vertices, glm::vec3 color = { 1.0f, 1.0f, 1.0f });
 	glm::mat4 m_model;
 	glm::mat4 m_projection;
 
@@ -147,15 +149,21 @@ private:
 	void _RenderSprites();
 	void _SortSprites();
 
+	void _RenderLines();
+
 	void _RenderStencil();
 
-	Shader m_shader_default;
+	Shader m_shader_textured;
 	Shader m_shader_stencil;
+	Shader m_shader_color;
 
 
 	std::vector<std::tuple<Sprite*, glm::vec3, glm::vec2>> m_sprites;
 	std::map<std::string, Texture2D*> m_loaded_textures;
 	std::vector<SpriteRenderData> m_sprite_data;
+
+	std::vector<LineRenderData> m_line_data;
+	
 
 	VertexIndexArrays m_stencil;
 };

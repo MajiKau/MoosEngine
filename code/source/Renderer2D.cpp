@@ -31,29 +31,29 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 
 	//Default
 	{
-		m_shader_default = Shader("Content/Shaders/Textured2D/shader.vertex", "Content/Shaders/Textured2D/shader.fragment");
+		m_shader_textured = Shader("Content/Shaders/Textured2D/shader.vertex", "Content/Shaders/Textured2D/shader.fragment");
 
-		glUseProgram(m_shader_default.m_shaderprogram);
+		glUseProgram(m_shader_textured.m_shaderprogram);
 
-		glGenVertexArrays(1, &m_shader_default.m_vao);
-		glBindVertexArray(m_shader_default.m_vao);
+		glGenVertexArrays(1, &m_shader_textured.m_vao);
+		glBindVertexArray(m_shader_textured.m_vao);
 
-		glGenBuffers(1, &m_shader_default.m_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, m_shader_default.m_vbo);
+		glGenBuffers(1, &m_shader_textured.m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m_shader_textured.m_vbo);
 
 
-		glGenBuffers(1, &m_shader_default.m_ebo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_shader_default.m_ebo);
+		glGenBuffers(1, &m_shader_textured.m_ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_shader_textured.m_ebo);
 
-		GLint vertexAttr = m_shader_default.GetAttributeLocation("vertex_position");
-		GLint texcoordAttr = m_shader_default.GetAttributeLocation("texture_coordinate");
+		GLint vertexAttr = m_shader_textured.GetAttributeLocation("vertex_position");
+		GLint texcoordAttr = m_shader_textured.GetAttributeLocation("texture_coordinate");
 		glEnableVertexAttribArray(vertexAttr);
 		glEnableVertexAttribArray(texcoordAttr);
 
 		glVertexAttribPointer(vertexAttr, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), NULL);//Vertex: 3 floats
 		glVertexAttribPointer(texcoordAttr, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(sizeof(GLfloat) * 3));//Texcoord: 2 floats, offset is 3
 
-		m_shader_default.SetInt("texture", 0);
+		m_shader_textured.SetInt("texture", 0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -87,6 +87,33 @@ Renderer2D::Renderer2D(float Zoom, float Ratio)
 		glBindVertexArray(0);
 	}
 
+	//Color
+
+	{
+		m_shader_color = Shader("Content/Shaders/Color2D/shader.vertex", "Content/Shaders/Color2D/shader.fragment");
+
+		glUseProgram(m_shader_color.m_shaderprogram);
+
+		glGenVertexArrays(1, &m_shader_color.m_vao);
+		glBindVertexArray(m_shader_color.m_vao);
+
+		glGenBuffers(1, &m_shader_color.m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m_shader_color.m_vbo);
+
+
+		glGenBuffers(1, &m_shader_color.m_ebo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_shader_color.m_ebo);
+
+		GLint vertexAttr = m_shader_color.GetAttributeLocation("vertex_position");
+		glEnableVertexAttribArray(vertexAttr);
+
+		glVertexAttribPointer(vertexAttr, 3, GL_FLOAT, GL_FALSE, NULL, NULL);//Vertex: 3 floats
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
 	err = glGetError();
 	if (GLEW_OK != err)
 	{
@@ -113,12 +140,13 @@ void Renderer2D::Render()
 	m_sprites.clear();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
 	
 	_RenderStencil();
 	m_stencil.vertices.clear();
 	m_stencil.indices.clear();
 
+	_RenderLines();
+	m_line_data.clear();
 
 	glEnable(GL_STENCIL_TEST);
 	_RenderSprites();
@@ -132,7 +160,7 @@ GLchar * Shader::LoadShader(const char * filename)
 {
 	std::ifstream file(filename, std::ios::in | std::ios::binary);
 	file.seekg(0, file.end);
-	int length = file.tellg();
+	int length = (int)file.tellg();
 	file.seekg(0, file.beg);
 	GLchar* data = new GLchar[length + 1];
 	file.read(data, length);
@@ -313,7 +341,7 @@ void Renderer2D::_RenderSprite(Texture2D* texture, glm::vec3 position, glm::vec2
 		data = &m_sprite_data.back().data;
 	}
 
-	GLuint indices_size = data->indices.size() / 5 * 4;
+	GLuint indices_size = (GLuint)data->indices.size() / 5 * 4;
 	GLuint indices[5] =
 	{
 		indices_size, indices_size + 1, indices_size + 2, indices_size + 3, 0xFFFFFFFF
@@ -330,16 +358,87 @@ void Renderer2D::RenderSprite(Sprite * sprite, glm::vec3 position, glm::vec2 sca
 
 void Renderer2D::RenderStencil(std::vector<GLfloat> vertices)
 {
-	GLuint num_vertices = vertices.size() / 2;
-	GLuint indices_size = m_stencil.vertices.size() / 2;
+	GLuint num_vertices = (GLuint)vertices.size() / 2;
+	GLuint indices_size = (GLuint)m_stencil.vertices.size() / 2;
 
-	for (int i = 0; i < num_vertices; i++)
+	for (GLuint i = 0; i < num_vertices; i++)
 	{
 		m_stencil.indices.emplace_back(indices_size + i);
 	}
 	m_stencil.indices.emplace_back(0xFFFFFFFF);
 
 	m_stencil.vertices.insert(m_stencil.vertices.end(), vertices.begin(), vertices.end());
+}
+
+void Renderer2D::RenderRectangle(Rectangle2D rect, glm::vec3 color)
+{
+	VertexIndexArrays* data = NULL;
+	for (auto& line : m_line_data)
+	{
+		if (line.color == color)
+		{
+			data = &line.data;
+			break;
+		}
+	}
+	if (!data)
+	{
+		m_line_data.push_back({ color,{} });
+		data = &m_line_data.back().data;
+	}
+
+	GLuint num_vertices = 4;
+	GLuint indices_size = (GLuint)data->vertices.size() / 3;
+
+	for (GLuint i = 0; i < num_vertices; i++)
+	{
+		data->indices.emplace_back(indices_size + i);
+	}
+	data->indices.emplace_back(indices_size);
+	data->indices.emplace_back(0xFFFFFFFF);
+
+	GLfloat vertices[] =
+	{
+		rect.x,			 rect.y,		  0,
+		rect.x + rect.w, rect.y,		  0,
+		rect.x + rect.w, rect.y + rect.h, 0,
+		rect.x,			 rect.y + rect.h, 0,
+	};
+
+	data->vertices.insert(data->vertices.end(), vertices, vertices + 3*4);
+
+	
+
+
+}
+
+void Renderer2D::RenderLines(std::vector<GLfloat> vertices, glm::vec3 color)
+{
+	VertexIndexArrays* data = NULL;
+	for (auto& line : m_line_data)
+	{
+		if (line.color == color)
+		{
+			data = &line.data;
+			break;
+		}
+	}
+	if (!data)
+	{
+		m_line_data.push_back({ color, {} });
+		data = &m_line_data.back().data;
+	}
+
+	GLuint num_vertices = (GLuint)vertices.size() / 3;
+	GLuint indices_size = (GLuint)data->vertices.size() / 3;
+
+	for (GLuint i = 0; i < num_vertices; i++)
+	{
+		data->indices.emplace_back(indices_size + i);
+	}
+	data->indices.emplace_back(0xFFFFFFFF);
+
+	data->vertices.insert(data->vertices.end(), vertices.begin(), vertices.end());
 }
 
 bool CompareSpriteDepths(const std::tuple<Sprite*, glm::vec3, glm::vec2>& a, const std::tuple<Sprite*, glm::vec3, glm::vec2>& b)
@@ -364,21 +463,18 @@ bool CompareSpriteDepths(const std::tuple<Sprite*, glm::vec3, glm::vec2>& a, con
 
 void Renderer2D::_RenderSprites()
 {
+	m_shader_textured.UseShader();
+	glUniformMatrix4fv(m_shader_textured.GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
 
-	
-
-	m_shader_default.UseShader();
-	glUniformMatrix4fv(m_shader_default.GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
-
-	for (auto sprite_data : m_sprite_data)
+	for (auto& sprite_data : m_sprite_data)
 	{
 		sprite_data.material.texture->Bind(GL_TEXTURE0);
-		glUniform4fv(m_shader_default.GetUniformLocation("colour"), 1, &sprite_data.material.color[0]);
+		glUniform4fv(m_shader_textured.GetUniformLocation("colour"), 1, &sprite_data.material.color[0]);
 
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sprite_data.data.indices.size() * sizeof(unsigned int), &sprite_data.data.indices[0], GL_STATIC_DRAW);
 		glBufferData(GL_ARRAY_BUFFER, sprite_data.data.vertices.size() * sizeof(GLfloat), &(sprite_data.data.vertices[0]), GL_STATIC_DRAW);
 
-		glDrawElements(GL_TRIANGLE_STRIP, sprite_data.data.indices.size(), GL_UNSIGNED_INT, (void*)0);
+		glDrawElements(GL_TRIANGLE_STRIP, (GLsizei)sprite_data.data.indices.size(), GL_UNSIGNED_INT, (void*)0);
 		//glDrawArrays(GL_TRIANGLE_STRIP, 0, pair.second.first.size() / 9);
 	}
 
@@ -391,6 +487,26 @@ void Renderer2D::_RenderSprites()
 void Renderer2D::_SortSprites()
 {
 	std::sort(m_sprites.begin(), m_sprites.end(), CompareSpriteDepths);
+}
+
+void Renderer2D::_RenderLines()
+{
+	m_shader_color.UseShader();
+	glUniformMatrix4fv(m_shader_color.GetUniformLocation("projection"), 1, GL_FALSE, &m_projection[0][0]);
+
+	for (auto& line_data : m_line_data)
+	{
+		glUniform3fv(m_shader_color.GetUniformLocation("color"), 1, &line_data.color[0]);
+
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, line_data.data.indices.size() * sizeof(unsigned int), &line_data.data.indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, line_data.data.vertices.size() * sizeof(GLfloat), &(line_data.data.vertices[0]), GL_STATIC_DRAW);
+
+		glDrawElements(GL_LINE_STRIP, (GLsizei)line_data.data.indices.size(), GL_UNSIGNED_INT, (void*)0);
+	}
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Renderer2D::_RenderStencil()
@@ -412,7 +528,7 @@ void Renderer2D::_RenderStencil()
 	glDepthMask(GL_FALSE); // Don't write to depth buffer
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	glClear(GL_STENCIL_BUFFER_BIT);
-	glDrawElements(GL_TRIANGLE_FAN, m_stencil.indices.size(), GL_UNSIGNED_INT, (void*)0);
+	glDrawElements(GL_TRIANGLE_FAN, (GLsizei)m_stencil.indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 	glStencilFunc(GL_EQUAL, 1, 0xFF); // Pass test if stencil value is 1
 	glStencilMask(0x00); // Don't write anything to stencil buffer

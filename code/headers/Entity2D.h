@@ -51,6 +51,8 @@ public:
 	void _RemoveChild(Entity2D* child);
 	void _SetParent(Entity2D* parent);
 
+	Rectangle2D Rect();
+
 	static int GetAmount();
 
 protected:
