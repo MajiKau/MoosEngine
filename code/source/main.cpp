@@ -774,19 +774,19 @@ void GameInit()
 
 	Entity* box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
-	box->SetLocalPosition({ 5,0,0 });
+	box->SetLocalPosition({ 5,1,0 });
 
 	box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
-	box->SetLocalPosition({ 0,0,5 });
+	box->SetLocalPosition({ 0,1,5 });
 
 	box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
-	box->SetLocalPosition({ 0,0,-20 });
+	box->SetLocalPosition({ 0,1,-20 });
 
 	box = MainScene.SpawnEntity();
 	box->AddMesh("testcube");
-	box->SetLocalPosition({ 0,0,-2.75f });
+	box->SetLocalPosition({ 0,1,-2.75f });
 
 	Entity* PortalRoomTop = MainScene.SpawnEntity("PortalRoomTop");
 	PortalT1 = PortalRoomTop->SpawnChild("Portal1");
@@ -807,7 +807,8 @@ void GameInit()
 	Portal* Portal_T2B = new Portal();
 	Portal_T2B->AddMesh("PortalB");
 	PortalT2->AddChild(Portal_T2B);
-	PortalT2->SetLocalPosition({ 0,0,-5 });
+	PortalT2->SetLocalPosition({ -5,0,-5 });
+	PortalT2->SetLocalRotation({ 0,PI / 2,0 });
 	//PortalT1->SetLocalRotation({ 0,-PI / 5.0f,0 });
 
 	Entity* PortalFrameBot1 = MainScene.SpawnEntity("PortalRoomBot");
@@ -829,13 +830,14 @@ void GameInit()
 	Portal* Portal_B2B = new Portal();
 	Portal_B2B->AddMesh("PortalB");
 	PortalB2->AddChild(Portal_B2B);
-	PortalB2->SetLocalPosition({ 0,0,-15 });
+	PortalB2->SetLocalPosition({ 9.5,0,-7.5 });
+	PortalB2->SetLocalRotation({ 0,-PI/2,0 });
 
 	PortalFrameBot1->SetLocalPosition({ 0, 100, 0 });
 	//PortalFrameBot1->SetLocalRotation({ 0.0f, PI / 4.0f, 0.0f });//Transitions between rooms don't work well with rotations
 
 	Entity* RoomB = PortalFrameBot1->SpawnChild("Room");
-	RoomB->AddMesh("Room1");
+	RoomB->AddMesh("CornerRoom1");
 
 	Portal_T1F->SetOtherPortal(Portal_B1F);
 	Portal_T1F->SetPortalRenderLayer(1);
@@ -897,12 +899,34 @@ void GameInit()
 		wave_entity->PlayAnimation("Wave");
 
 		Entity* person_root = wave_entity->SpawnParent("Person_Root");
-		person_root->SetLocalPosition({ 20,-20,-120 });
+		person_root->SetLocalPosition({ 0,-1,-10 });
+		person_root->SetLocalScale({ 0.1,0.1,0.1 });
 		person_root->SetLocalRotation(glm::rotate(glm::quat(1,0,0,0), 2*PI/3,glm::vec3(0,1,0)));
+		PortalFrameBot1->AddChild(person_root);
 
 		//wave_animation.LoadAnimation("Content/Animations/Wave.txt");
 		//wave_entity->GetAnimationController()->SetAnimations({ wave_animation });
 	}
+
+	Entity* grassground = MainScene.SpawnEntity();
+	grassground->AddMesh("Ground");
+	grassground->SetLocalPosition({ 0,-0.25, 0 });
+	grassground->SetLocalScale({ 100,1,100 });
+
+	/*Entity* nanosuit = MainScene.SpawnEntity();
+	nanosuit->AddMesh("nanosuit");
+	nanosuit->SetLocalPosition({ 0,5, 5 });*/
+	Entity* gasmask = MainScene.SpawnEntity();
+	gasmask->AddMesh("gasmask");
+	gasmask->SetLocalPosition({ 0,2, 10 });
+	gasmask->SetLocalScale({ 0.1,0.1,0.1 });
+	gasmask->SetLocalRotation({ 0,PI,0 });
+
+	Entity* gasmask2 = MainScene.SpawnEntity();
+	gasmask2->AddMesh("gasmask2");
+	gasmask2->SetLocalPosition({ 3,2, 10 });
+	gasmask2->SetLocalScale({ 0.1,0.1,0.1 });
+	gasmask2->SetLocalRotation({ 0,PI,0 });
 }
 
 
@@ -1254,7 +1278,7 @@ void game()
 			renderer->Camera.Position = TopToBot1m * glm::vec4(renderer->Camera.Position, 1.0f);
 			renderer->Camera.RenderLayer = 1;
 			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT1->GetWorldRotation()) * PortalB1->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
+			//renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
 		}
 	}
 	else if (glm::distance(pt2 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
@@ -1264,11 +1288,12 @@ void game()
 		up = glm::mat4(PortalT2->GetWorldRotation())*glm::vec4(up, 1.0f);
 		if (glm::dot(v, up) > 0.0f)
 		{
-			speed *= TopToBot2m[0][0];
+			//speed *= TopToBot2m[0][0]; //Meant to fix speed when portals are different sizes
 			renderer->Camera.Position = TopToBot2m * glm::vec4(renderer->Camera.Position, 1.0f);
+			printf("1: %f, %f, %f \n",renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z);
 			renderer->Camera.RenderLayer = 1;
 			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalT2->GetWorldRotation()) * PortalB2->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
+			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(PI, 0, 0);// +glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z); //Rotation doesn't work properly
 		}
 	}
 	else if (glm::distance(pb1 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
@@ -1281,7 +1306,7 @@ void game()
 			renderer->Camera.Position = glm::inverse(TopToBot1m) * glm::vec4(renderer->Camera.Position, 1.0f);
 			renderer->Camera.RenderLayer = 0;
 			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB1->GetWorldRotation()) * PortalT1->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
+			//renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
 		}
 	}
 	else if (glm::distance(pb2 + glm::vec3(0, 3, 0), cameraPosition) < 3.0f)
@@ -1291,11 +1316,12 @@ void game()
 		up = glm::mat4(PortalB2->GetWorldRotation())*glm::vec4(up, 1.0f);
 		if (glm::dot(v, up) > 0.0f)
 		{
-			speed *= glm::inverse(TopToBot2m)[0][0];
+			//speed *= glm::inverse(TopToBot2m)[0][0]; //Meant to fix speed when portals are different sizes
 			renderer->Camera.Position = glm::inverse(TopToBot2m) * glm::vec4(renderer->Camera.Position, 1.0f);
+			printf("2: %f, %f, %f \n", renderer->Camera.Position.x, renderer->Camera.Position.y, renderer->Camera.Position.z);
 			renderer->Camera.RenderLayer = 0;
 			glm::vec3 deltaRotation = glm::eulerAngles(glm::inverse(PortalB2->GetWorldRotation()) * PortalT2->GetWorldRotation());
-			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z);
+			renderer->Camera.Rotation = renderer->Camera.Rotation + glm::vec3(PI, 0, 0);// + glm::vec3(deltaRotation.y, deltaRotation.x, deltaRotation.z); //Rotation doesn't work properly
 		}
 	}
 

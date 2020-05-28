@@ -928,6 +928,8 @@ BatchRenderer::BatchRenderer(float Zoom, float Ratio)
 	m_loaded_meshes.insert({ "testcube",new Mesh("Content/Models/TestCube/TestCube.obj") });
 
 	m_loaded_meshes.insert({ "gasmask",new Mesh("Content/Models/Gasmask/GasmaskV2_5.obj") });
+	m_loaded_meshes.insert({ "gasmask2",new Mesh("Content/Models/Gasmask/GasmaskV2_5_notex.obj") });
+	m_loaded_meshes.insert({ "nanosuit",new Mesh("Content/Models/nanosuit/nanosuit.obj") });
 
 	m_loaded_meshes.insert({ "BasicCube",new Mesh("Content/Models/BasicCube/BasicCube.obj") });
 
@@ -938,6 +940,10 @@ BatchRenderer::BatchRenderer(float Zoom, float Ratio)
 	m_loaded_meshes.insert({ "PortalF",new Mesh("Content/Models/Portals/PortalF.obj") });
 	m_loaded_meshes.insert({ "PortalB",new Mesh("Content/Models/Portals/PortalB.obj") });
 	m_loaded_meshes.insert({ "Room1",new Mesh("Content/Models/Portals/Room1.obj") });
+	m_loaded_meshes.insert({ "CornerRoom1",new Mesh("Content/Models/Portals/corner.obj") });
+
+	m_loaded_meshes.insert({ "Ground",new Mesh("Content/Models/Ground/ground.obj") });
+
 
 	//CUBE
 	{
